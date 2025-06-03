@@ -21,7 +21,27 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
 
 ## 🚀 Quick Start
 
-### Installation
+1. Install Magellan from the [Chrome Web Store](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
+2. Get your Google Gemini API key:
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
+   - Click the Magellan extension icon in your browser toolbar
+   - Enter your API key in the settings
+3. Start using Magellan:
+   - Click the Magellan icon in your Chrome toolbar to open the sidebar
+   - Type your question about the current page
+   - Get AI-powered answers with highlighted citations
+   - Click citations to navigate to the relevant parts of the page
+
+💡 **Pro Tip**: For quick access, set up a keyboard shortcut in Chrome's extension settings:
+
+1. Go to `chrome://extensions/shortcuts`
+2. Find Magellan in the list
+3. Set your preferred keyboard shortcut for "Activate the extension"
+
+## 🛠️ Development
+
+### Building from Source
 
 1. Clone the repository:
 
@@ -33,21 +53,11 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
 
    - Open Chrome and go to `chrome://extensions/`
    - Enable "Developer mode" in the top right
-   - Click "Load unpacked" and select this repository
+   - Click "Load unpacked" and select the `magellan` repository
 
-3. Get a Google Gemini API key:
-   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create a new API key
-   - Click the Magellan extension icon and enter your API key
-
-### Usage
-
-1. Click the Magellan icon in your Chrome toolbar to open the sidebar
-2. Type your question about the current page
-3. Get AI-powered answers with highlighted citations
-4. Click citations to navigate to the relevant parts of the page
-
-## 🛠️ Development
+3. Make your changes to the source code
+4. Test the extension locally using Chrome's developer mode
+5. Submit a pull request with your changes
 
 ### Project Structure
 
@@ -64,12 +74,6 @@ magellan/
 ├── docs/                  # Documentation
 └── manifest.json          # Chrome extension manifest
 ```
-
-### Building from Source
-
-1. Make your changes to the source code
-2. Test the extension locally using Chrome's developer mode
-3. Submit a pull request with your changes
 
 ## 🤝 Contributing
 

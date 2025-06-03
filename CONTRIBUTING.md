@@ -36,7 +36,7 @@ Want to help improve the code? Great! Here's how:
 2. Load the extension in Chrome:
    - Go to `chrome://extensions/`
    - Enable "Developer mode"
-   - Click "Load unpacked" and select this repository
+   - Click "Load unpacked" and select the `magellan` repository
 3. Make your changes
 4. Test that everything works
 5. Submit a pull request
