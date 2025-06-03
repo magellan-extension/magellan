@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Magellan - API Key</title>
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --error: #ef4444;
+        --error-bg: rgba(239, 68, 68, 0.1);
+        --success: #10b981;
+        --success-bg: rgba(16, 185, 129, 0.1);
+        --warning: #f59e0b;
+        --warning-bg: rgba(245, 158, 11, 0.1);
+        --bg-dark: #181f28;
+        --bg-light: #374151;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --border-radius: 8px;
+        --transition: all 0.2s ease;
+      }
+
+      body {
+        min-width: 320px;
+        padding: 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
+          "Helvetica Neue", Arial, sans-serif;
+        color: var(--text-primary);
+        background-color: var(--bg-dark);
+        margin: 0;
+        height: 95vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        flex: 1;
+        min-height: 0;
+        justify-content: flex-start;
+        height: 100%;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        gap: 5px;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-right: 10px;
+      }
+
+      .api-key-container {
+        background-color: var(--bg-light);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        border: 1px solid var(--primary-dark);
+      }
+
+      .api-key-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .api-key-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .api-key-description {
+        color: var(--text-secondary);
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 12px;
+        border: 1px solid var(--error);
+        border-radius: var(--border-radius);
+        background-color: var(--error-bg);
+        margin: 8px 0;
+      }
+
+      .api-key-description strong {
+        color: var(--error);
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+
+      .api-key-input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .api-key-input,
+      .save-button,
+      .back-button {
+        height: 40px;
+        width: 100%;
+        font-size: 14px;
+        border-radius: var(--border-radius);
+        padding: 10px 14px;
+        box-sizing: border-box;
+      }
+
+      .api-key-input {
+        border: 1px solid var(--bg-light);
+        font-family: monospace;
+        outline: none;
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
+        transition: var(--transition);
+      }
+
+      .api-key-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      }
+
+      .api-key-link {
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background-color: var(--primary);
+        padding: 8px 12px;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+      }
+
+      .api-key-link:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+
+      .api-key-status {
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: var(--border-radius);
+        display: none;
+        transition: var(--transition);
+      }
+
+      .api-key-status.visible {
+        display: block;
+      }
+
+      .api-key-status.success {
+        background-color: var(--success-bg);
+        color: var(--success);
+        outline: 1px solid rgba(16, 185, 129, 0.5);
+      }
+
+      .api-key-status.error {
+        background-color: var(--error-bg);
+        color: var(--error);
+        outline: 1px solid rgba(239, 68, 68, 0.5);
+      }
+
+      .save-button {
+        background-color: var(--success);
+        color: var(--text-primary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .save-button:hover:not(:disabled) {
+        background-color: #0d9b6c;
+      }
+
+      .back-button {
+        background-color: var(--primary);
+        color: var(--text-primary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .back-button:hover:not(:disabled) {
+        background-color: var(--primary-dark);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .button-group button {
+        flex: 1;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 12px 0 0 0;
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      .footer span {
+        display: flex;
+        align-items: center;
+      }
+
+      .footer img {
+        vertical-align: middle;
+        margin: 0 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img
+          src="../../public/logo.png"
+          alt="Logo"
+          style="width: 36px; height: auto; border-radius: 4px"
+        />
+        <div class="title">Magellan</div>
+      </div>
+
+      <div class="api-key-container">
+        <div class="api-key-header">
+          <div class="api-key-title">Configure API Key</div>
+          <a
+            href="https://ai.google.dev/gemini-api/docs/api-key"
+            target="_blank"
+            class="api-key-link"
+          >
+            Get API Key
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M2.5 9.5L9.5 2.5M9.5 2.5H3.5M9.5 2.5V8.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </a>
+        </div>
+
+        <div class="api-key-description">
+          <strong>Privacy Notice</strong>
+          To use Magellan, you need a Gemini API key. The key is free to use
+          with rate limiting. Please note that while your API key is stored
+          securely in your browser, Google's Gemini AI may store and process the
+          content you search. Be cautious about which pages you run the
+          extension on, especially with sensitive or private information.
+        </div>
+
+        <div class="api-key-input-group">
+          <input
+            type="password"
+            id="apiKeyInput"
+            class="api-key-input"
+            placeholder="Enter your Gemini API key"
+          />
+          <button id="saveApiKey" class="save-button">Save</button>
+          <button id="backToPopup" class="back-button">Back to Search</button>
+        </div>
+
+        <div id="apiKeyStatus" class="api-key-status"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Made with
+      <span>
+        <img src="../../public/heart.png" alt="heart" height="16" width="16" />
+      </span>
+      by the Magellan Team
+    </div>
+
+    <script src="../js/google-ai.js"></script>
+    <script src="../js/api-key.js"></script>
+  </body>
+</html>

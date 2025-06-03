@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Magellan - Free Conversational AI for Every Tab",
+  "version": "1.0.1",
+  "description": "Magellan lets you ask AI questions about the web page you're currently viewing.",
+  "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
+  "background": {
+    "service_worker": "src/js/background.js"
+  },
+  "side_panel": {
+    "default_path": "src/html/sidebar.html"
+  },
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_icon": {
+      "16": "public/logo-white.png",
+      "32": "public/logo-white.png",
+      "48": "public/logo-white.png",
+      "128": "public/logo-white.png"
+    },
+    "default_popup": "src/html/sidebar.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  }
+}
