@@ -1,4 +1,4 @@
-# Magellan - AI-Powered Web Page Assistant
+# Magellan - Conversational AI for Every Tab
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
