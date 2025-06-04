@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Magellan - Free Conversational AI for Every Tab",
+  "name": "Magellan - Query Any Webpage with AI for Free",
   "version": "1.0.1",
   "description": "Magellan lets you ask AI questions about the web page you're currently viewing.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
