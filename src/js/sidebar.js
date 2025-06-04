@@ -282,6 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderPopupUI();
         updateStatus("Chat cleared. Ask a new question.", "idle");
       }
+      handleRemoveHighlights();
       closeSettingsDropdown();
     });
   }
