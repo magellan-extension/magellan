@@ -1,4 +1,4 @@
-# Magellan - Query any webpage with AI
+# Magellan - Query Any Webpage with AI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
