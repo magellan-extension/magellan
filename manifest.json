@@ -11,13 +11,13 @@
     "default_path": "src/html/sidebar.html"
   },
   "host_permissions": ["<all_urls>"],
+  "icons": {
+    "16": "public/logo-white.png",
+    "32": "public/logo-white.png",
+    "48": "public/logo-white.png",
+    "128": "public/logo-white.png"
+  },
   "action": {
-    "default_icon": {
-      "16": "public/logo-white.png",
-      "32": "public/logo-white.png",
-      "48": "public/logo-white.png",
-      "128": "public/logo-white.png"
-    },
     "default_popup": "src/html/sidebar.html"
   },
   "content_security_policy": {
