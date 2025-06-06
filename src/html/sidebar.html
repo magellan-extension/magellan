@@ -720,6 +720,16 @@
                   <span class="toggle-slider"></span>
                 </div>
               </div>
+              <div
+                class="settings-dropdown-item"
+                id="toggleGeneralKnowledgeDropdownItem"
+              >
+                <span id="generalKnowledgeToggleText">General Knowledge</span>
+                <div class="toggle-switch">
+                  <input type="checkbox" id="generalKnowledgeToggle" checked />
+                  <span class="toggle-slider"></span>
+                </div>
+              </div>
             </div>
           </button>
         </div>
@@ -735,8 +745,6 @@
             <span id="numCitationsValue">3</span>
           </div>
         </div>
-        <!-- The old "Clear Highlights" button can be removed if dropdown is preferred -->
-        <!-- <button id="removeHighlights" class="secondary-button danger" title="Remove Highlights from Page">Clear Highlights</button> -->
       </div>
 
       <div id="status" class="status">Enter a query to start.</div>
@@ -798,9 +806,7 @@
           </div>
         </div>
         <div class="citations-content-wrapper" id="citationsContentWrapper">
-          <div id="citationsContainer" class="citations-container">
-            <!-- Citations will be dynamically inserted here -->
-          </div>
+          <div id="citationsContainer" class="citations-container"></div>
           <div class="button-group" id="citationNavButtons">
             <button id="prevMatch" class="nav-button" disabled>
               Previous Citation
