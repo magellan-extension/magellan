@@ -17,6 +17,9 @@
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 
+/** @constant {string} Storage key for the number of citations setting */
+const NUM_CITATIONS_STORAGE_KEY = "magellan_num_citations";
+
 /** @type {GoogleGenAI|null} Instance of the Google AI client */
 let ai = null;
 
@@ -159,6 +162,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Initialize number of citations from storage or set default
+  if (numCitationsInput && numCitationsValueEl) {
+    const DEFAULT_NUM_CITATIONS = 3; // Default if nothing is stored
+    chrome.storage.local.get([NUM_CITATIONS_STORAGE_KEY], (result) => {
+      const storedNumCitations = result[NUM_CITATIONS_STORAGE_KEY];
+      if (storedNumCitations !== undefined) {
+        numCitationsInput.value = storedNumCitations;
+        numCitationsValueEl.textContent = storedNumCitations;
+      } else {
+        numCitationsInput.value = DEFAULT_NUM_CITATIONS;
+        numCitationsValueEl.textContent = DEFAULT_NUM_CITATIONS;
+        // Optionally, save the default if you want it persisted immediately
+        // chrome.storage.local.set({ [NUM_CITATIONS_STORAGE_KEY]: DEFAULT_NUM_CITATIONS });
+      }
+    });
+  }
   if (highlightsToggle) {
     highlightsToggle.addEventListener("change", () => {
       const isVisible = highlightsToggle.checked;
@@ -228,6 +247,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (numCitationsInput) {
     numCitationsInput.addEventListener("input", (e) => {
       if (numCitationsValueEl) numCitationsValueEl.textContent = e.target.value;
+      // Save the new value to storage
+      const newNumCitations = parseInt(e.target.value, 10);
+      chrome.storage.local.set({ [NUM_CITATIONS_STORAGE_KEY]: newNumCitations });
     });
   }
   if (nextMatchButton)
