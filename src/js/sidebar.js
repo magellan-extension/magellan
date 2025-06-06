@@ -614,10 +614,8 @@ function updateNavigationButtonsInternal(citedSentences, currentIndex = -1) {
 
   const hasCitations = citedSentences && citedSentences.length > 0;
 
-  prevButton.disabled = !hasCitations || currentIndex <= 0;
-  nextButton.disabled =
-    !hasCitations || currentIndex >= citedSentences.length - 1;
-
+  prevButton.disabled = !hasCitations;
+  nextButton.disabled = !hasCitations;
   citationNavButtons.style.display = hasCitations ? "flex" : "none";
 }
 
@@ -801,10 +799,7 @@ function handleNextMatch() {
   if (!currentActiveTabId || !tabStates[currentActiveTabId]) return;
   const state = tabStates[currentActiveTabId];
   if (!state.citedSentences || state.citedSentences.length === 0) return;
-  const newIndex = Math.min(
-    state.currentCitedSentenceIndex + 1,
-    state.citedSentences.length - 1
-  );
+  const newIndex = (state.currentCitedSentenceIndex + 1) % state.citedSentences.length;
   if (newIndex !== state.currentCitedSentenceIndex) {
     navigateToMatchOnPage(currentActiveTabId, newIndex);
   }
@@ -818,7 +813,7 @@ function handlePrevMatch() {
   if (!currentActiveTabId || !tabStates[currentActiveTabId]) return;
   const state = tabStates[currentActiveTabId];
   if (!state.citedSentences || state.citedSentences.length === 0) return;
-  const newIndex = Math.max(state.currentCitedSentenceIndex - 1, 0);
+  const newIndex = (state.currentCitedSentenceIndex - 1 + state.citedSentences.length) % state.citedSentences.length;
   if (newIndex !== state.currentCitedSentenceIndex) {
     navigateToMatchOnPage(currentActiveTabId, newIndex);
   }
