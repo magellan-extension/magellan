@@ -1055,8 +1055,8 @@ async function performLLMSearch(query, forTabId, options = {}) {
     const { [GENERAL_KNOWLEDGE_STORAGE_KEY]: useGeneralKnowledge } =
       await chrome.storage.local.get([GENERAL_KNOWLEDGE_STORAGE_KEY]);
 
-    const shouldUseGeneralKnowledge =
-      (forceGeneralKnowledge || !isRelevant) && useGeneralKnowledge;
+    // If forceGeneralKnowledge is true, always use it. Otherwise, use it if not relevant and the global setting is on.
+    const shouldUseGeneralKnowledge = forceGeneralKnowledge || (!isRelevant && useGeneralKnowledge);
 
     let llmResult;
     if (shouldUseGeneralKnowledge) {
