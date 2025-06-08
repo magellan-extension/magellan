@@ -510,6 +510,7 @@ function renderPopupUI() {
       const lastMessage = state.chatHistory[state.chatHistory.length - 1];
       if (lastMessage?.isExternalSource) {
         statusMessage = "Answered with general knowledge.";
+        statusType = "success";
       } else {
         statusMessage = state.errorMessage || "Response received.";
         if (!state.errorMessage && state.citedSentences.length > 0) {
@@ -527,8 +528,8 @@ function renderPopupUI() {
             statusMessage += " No direct citations found for this response.";
           }
         }
+        statusType = state.errorMessage ? "error" : "success";
       }
-      statusType = state.errorMessage ? "error" : "success";
       break;
     case "error":
       statusMessage = state.errorMessage || "An error occurred.";
@@ -865,6 +866,24 @@ async function handleSearch() {
   state.chatHistory.push({ role: "user", content: query });
   searchQueryEl.value = "";
 
+  // Get current search mode
+  const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
+    await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
+  const isGeneralKnowledgeMode = searchMode === "general";
+
+  if (isGeneralKnowledgeMode) {
+    // For general knowledge mode, skip all page content checks
+    state.status = "querying_llm";
+    state.errorMessage = "";
+    state.citedSentences = [];
+    state.currentCitedSentenceIndex = -1;
+    state.pageIdentifiedElements = [];
+    state.fullPageTextContent = "";
+    renderPopupUI();
+    await performLLMSearch(query, tabIdForSearch);
+    return;
+  }
+
   state.status = "extracting";
   state.errorMessage = "";
   state.citedSentences = [];
@@ -920,6 +939,18 @@ async function handleSearch() {
   } catch (error) {
     console.error("Search process error:", error);
     if (tabStates[tabIdForSearch]) {
+      // If in blended mode and extraction failed, fall back to general knowledge
+      if (searchMode === "blended") {
+        state.pageIdentifiedElements = [];
+        state.fullPageTextContent = "";
+        state.status = "querying_llm";
+        if (currentActiveTabId === tabIdForSearch) renderPopupUI();
+        await performLLMSearch(query, tabIdForSearch, {
+          forceGeneralKnowledge: true,
+        });
+        return;
+      }
+
       state.status = "error";
       state.errorMessage =
         error.message || "An unexpected error occurred during search.";
@@ -1061,10 +1092,14 @@ Respond with ONLY "RELEVANT" or "NOT_RELEVANT".
 async function performLLMSearch(query, forTabId, options = {}) {
   const { forceGeneralKnowledge = false } = options;
   const state = tabStates[forTabId];
-  if (
-    !state ||
-    (!state.pageIdentifiedElements.length && !state.fullPageTextContent)
-  ) {
+
+  // Get current search mode
+  const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
+    await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
+  const isGeneralKnowledgeMode =
+    searchMode === "general" || forceGeneralKnowledge;
+
+  if (!state) {
     if (state) {
       state.status = "error";
       state.errorMessage = "Page content not available for LLM search.";
@@ -1077,19 +1112,32 @@ async function performLLMSearch(query, forTabId, options = {}) {
     return;
   }
 
-  try {
-    // Get current search mode
-    const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
-      await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
 
+  // Only require page content for non-general knowledge modes
+  if (
+    !isGeneralKnowledgeMode &&
+    !state.pageIdentifiedElements.length &&
+    !state.fullPageTextContent
+  ) {
+    state.status = "error";
+    state.errorMessage = "Page content not available for LLM search.";
+    state.chatHistory.push({
+      role: "assistant",
+      content: `Error: ${state.errorMessage}`,
+    });
+    if (currentActiveTabId === forTabId) renderPopupUI();
+    return;
+  }
+
+
+  try {
     // Skip relevance check if forcing general knowledge or in general knowledge mode
-    const isRelevant =
-      forceGeneralKnowledge || searchMode === "general"
-        ? false
-        : await isPageContentRelevant(query, state.fullPageTextContent);
+    const isRelevant = isGeneralKnowledgeMode
+      ? false
+      : await isPageContentRelevant(query, state.fullPageTextContent);
 
     let llmResult;
-    if (searchMode === "general" || forceGeneralKnowledge) {
+    if (isGeneralKnowledgeMode) {
       // General Knowledge Only mode
       const webPrompt = `
 You are an AI assistant helping a user with their question. Please use your general knowledge and reasoning capabilities to provide a helpful answer.
@@ -1236,10 +1284,7 @@ LLM_CITATIONS_END
         role: "assistant",
         content: assistantResponseText,
         citations: state.citedSentences,
-        isExternalSource:
-          searchMode === "general" ||
-          (searchMode === "blended" && !isRelevant) ||
-          forceGeneralKnowledge,
+        isExternalSource: isGeneralKnowledgeMode,
       });
     }
 
