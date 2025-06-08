@@ -324,9 +324,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function updateHighlightsToggleText(isVisible) {
     const toggleText = document.getElementById("highlightsToggleText");
     if (toggleText) {
-      toggleText.textContent = isVisible
-        ? "Hide Highlights"
-        : "Show Highlights";
+      toggleText.textContent = "Show Highlights";
     }
   }
 
