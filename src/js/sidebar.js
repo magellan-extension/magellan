@@ -20,6 +20,9 @@ const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 /** @constant {string} Storage key for the number of citations setting */
 const NUM_CITATIONS_STORAGE_KEY = "magellan_num_citations";
 
+/** @constant {string} Storage key for the search mode setting */
+const SEARCH_MODE_STORAGE_KEY = "magellan_search_mode";
+
 /** @constant {string} Storage key for the general knowledge setting */
 const GENERAL_KNOWLEDGE_STORAGE_KEY = "magellan_use_general_knowledge";
 
@@ -153,29 +156,108 @@ document.addEventListener("DOMContentLoaded", async () => {
   const changeApiKeyDropdownItem = document.getElementById(
     "changeApiKeyDropdownItem"
   );
-  const toggleGeneralKnowledgeDropdownItem = document.getElementById(
-    "toggleGeneralKnowledgeDropdownItem"
-  );
-  const generalKnowledgeToggleInput = document.getElementById(
-    "generalKnowledgeToggle"
-  );
 
-  // Initialize general knowledge toggle state from storage
-  chrome.storage.local.get([GENERAL_KNOWLEDGE_STORAGE_KEY], (result) => {
-    if (result[GENERAL_KNOWLEDGE_STORAGE_KEY] === undefined) {
-      chrome.storage.local.set({ [GENERAL_KNOWLEDGE_STORAGE_KEY]: true });
-      generalKnowledgeToggleInput.checked = true;
+  // Initialize search mode from storage
+  chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY], (result) => {
+    if (result[SEARCH_MODE_STORAGE_KEY] === undefined) {
+      chrome.storage.local.set({ [SEARCH_MODE_STORAGE_KEY]: "blended" });
+      document.querySelector(
+        'input[name="searchMode"][value="blended"]'
+      ).checked = true;
     } else {
-      generalKnowledgeToggleInput.checked =
-        result[GENERAL_KNOWLEDGE_STORAGE_KEY];
+      document.querySelector(
+        `input[name="searchMode"][value="${result[SEARCH_MODE_STORAGE_KEY]}"]`
+      ).checked = true;
     }
+    updateSearchQueryPlaceholder(result[SEARCH_MODE_STORAGE_KEY] || "blended");
+    updateSearchModeTitle(result[SEARCH_MODE_STORAGE_KEY] || "blended");
   });
 
-  // Add event listener for general knowledge toggle
-  generalKnowledgeToggleInput.addEventListener("change", () => {
-    const isEnabled = generalKnowledgeToggleInput.checked;
-    chrome.storage.local.set({ [GENERAL_KNOWLEDGE_STORAGE_KEY]: isEnabled });
+  // Add event listeners for search mode change
+  document.querySelectorAll('input[name="searchMode"]').forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (radio.checked) {
+        chrome.storage.local.set({ [SEARCH_MODE_STORAGE_KEY]: radio.value });
+        updateSearchQueryPlaceholder(radio.value);
+        updateSearchModeTitle(radio.value);
+
+        if (searchModeTitle && searchModeContent) {
+          searchModeTitle.classList.add("collapsed");
+          searchModeContent.classList.add("collapsed");
+          chrome.storage.local.set({ searchModeCollapsed: true });
+        }
+      }
+    });
   });
+
+  // Search Mode Collapse/Expand Functionality
+  const searchModeHeader = document.getElementById("searchModeHeader");
+  const searchModeTitle = document.getElementById("searchModeTitle");
+  const searchModeContent = document.getElementById("searchModeContent");
+
+  if (searchModeHeader && searchModeTitle && searchModeContent) {
+    chrome.storage.local.get(["searchModeCollapsed"], (result) => {
+      const searchModeIsCollapsed = result.searchModeCollapsed === true;
+      if (searchModeIsCollapsed) {
+        searchModeTitle.classList.add("collapsed");
+        searchModeContent.classList.add("collapsed");
+      } else {
+        searchModeTitle.classList.remove("collapsed");
+        searchModeContent.classList.remove("collapsed");
+      }
+    });
+
+    searchModeHeader.addEventListener("click", () => {
+      const isCurrentlyCollapsed =
+        searchModeTitle.classList.contains("collapsed");
+      searchModeTitle.classList.toggle("collapsed", !isCurrentlyCollapsed);
+      searchModeContent.classList.toggle("collapsed", !isCurrentlyCollapsed);
+      chrome.storage.local.set({ searchModeCollapsed: !isCurrentlyCollapsed });
+    });
+  }
+
+  /**
+   * Updates the placeholder text of the search query input field
+   * @function
+   * @param {string} mode - The current search mode (unused in current implementation)
+   */
+  function updateSearchQueryPlaceholder(mode) {
+    const searchQueryEl = document.getElementById("searchQuery");
+    if (searchQueryEl) {
+      searchQueryEl.placeholder = "Ask a question...";
+    }
+  }
+
+  /**
+   * Updates the search mode dropdown title to show the current mode
+   * @function
+   * @param {string} mode - The current search mode ('page', 'blended', or 'general')
+   *
+   * @example
+   * updateSearchModeTitle('page'); // Shows "Search Mode: Page Context"
+   * updateSearchModeTitle('blended'); // Shows "Search Mode: Blended"
+   * updateSearchModeTitle('general'); // Shows "Search Mode: Gen. Knowledge"
+   */
+  function updateSearchModeTitle(mode) {
+    const searchModeTitle = document.getElementById("searchModeTitle");
+    if (searchModeTitle) {
+      const modeLabels = {
+        page: "Page Context",
+        blended: "Blended",
+        general: "Gen. Knowledge",
+      };
+      const label = modeLabels[mode] || "Blended";
+      searchModeTitle.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Search Mode: ${label}
+        <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+    }
+  }
 
   // --- Citations Collapse/Expand Elements ---
   const citationsHeader = document.getElementById("citationsHeader");
@@ -329,15 +411,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  if (toggleGeneralKnowledgeDropdownItem) {
-    toggleGeneralKnowledgeDropdownItem.addEventListener("click", (event) => {
-      event.preventDefault();
-      generalKnowledgeToggleInput.checked =
-        !generalKnowledgeToggleInput.checked;
-      generalKnowledgeToggleInput.dispatchEvent(new Event("change"));
-    });
-  }
-
   if (clearChatDropdownItem) {
     clearChatDropdownItem.addEventListener("click", () => {
       if (currentActiveTabId && tabStates[currentActiveTabId]) {
@@ -458,7 +531,7 @@ function renderPopupUI() {
       statusMessage =
         state.errorMessage ||
         (state.chatHistory.length === 0
-          ? "Enter a query to search the page."
+          ? "Enter a query to get started."
           : "Ready for your next question.");
       statusType = state.errorMessage ? "warning" : "idle";
       break;
@@ -471,21 +544,25 @@ function renderPopupUI() {
       statusType = "warning";
       break;
     case "ready":
-      statusMessage = state.errorMessage || "Response received.";
-      if (!state.errorMessage && state.citedSentences.length > 0) {
-        statusMessage += ` ${state.citedSentences.length} citation(s) found.`;
-      } else if (
-        !state.errorMessage &&
-        state.chatHistory.length > 0 &&
-        state.chatHistory[state.chatHistory.length - 1].role === "assistant" &&
-        state.citedSentences.length === 0
-      ) {
-        const lastMessage = state.chatHistory[state.chatHistory.length - 1];
-        if (
-          lastMessage.role === "assistant" &&
-          (!lastMessage.citations || lastMessage.citations.length === 0)
+      const lastMessage = state.chatHistory[state.chatHistory.length - 1];
+      if (lastMessage?.isExternalSource) {
+        statusMessage = "Answered with general knowledge.";
+      } else {
+        statusMessage = state.errorMessage || "Response received.";
+        if (!state.errorMessage && state.citedSentences.length > 0) {
+          statusMessage += ` ${state.citedSentences.length} citation(s) found.`;
+        } else if (
+          !state.errorMessage &&
+          state.chatHistory.length > 0 &&
+          lastMessage?.role === "assistant" &&
+          state.citedSentences.length === 0
         ) {
-          statusMessage += " No direct citations found for this response.";
+          if (
+            lastMessage.role === "assistant" &&
+            (!lastMessage.citations || lastMessage.citations.length === 0)
+          ) {
+            statusMessage += " No direct citations found for this response.";
+          }
         }
       }
       statusType = state.errorMessage ? "error" : "success";
@@ -605,7 +682,7 @@ function renderChatLog(chatHistory, currentStatus) {
         if (spinnerDiv) spinnerDiv.style.display = "inline-block";
 
         state.status = "querying_llm";
-        updateStatus("Asking Magellan AI (General Knowledge)...", "warning");
+        updateStatus("Asking Magellan AI...", "warning");
         document.getElementById("searchButton").disabled = true;
 
         try {
@@ -1047,19 +1124,19 @@ async function performLLMSearch(query, forTabId, options = {}) {
       : 0;
 
   try {
-    // Skip relevance check if forcing general knowledge
-    const isRelevant = forceGeneralKnowledge
-      ? false
-      : await isPageContentRelevant(query, state.fullPageTextContent);
+    // Get current search mode
+    const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
+      await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
 
-    const { [GENERAL_KNOWLEDGE_STORAGE_KEY]: useGeneralKnowledge } =
-      await chrome.storage.local.get([GENERAL_KNOWLEDGE_STORAGE_KEY]);
-
-    // If forceGeneralKnowledge is true, always use it. Otherwise, use it if not relevant and the global setting is on.
-    const shouldUseGeneralKnowledge = forceGeneralKnowledge || (!isRelevant && useGeneralKnowledge);
+    // Skip relevance check if forcing general knowledge or in general knowledge mode
+    const isRelevant =
+      forceGeneralKnowledge || searchMode === "general"
+        ? false
+        : await isPageContentRelevant(query, state.fullPageTextContent);
 
     let llmResult;
-    if (shouldUseGeneralKnowledge) {
+    if (searchMode === "general" || forceGeneralKnowledge) {
+      // General Knowledge Only mode
       const webPrompt = `
 You are an AI assistant helping a user with their question. Please use your general knowledge and reasoning capabilities to provide a helpful answer.
 
@@ -1075,17 +1152,36 @@ NONE
 LLM_CITATIONS_END
 `;
       llmResult = await ai.generateContent(webPrompt);
-    } else if (!isRelevant && !useGeneralKnowledge) {
+    } else if (searchMode === "page" && !isRelevant) {
+      // Page Context Only mode - no relevant content found
       llmResult = {
         text: `LLM_ANSWER_START
-I apologize, but I cannot find any relevant information on this page to answer your question. The general knowledge feature is currently disabled in settings.
+I apologize, but I cannot find any relevant information on this page to answer your question. You can try searching with general knowledge by changing the search mode or clicking the button below.
 
 LLM_ANSWER_END
 LLM_CITATIONS_START
 NONE
 LLM_CITATIONS_END`,
       };
+    } else if (searchMode === "blended" && !isRelevant) {
+      // Blended mode - fallback to general knowledge
+      const webPrompt = `
+You are an AI assistant helping a user with their question. Please use your general knowledge and reasoning capabilities to provide a helpful answer.
+
+User's question: "${query}"
+
+Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
+Format your response as follows:
+LLM_ANSWER_START
+[Your answer to the query]
+LLM_ANSWER_END
+LLM_CITATIONS_START
+NONE
+LLM_CITATIONS_END
+`;
+      llmResult = await ai.generateContent(webPrompt);
     } else {
+      // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
 You are an AI assistant helping a user understand the content of a webpage.
 The user has asked the following question: "${query}"
@@ -1186,7 +1282,10 @@ LLM_CITATIONS_END
         role: "assistant",
         content: assistantResponseText,
         citations: state.citedSentences,
-        isExternalSource: shouldUseGeneralKnowledge,
+        isExternalSource:
+          searchMode === "general" ||
+          (searchMode === "blended" && !isRelevant) ||
+          forceGeneralKnowledge,
       });
     }
 
