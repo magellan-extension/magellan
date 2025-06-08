@@ -20,6 +20,9 @@ const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 /** @constant {string} Storage key for the number of citations setting */
 const NUM_CITATIONS_STORAGE_KEY = "magellan_num_citations";
 
+/** @constant {string} Storage key for the general knowledge setting */
+const GENERAL_KNOWLEDGE_STORAGE_KEY = "magellan_use_general_knowledge";
+
 /** @type {GoogleGenAI|null} Instance of the Google AI client */
 let ai = null;
 
@@ -31,8 +34,17 @@ let ai = null;
  */
 
 /**
+ * @typedef {Object} ChatMessage
+ * @property {string} role - 'user' or 'assistant'
+ * @property {string} content - The text of the message
+ * @property {Array<CitedSentence>} [citations] - Citations for an assistant message
+ * @property {boolean} [isExternalSource] - True if the answer is from general knowledge
+ * @property {boolean} [gkPrompted] - True if the "prompt with GK" has been clicked for this message
+ */
+
+/**
  * @typedef {Object} TabState
- * @property {Array<{role: string, content: string}>} chatHistory - Chat conversation history
+ * @property {Array<ChatMessage>} chatHistory - Chat conversation history
  * @property {Array<CitedSentence>} citedSentences - Sentences cited from the page
  * @property {number} currentCitedSentenceIndex - Current citation being viewed
  * @property {string} status - Current status ('idle', 'searching', 'error')
@@ -141,6 +153,29 @@ document.addEventListener("DOMContentLoaded", async () => {
   const changeApiKeyDropdownItem = document.getElementById(
     "changeApiKeyDropdownItem"
   );
+  const toggleGeneralKnowledgeDropdownItem = document.getElementById(
+    "toggleGeneralKnowledgeDropdownItem"
+  );
+  const generalKnowledgeToggleInput = document.getElementById(
+    "generalKnowledgeToggle"
+  );
+
+  // Initialize general knowledge toggle state from storage
+  chrome.storage.local.get([GENERAL_KNOWLEDGE_STORAGE_KEY], (result) => {
+    if (result[GENERAL_KNOWLEDGE_STORAGE_KEY] === undefined) {
+      chrome.storage.local.set({ [GENERAL_KNOWLEDGE_STORAGE_KEY]: true });
+      generalKnowledgeToggleInput.checked = true;
+    } else {
+      generalKnowledgeToggleInput.checked =
+        result[GENERAL_KNOWLEDGE_STORAGE_KEY];
+    }
+  });
+
+  // Add event listener for general knowledge toggle
+  generalKnowledgeToggleInput.addEventListener("change", () => {
+    const isEnabled = generalKnowledgeToggleInput.checked;
+    chrome.storage.local.set({ [GENERAL_KNOWLEDGE_STORAGE_KEY]: isEnabled });
+  });
 
   // --- Citations Collapse/Expand Elements ---
   const citationsHeader = document.getElementById("citationsHeader");
@@ -249,7 +284,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (numCitationsValueEl) numCitationsValueEl.textContent = e.target.value;
       // Save the new value to storage
       const newNumCitations = parseInt(e.target.value, 10);
-      chrome.storage.local.set({ [NUM_CITATIONS_STORAGE_KEY]: newNumCitations });
+      chrome.storage.local.set({
+        [NUM_CITATIONS_STORAGE_KEY]: newNumCitations,
+      });
     });
   }
   if (nextMatchButton)
@@ -289,6 +326,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       event.preventDefault();
       highlightsToggle.checked = !highlightsToggle.checked;
       highlightsToggle.dispatchEvent(new Event("change"));
+    });
+  }
+
+  if (toggleGeneralKnowledgeDropdownItem) {
+    toggleGeneralKnowledgeDropdownItem.addEventListener("click", (event) => {
+      event.preventDefault();
+      generalKnowledgeToggleInput.checked =
+        !generalKnowledgeToggleInput.checked;
+      generalKnowledgeToggleInput.dispatchEvent(new Event("change"));
     });
   }
 
@@ -476,7 +522,7 @@ function renderPopupUI() {
 
 /**
  * Renders the chat conversation history
- * @param {Array<{role: string, content: string}>} chatHistory - Chat messages
+ * @param {Array<ChatMessage>} chatHistory - Chat messages
  * @param {string} currentStatus - Current search status
  */
 function renderChatLog(chatHistory, currentStatus) {
@@ -490,7 +536,95 @@ function renderChatLog(chatHistory, currentStatus) {
     messageDiv.classList.add(
       msg.role === "user" ? "user-message" : "assistant-message"
     );
-    messageDiv.textContent = msg.content;
+
+    if (msg.role === "assistant") {
+      const headerDiv = document.createElement("div");
+      headerDiv.style.fontSize = "0.75rem";
+      headerDiv.style.marginBottom = "0.5rem";
+      headerDiv.style.fontStyle = "italic";
+
+      if (msg.isExternalSource) {
+        headerDiv.style.color = "#10b981";
+        headerDiv.textContent = "Answer from general knowledge";
+        messageDiv.style.borderLeftColor = "#10b981";
+      } else {
+        headerDiv.style.color = "#6366f1";
+        headerDiv.textContent = "Answer from page context";
+        messageDiv.style.borderLeftColor = "#6366f1";
+      }
+      messageDiv.appendChild(headerDiv);
+    }
+
+    const contentDiv = document.createElement("div");
+    contentDiv.style.whiteSpace = "pre-wrap";
+    contentDiv.style.wordBreak = "break-word";
+    contentDiv.textContent = msg.content;
+    messageDiv.appendChild(contentDiv);
+
+    // Add "Prompt with general knowledge" button for page-context answers
+    if (
+      msg.role === "assistant" &&
+      !msg.isExternalSource &&
+      !msg.gkPrompted &&
+      chatHistory[index - 1]?.role === "user"
+    ) {
+      const originalQuery = chatHistory[index - 1].content;
+      const generalKnowledgeContainer = document.createElement("div");
+      generalKnowledgeContainer.className =
+        "general-knowledge-prompt-container";
+
+      const button = document.createElement("button");
+      button.className = "general-knowledge-prompt-button";
+      button.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <span>Prompt with general knowledge</span>
+        <div class="spinner" style="display: none;"></div>
+      `;
+
+      button.addEventListener("click", async (event) => {
+        event.stopPropagation(); // Prevent container click events
+
+        const state = tabStates[currentActiveTabId];
+        if (!state || !ai || state.status === "querying_llm") return;
+
+        const messageInHistory = state.chatHistory[index];
+        if (messageInHistory) {
+          messageInHistory.gkPrompted = true;
+        }
+
+        button.disabled = true;
+        const textSpan = button.querySelector("span");
+        const iconSvg = button.querySelector("svg");
+        const spinnerDiv = button.querySelector(".spinner");
+        if (textSpan) textSpan.style.display = "none";
+        if (iconSvg) iconSvg.style.display = "none";
+        if (spinnerDiv) spinnerDiv.style.display = "inline-block";
+
+        state.status = "querying_llm";
+        updateStatus("Asking Magellan AI (General Knowledge)...", "warning");
+        document.getElementById("searchButton").disabled = true;
+
+        try {
+          await performLLMSearch(originalQuery, currentActiveTabId, {
+            forceGeneralKnowledge: true,
+          });
+        } catch (error) {
+          console.error("General knowledge search error:", error);
+          if (tabStates[currentActiveTabId]) {
+            const errorState = tabStates[currentActiveTabId];
+            errorState.status = "error";
+            errorState.errorMessage = "Failed to get general knowledge answer.";
+            renderPopupUI();
+          }
+        }
+      });
+      generalKnowledgeContainer.appendChild(button);
+      messageDiv.appendChild(generalKnowledgeContainer);
+    }
 
     if (msg.role === "assistant" && msg.citations && msg.citations.length > 0) {
       messageDiv.classList.add("has-citations");
@@ -821,7 +955,8 @@ function handleNextMatch() {
   if (!currentActiveTabId || !tabStates[currentActiveTabId]) return;
   const state = tabStates[currentActiveTabId];
   if (!state.citedSentences || state.citedSentences.length === 0) return;
-  const newIndex = (state.currentCitedSentenceIndex + 1) % state.citedSentences.length;
+  const newIndex =
+    (state.currentCitedSentenceIndex + 1) % state.citedSentences.length;
   if (newIndex !== state.currentCitedSentenceIndex) {
     navigateToMatchOnPage(currentActiveTabId, newIndex);
   }
@@ -835,9 +970,40 @@ function handlePrevMatch() {
   if (!currentActiveTabId || !tabStates[currentActiveTabId]) return;
   const state = tabStates[currentActiveTabId];
   if (!state.citedSentences || state.citedSentences.length === 0) return;
-  const newIndex = (state.currentCitedSentenceIndex - 1 + state.citedSentences.length) % state.citedSentences.length;
+  const newIndex =
+    (state.currentCitedSentenceIndex - 1 + state.citedSentences.length) %
+    state.citedSentences.length;
   if (newIndex !== state.currentCitedSentenceIndex) {
     navigateToMatchOnPage(currentActiveTabId, newIndex);
+  }
+}
+
+/**
+ * Checks if the page content is relevant to the query
+ * @async
+ * @param {string} query - User's search query
+ * @param {string} pageContent - Content from the page
+ * @returns {Promise<boolean>} Whether the page content is relevant
+ */
+async function isPageContentRelevant(query, pageContent) {
+  const relevancePrompt = `
+You are an AI assistant helping determine if a webpage's content is relevant to a user's question.
+The user has asked: "${query}"
+
+Here is the content from the webpage:
+${pageContent}
+
+Please determine if the webpage content is relevant to answering the user's question.
+Respond with ONLY "RELEVANT" or "NOT_RELEVANT".
+`;
+
+  try {
+    const result = await ai.generateContent(relevancePrompt);
+    const response = result.text.trim().toUpperCase();
+    return response === "RELEVANT";
+  } catch (error) {
+    console.error("Error checking content relevance:", error);
+    return false;
   }
 }
 
@@ -846,11 +1012,14 @@ function handlePrevMatch() {
  * @async
  * @param {string} query - User's search query
  * @param {number} forTabId - ID of the tab to search in
- * @returns {Promise<{citedSentences: Array<CitedSentence>, errorMessage: string}>} Search results
+ * @param {Object} [options={}] - Additional search options
+ * @param {boolean} [options.forceGeneralKnowledge=false] - If true, forces a general knowledge search
+ * @returns {Promise<void>}
  *
  * @throws {Error} If search fails or AI is not initialized
  */
-async function performLLMSearch(query, forTabId) {
+async function performLLMSearch(query, forTabId, options = {}) {
+  const { forceGeneralKnowledge = false } = options;
   const state = tabStates[forTabId];
   if (
     !state ||
@@ -877,7 +1046,47 @@ async function performLLMSearch(query, forTabId) {
       ? Math.min(numCitations, state.pageIdentifiedElements.length, 7)
       : 0;
 
-  const prompt = `
+  try {
+    // Skip relevance check if forcing general knowledge
+    const isRelevant = forceGeneralKnowledge
+      ? false
+      : await isPageContentRelevant(query, state.fullPageTextContent);
+
+    const { [GENERAL_KNOWLEDGE_STORAGE_KEY]: useGeneralKnowledge } =
+      await chrome.storage.local.get([GENERAL_KNOWLEDGE_STORAGE_KEY]);
+
+    // If forceGeneralKnowledge is true, always use it. Otherwise, use it if not relevant and the global setting is on.
+    const shouldUseGeneralKnowledge = forceGeneralKnowledge || (!isRelevant && useGeneralKnowledge);
+
+    let llmResult;
+    if (shouldUseGeneralKnowledge) {
+      const webPrompt = `
+You are an AI assistant helping a user with their question. Please use your general knowledge and reasoning capabilities to provide a helpful answer.
+
+User's question: "${query}"
+
+Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
+Format your response as follows:
+LLM_ANSWER_START
+[Your answer to the query]
+LLM_ANSWER_END
+LLM_CITATIONS_START
+NONE
+LLM_CITATIONS_END
+`;
+      llmResult = await ai.generateContent(webPrompt);
+    } else if (!isRelevant && !useGeneralKnowledge) {
+      llmResult = {
+        text: `LLM_ANSWER_START
+I apologize, but I cannot find any relevant information on this page to answer your question. The general knowledge feature is currently disabled in settings.
+
+LLM_ANSWER_END
+LLM_CITATIONS_START
+NONE
+LLM_CITATIONS_END`,
+      };
+    } else {
+      const pagePrompt = `
 You are an AI assistant helping a user understand the content of a webpage.
 The user has asked the following question: "${query}"
 
@@ -907,9 +1116,9 @@ LLM_CITATIONS_START
 ...
 LLM_CITATIONS_END
 `;
+      llmResult = await ai.generateContent(pagePrompt);
+    }
 
-  try {
-    const llmResult = await ai.generateContent(prompt);
     const llmRawResponse = llmResult.text;
 
     if (!tabStates[forTabId]) {
@@ -926,7 +1135,7 @@ LLM_CITATIONS_END
 
     const assistantResponseText = answerMatch
       ? answerMatch[1].trim()
-      : "LLM did not provide an answer in the expected format.";
+      : "LLM did not provide an answer in the expected format. Please try again.";
     const rawCitationIds = citationsMatch ? citationsMatch[1].trim() : "";
     const parsedElementIds = rawCitationIds
       .split("\n")
@@ -962,13 +1171,24 @@ LLM_CITATIONS_END
       });
     }
 
-    state.citedSentences = currentCitationsForThisResponse;
-    state.currentCitedSentenceIndex = state.citedSentences.length > 0 ? 0 : -1;
-    state.chatHistory.push({
-      role: "assistant",
-      content: assistantResponseText,
-      citations: state.citedSentences,
-    });
+    // Only add the response if it's not a duplicate
+    const lastMessage = state.chatHistory[state.chatHistory.length - 1];
+    const isDuplicate =
+      lastMessage &&
+      lastMessage.role === "assistant" &&
+      lastMessage.content === assistantResponseText;
+
+    if (!isDuplicate) {
+      state.citedSentences = currentCitationsForThisResponse;
+      state.currentCitedSentenceIndex =
+        state.citedSentences.length > 0 ? 0 : -1;
+      state.chatHistory.push({
+        role: "assistant",
+        content: assistantResponseText,
+        citations: state.citedSentences,
+        isExternalSource: shouldUseGeneralKnowledge,
+      });
+    }
 
     if (state.citedSentences.length > 0) {
       const elementIdsToHighlight = state.citedSentences.map(
@@ -1144,6 +1364,7 @@ async function navigateToMatchOnPage(
 }
 
 // --- CONTENT SCRIPT FUNCTIONS ---
+// (No changes to content script functions)
 function contentScript_extractAndIdRelevantElements() {
   const selectors =
     "p, h1, h2, h3, h4, h5, h6, li, span, blockquote, td, th, pre," +
