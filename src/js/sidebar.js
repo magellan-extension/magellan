@@ -874,7 +874,7 @@ async function handleSearch() {
   // Get current search mode
   const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
     await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
-  const isGeneralKnowledgeMode = searchMode === "general";
+  let isGeneralKnowledgeMode = searchMode === "general";
 
   if (isGeneralKnowledgeMode) {
     // For general knowledge mode, skip all page content checks
@@ -1101,7 +1101,7 @@ async function performLLMSearch(query, forTabId, options = {}) {
   // Get current search mode
   const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
     await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
-  const isGeneralKnowledgeMode =
+  let isGeneralKnowledgeMode =
     searchMode === "general" || forceGeneralKnowledge;
 
   if (!state) {
@@ -1185,6 +1185,7 @@ NONE
 LLM_CITATIONS_END
 `;
       llmResult = await ai.generateContent(webPrompt);
+      isGeneralKnowledgeMode = true;
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
