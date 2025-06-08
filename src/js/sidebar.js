@@ -17,9 +17,6 @@
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 
-/** @constant {string} Storage key for the number of citations setting */
-const NUM_CITATIONS_STORAGE_KEY = "magellan_num_citations";
-
 /** @constant {string} Storage key for the search mode setting */
 const SEARCH_MODE_STORAGE_KEY = "magellan_search_mode";
 
@@ -138,8 +135,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const searchButton = document.getElementById("searchButton");
   const searchQueryEl = document.getElementById("searchQuery");
-  const numCitationsInput = document.getElementById("numCitations");
-  const numCitationsValueEl = document.getElementById("numCitationsValue");
   const nextMatchButton = document.getElementById("nextMatch");
   const prevMatchButton = document.getElementById("prevMatch");
   const highlightsToggle = document.getElementById("highlightsToggle");
@@ -279,22 +274,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Initialize number of citations from storage or set default
-  if (numCitationsInput && numCitationsValueEl) {
-    const DEFAULT_NUM_CITATIONS = 3; // Default if nothing is stored
-    chrome.storage.local.get([NUM_CITATIONS_STORAGE_KEY], (result) => {
-      const storedNumCitations = result[NUM_CITATIONS_STORAGE_KEY];
-      if (storedNumCitations !== undefined) {
-        numCitationsInput.value = storedNumCitations;
-        numCitationsValueEl.textContent = storedNumCitations;
-      } else {
-        numCitationsInput.value = DEFAULT_NUM_CITATIONS;
-        numCitationsValueEl.textContent = DEFAULT_NUM_CITATIONS;
-        // Optionally, save the default if you want it persisted immediately
-        // chrome.storage.local.set({ [NUM_CITATIONS_STORAGE_KEY]: DEFAULT_NUM_CITATIONS });
-      }
-    });
-  }
   if (highlightsToggle) {
     highlightsToggle.addEventListener("change", () => {
       const isVisible = highlightsToggle.checked;
@@ -359,16 +338,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         event.preventDefault();
         handleSearch();
       }
-    });
-  }
-  if (numCitationsInput) {
-    numCitationsInput.addEventListener("input", (e) => {
-      if (numCitationsValueEl) numCitationsValueEl.textContent = e.target.value;
-      // Save the new value to storage
-      const newNumCitations = parseInt(e.target.value, 10);
-      chrome.storage.local.set({
-        [NUM_CITATIONS_STORAGE_KEY]: newNumCitations,
-      });
     });
   }
   if (nextMatchButton)
@@ -507,8 +476,6 @@ function renderPopupUI() {
   const state = tabStates[currentActiveTabId];
   const searchButton = document.getElementById("searchButton");
   const searchQueryEl = document.getElementById("searchQuery");
-  const numCitationsInput = document.getElementById("numCitations");
-  const numCitationsValueEl = document.getElementById("numCitationsValue");
 
   renderChatLog(state.chatHistory, state.status);
 
@@ -517,10 +484,6 @@ function renderPopupUI() {
       state.chatHistory.length === 0
         ? "Ask about this page..."
         : "Ask a follow-up...";
-  }
-
-  if (numCitationsValueEl && numCitationsInput) {
-    numCitationsValueEl.textContent = numCitationsInput.value;
   }
 
   let statusMessage = "";
@@ -1114,15 +1077,6 @@ async function performLLMSearch(query, forTabId, options = {}) {
     return;
   }
 
-  const numCitationsInput = document.getElementById("numCitations");
-  const numCitations = numCitationsInput
-    ? parseInt(numCitationsInput.value, 10) || 3
-    : 3;
-  const effectiveNumCitations =
-    state.pageIdentifiedElements.length > 0
-      ? Math.min(numCitations, state.pageIdentifiedElements.length, 7)
-      : 0;
-
   try {
     // Get current search mode
     const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
@@ -1194,8 +1148,8 @@ ${state.fullPageTextContent}
 
 Please perform the following tasks:
 1.  Provide a concise answer to the user's question based *only* on the provided page content.
-    If the answer cannot be found in the content, explicitly state that.
-2.  Identify up to ${effectiveNumCitations} element IDs from the "PAGE CONTENT" above whose text directly supports your answer or is most relevant to the user's query.
+    If the answer cannot be found in the content, explicitly state that. Do not make up information.
+2.  Identify element IDs from the "PAGE CONTENT" above whose text directly supports your answer or is most relevant to the user's query.
     *   **Prioritize the SMALLEST, most specific HTML elements** that contain the relevant information. For example, if a specific sentence is in a <p> tag inside a <div>, prefer the ID of the <p> tag if its text is listed.
     *   **Avoid selecting IDs of very large elements** (e.g., main content containers, sidebars, or elements whose text seems to span a huge portion of the page content provided) unless absolutely necessary because no smaller element contains the specific information.
     *   List *only the element IDs* (the string inside the brackets, e.g., mgl-node-0), one ID per line.
