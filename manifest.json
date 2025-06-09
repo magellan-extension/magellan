@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Magellan - Query Any Webpage with AI for Free",
+  "name": "Magellan - Free AI Webpage Search",
   "version": "1.0.2",
-  "description": "Magellan lets you ask AI questions about the web page you're currently viewing.",
+  "description": "Ask AI questions about any webpage and get instant answers. 100% free, no strings attached.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
   "background": {
     "service_worker": "src/js/background.js"
