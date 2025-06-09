@@ -28,7 +28,14 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
 1. Install the extension:
 
    - [Get it from the Chrome Web Store](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
-   - Or [build it yourself](#development)
+   - Or download the latest release:
+     1. Go to the [Releases page](https://github.com/magellan-extension/magellan/releases)
+     2. Download `package.zip` from the latest release
+     3. Extract the zip file
+     4. Open Chrome and go to `chrome://extensions/`
+     5. Enable "Developer mode" in the top right
+     6. Click "Load unpacked" and select the extracted folder
+   - Or [build from source](#🛠️-development)
 
 2. Get your API key:
 
