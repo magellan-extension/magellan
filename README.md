@@ -6,7 +6,7 @@
 
 Magellan is an open-source Chrome extension that brings conversational AI to your web browsing experience. It allows you to ask questions about the web page you're currently viewing and get AI-powered answers with smart citations. It can search through the page content and provide relevant citations, or use general knowledge when needed.
 
-[Demo](https://youtu.be/rZ7IUOiCjMI)
+[Demo](https://www.youtube.com/watch?v=FGqaT5tMBI0)
 
 ![Magellan Screenshot](public/screenshot.png)
 

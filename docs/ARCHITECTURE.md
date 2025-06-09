@@ -97,16 +97,30 @@ Each tab maintains its own state:
 
 ```typescript
 type TabState = {
+  /** Chat conversation history between user and AI assistant */
   chatHistory: Array<{
+    /** Role of the message sender - either user or AI assistant */
     role: "user" | "assistant";
+    /** The actual message content */
     content: string;
+    /** Optional citations from the page for assistant messages */
     citations?: Array<CitedSentence>;
+    /** True if the answer comes from general knowledge rather than page content */
+    isExternalSource?: boolean;
+    /** True if user clicked "Prompt with GK" button for this message */
+    gkPrompted?: boolean;
   }>;
+  /** Currently active citations from the page that are being highlighted */
   citedSentences: Array<CitedSentence>;
+  /** Index of the currently viewed citation in citedSentences array */
   currentCitedSentenceIndex: number;
+  /** Current state of the extension's processing pipeline */
   status: "idle" | "extracting" | "querying_llm" | "ready" | "error";
+  /** Error message if status is 'error', empty otherwise */
   errorMessage: string;
+  /** Full text content extracted from the page, formatted for AI processing */
   fullPageTextContent: string;
+  /** List of identified elements from the page with their IDs and text content */
   pageIdentifiedElements: Array<IdentifiedElement>;
 };
 ```
@@ -126,6 +140,56 @@ type TabState = {
    - Manages error states
 
 ## AI Integration
+
+### Search Modes
+
+Magellan supports three distinct search modes:
+
+1. **Page Context Mode**
+
+   - Searches only within the current page content
+   - Requires relevant page content to be found
+   - Provides citations from the page
+   - Falls back to "no relevant content" message if nothing found
+
+2. **General Knowledge Mode**
+
+   - Uses only AI's general knowledge
+   - Ignores page content completely
+   - No citations provided
+   - Always marked as external source
+
+3. **Blended Mode**
+   - First attempts to find relevant content on the page
+   - Uses content relevance check to determine if page content is useful
+   - If page content is relevant:
+     - Provides answer with page citations
+     - Marked as page context answer
+   - If page content is not relevant:
+     - Falls back to general knowledge
+     - Marked as external source
+     - No citations provided
+   - Allows manual fallback to general knowledge via "Prompt with general knowledge" button
+
+### Content Relevance Check
+
+The blended mode uses a dedicated relevance check:
+
+```javascript
+async function isPageContentRelevant(query, pageContent) {
+  const relevancePrompt = `
+You are an AI assistant helping determine if a webpage's content is relevant to a user's question.
+The user has asked: "${query}"
+
+Here is the content from the webpage:
+${pageContent}
+
+Please determine if the webpage content is relevant to answering the user's question.
+Respond with ONLY "RELEVANT" or "NOT_RELEVANT".
+`;
+  // ... implementation
+}
+```
 
 ### Query Processing
 
@@ -159,12 +223,25 @@ Please:
    - Parses AI response for element IDs
    - Validates IDs against stored elements
    - Creates citation objects
+   - Handles both page context and general knowledge responses
 
 2. **UI Updates**
-   - Updates chat history
-   - Renders citations
-   - Manages highlights
+
+   - Updates chat history with source indication (page context vs general knowledge)
+   - Renders citations for page context answers
+   - Manages highlights for page context answers
    - Updates navigation state
+   - Shows appropriate status messages based on response source
+
+3. **Response Types**
+   - Page Context Response:
+     - Blue header with "Answer from page context"
+     - Includes citations and highlights
+     - Shows "Prompt with general knowledge" button
+   - General Knowledge Response:
+     - Green header with "Answer from general knowledge"
+     - No citations or highlights
+     - No additional action buttons
 
 ## Highlight Management
 
