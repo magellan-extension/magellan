@@ -294,6 +294,7 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 10px;
         background-color: var(--bg-dark);
         border-radius: var(--border-radius);
@@ -301,6 +302,7 @@
         flex-direction: column;
         gap: 12px;
         border: none;
+        max-width: 100%;
       }
 
       .chat-log-container:empty::before {
@@ -319,9 +321,105 @@
         border-radius: 18px;
         max-width: 85%;
         word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
         font-size: 14px;
         line-height: 1.5;
+      }
+
+      .chat-message p {
+        margin: 0.5em 0;
+      }
+
+      .chat-message h1,
+      .chat-message h2,
+      .chat-message h3,
+      .chat-message h4,
+      .chat-message h5,
+      .chat-message h6 {
+        margin: 0.8em 0 0.4em;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+
+      .chat-message h1 {
+        font-size: 1.4em;
+      }
+      .chat-message h2 {
+        font-size: 1.3em;
+      }
+      .chat-message h3 {
+        font-size: 1.2em;
+      }
+      .chat-message h4 {
+        font-size: 1.1em;
+      }
+      .chat-message h5 {
+        font-size: 1em;
+      }
+      .chat-message h6 {
+        font-size: 0.9em;
+      }
+
+      .chat-message code {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 0.2em 0.4em;
+        border-radius: 3px;
+        font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+          Liberation Mono, monospace;
+        font-size: 0.9em;
         white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .chat-message pre {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 1em;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 0.8em 0;
+        max-width: 100%;
+      }
+
+      .chat-message pre code {
+        background-color: transparent;
+        padding: 0;
+        font-size: 0.9em;
+        white-space: pre;
+      }
+
+      .chat-message blockquote {
+        border-left: 3px solid var(--text-secondary);
+        margin: 0.8em 0;
+        padding-left: 1em;
+        color: var(--text-secondary);
+      }
+
+      .chat-message ul,
+      .chat-message ol {
+        margin: 0.5em 0;
+        padding-left: 1.5em;
+      }
+
+      .chat-message li {
+        margin: 0.3em 0;
+      }
+
+      .chat-message a {
+        color: var(--primary);
+        text-decoration: none;
+      }
+
+      .chat-message a:hover {
+        text-decoration: underline;
+      }
+
+      .chat-message strong {
+        font-weight: 600;
+      }
+
+      .chat-message em {
+        font-style: italic;
       }
 
       .user-message {
@@ -602,7 +700,6 @@
       }
 
       .button-group {
-        /* For Prev/Next Citation buttons */
         display: flex;
         gap: 8px;
         width: 100%;
@@ -1029,7 +1126,7 @@
         Magellan Team
       </a>
     </div>
-    <script src="../js/google-ai.js"></script>
-    <script src="../js/sidebar.js"></script>
+    <script src="../js/google-ai.js" type="module"></script>
+    <script src="../js/sidebar.js" type="module"></script>
   </body>
 </html>

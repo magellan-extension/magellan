@@ -14,6 +14,8 @@
  * @requires GoogleGenAI class
  */
 
+import { parseMarkdown } from "./utils.js";
+
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 
@@ -586,9 +588,15 @@ function renderChatLog(chatHistory, currentStatus) {
     }
 
     const contentDiv = document.createElement("div");
-    contentDiv.style.whiteSpace = "pre-wrap";
     contentDiv.style.wordBreak = "break-word";
-    contentDiv.textContent = msg.content;
+
+    if (msg.role === "assistant") {
+      contentDiv.innerHTML = parseMarkdown(msg.content);
+    } else {
+      contentDiv.style.whiteSpace = "pre-wrap";
+      contentDiv.textContent = msg.content;
+    }
+
     messageDiv.appendChild(contentDiv);
 
     // Add "Prompt with general knowledge" button for page-context answers
