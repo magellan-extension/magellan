@@ -4,35 +4,53 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Get it on Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Get_it_here-4285F4?logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
 
-Magellan is an open-source Chrome extension that brings conversational AI to your web browsing experience. It allows you to ask questions about the web page you're currently viewing and get AI-powered answers with smart citations.
+Magellan is an open-source Chrome extension that brings conversational AI to your web browsing experience. It allows you to ask questions about the web page you're currently viewing and get AI-powered answers with smart citations. It can search through the page content and provide relevant citations, or use general knowledge when needed.
 
-[Demo](https://youtu.be/rZ7IUOiCjMI)
+[Demo](https://www.youtube.com/watch?v=FGqaT5tMBI0)
 
 ![Magellan Screenshot](public/screenshot.png)
 
-## 🌟 Features
+## Features
 
-- 💬 **Conversational AI** – Ask questions and get answers directly from the page, powered by Google Gemini
-- 🔗 **Smart Citations** – See exactly where each answer comes from, with toggleable highlights and one-click navigation
-- 🧠 **Context-Aware Tabs** – Each tab keeps its own chat and memory, so your questions stay relevant to the content you're viewing
-- 📜 **Citation Recall** – Pull up sources from earlier in the chat, even if you've moved on
-- 🚀 **Seamless Navigation** – Effortlessly jump to the right spot with smooth scrolling and intuitive controls
+- 🧠 **AI-Powered Search** – Ask questions about any webpage and get instant answers
+  - **Multiple Search Modes**:
+    - **Page Context**: Search only within the current page content
+    - **Blended**: Search page first, then use general knowledge if needed
+    - **General Knowledge**: Use only general knowledge, ignore page content
+- 📚 **Smart Citations** – Get direct links to the relevant parts of the page
+- 🎯 **Visual Highlights** – See exactly where the information comes from with highlighted text
+- 💬 **Conversation History** – Keep track of your questions and answers
 - 🧼 **Sleek, Responsive UI** – Clean design that fits right into your browser workflow
 - 💸 **100% Free** – No subscriptions, no paywalls, no data harvesting
 
 ## 🚀 Quick Start
 
-1. Install Magellan from the [Chrome Web Store](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
-2. Get your Google Gemini API key:
+1. Install the extension:
+
+   - [Get it from the Chrome Web Store](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
+   - Or download the latest release:
+     1. Go to the [Releases page](https://github.com/magellan-extension/magellan/releases)
+     2. Download `package.zip` from the latest release
+     3. Extract the zip file
+     4. Open Chrome and go to `chrome://extensions/`
+     5. Enable "Developer mode" in the top right
+     6. Click "Load unpacked" and select the extracted folder
+   - Or [build from source](#🛠️-development)
+
+2. Get your API key:
+
    - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
    - Create a new API key
-   - Click the Magellan extension icon in your browser toolbar
-   - Enter your API key in the settings
+   - Copy the key
+
 3. Start using Magellan:
    - Click the Magellan icon in your Chrome toolbar to open the sidebar
+   - Choose your preferred search mode:
+     - **Page Context**: Best for understanding specific content on the page
+     - **Blended**: Good for general questions that might need additional context
+     - **General Knowledge**: Use when you want answers not limited to the page content
    - Type your question about the current page
    - Get AI-powered answers with highlighted citations
-   - Click citations to navigate to the relevant parts of the page
 
 💡 **Pro Tip**: For quick access, set up a keyboard shortcut in Chrome's extension settings:
 

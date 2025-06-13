@@ -294,6 +294,7 @@
         flex: 1;
         min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 10px;
         background-color: var(--bg-dark);
         border-radius: var(--border-radius);
@@ -301,6 +302,7 @@
         flex-direction: column;
         gap: 12px;
         border: none;
+        max-width: 100%;
       }
 
       .chat-log-container:empty::before {
@@ -319,6 +321,8 @@
         border-radius: 18px;
         max-width: 85%;
         word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
         font-size: 14px;
         line-height: 1.5;
       }
@@ -364,6 +368,8 @@
         font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
           Liberation Mono, monospace;
         font-size: 0.9em;
+        white-space: pre-wrap;
+        word-break: break-word;
       }
 
       .chat-message pre {
@@ -372,6 +378,7 @@
         border-radius: 6px;
         overflow-x: auto;
         margin: 0.8em 0;
+        max-width: 100%;
       }
 
       .chat-message pre code {

@@ -4,65 +4,113 @@
 
 /**
  * Simple markdown parser that converts basic markdown to HTML
+ * Supports headers, bold/italic, code, blockquotes, links, and real list grouping.
  * @param {string} markdown - The markdown text to parse
  * @returns {string} The parsed HTML
  */
 export function parseMarkdown(markdown) {
-  if (!markdown) return "";
+  if (!markdown || typeof markdown !== "string") return "";
 
   // Escape HTML special characters
-  const escapeHtml = (text) => {
-    return text
+  const escapeHtml = (text) =>
+    text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
-  };
 
-  // Process code blocks first to prevent other markdown processing
-  let html = markdown.replace(/```([\s\S]*?)```/g, (match, code) => {
-    return `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
+  // Store code blocks and replace with placeholders
+  const codeBlocks = [];
+  markdown = markdown.replace(/```([\s\S]*?)```/g, (_, code) => {
+    const escaped = `<pre><code>${escapeHtml(code.trim())}</code></pre>`;
+    codeBlocks.push(escaped);
+    return `__CODEBLOCK_${codeBlocks.length - 1}__`;
   });
 
-  // Process inline code
-  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // Inline code
+  markdown = markdown.replace(
+    /`([^`\n]+)`/g,
+    (_, code) => `<code>${escapeHtml(code)}</code>`
+  );
 
-  // Process headers
-  html = html.replace(/^### (.*$)/gm, "<h3>$1</h3>");
-  html = html.replace(/^## (.*$)/gm, "<h2>$1</h2>");
-  html = html.replace(/^# (.*$)/gm, "<h1>$1</h1>");
+  // Headers
+  markdown = markdown
+    .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.*)$/gm, "<h1>$1</h1>");
 
-  // Process bold and italic
-  html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-  html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  // Bold and italic
+  markdown = markdown
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>");
 
-  // Process lists
-  html = html.replace(/^\s*[-*+]\s+(.*$)/gm, "<li>$1</li>");
-  html = html.replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>");
+  // Blockquotes
+  markdown = markdown.replace(/^> (.*)$/gm, "<blockquote>$1</blockquote>");
 
-  // Process numbered lists
-  html = html.replace(/^\s*\d+\.\s+(.*$)/gm, "<li>$1</li>");
-  html = html.replace(/(<li>.*<\/li>)/gs, "<ol>$1</ol>");
-
-  // Process blockquotes
-  html = html.replace(/^\> (.*$)/gm, "<blockquote>$1</blockquote>");
-
-  // Process links
-  html = html.replace(
+  // Links
+  markdown = markdown.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
 
-  // Process paragraphs
-  html = html.replace(/^(?!<[h|ul|ol|blockquote|pre])(.*$)/gm, "<p>$1</p>");
+  // Convert lines into array for list processing
+  const lines = markdown.split("\n");
+  let result = [];
+  let listBuffer = [];
+  let currentListType = null;
 
-  // Clean up empty paragraphs and fix nested lists
-  html = html
-    .replace(/<p><\/p>/g, "")
-    .replace(/<\/p>\s*<p>/g, "\n")
-    .replace(/<\/ul>\s*<ul>/g, "")
-    .replace(/<\/ol>\s*<ol>/g, "");
+  for (let line of lines) {
+    const trimmed = line.trim();
 
-  return html;
+    const bulletMatch = /^[-*+] (.+)/.exec(trimmed);
+    const numberedMatch = /^\d+\. (.+)/.exec(trimmed);
+
+    if (bulletMatch) {
+      const item = bulletMatch[1];
+      if (currentListType !== "ul") {
+        flushList(); // close previous list if any
+        currentListType = "ul";
+      }
+      listBuffer.push(`<li>${item}</li>`);
+    } else if (numberedMatch) {
+      const item = numberedMatch[1];
+      if (currentListType !== "ol") {
+        flushList();
+        currentListType = "ol";
+      }
+      listBuffer.push(`<li>${item}</li>`);
+    } else {
+      flushList();
+      result.push(line);
+    }
+  }
+
+  flushList();
+
+  function flushList() {
+    if (listBuffer.length) {
+      result.push(
+        `<${currentListType}>${listBuffer.join("")}</${currentListType}>`
+      );
+      listBuffer = [];
+    }
+    currentListType = null;
+  }
+
+  markdown = result.join("\n");
+
+  // Paragraphs (skip lines that are already block elements)
+  markdown = markdown.replace(
+    /^(?!<(h\d|ul|ol|li|blockquote|pre|code|a|\/)).+$/gm,
+    (line) => {
+      if (line.trim() === "") return "";
+      return `<p>${line}</p>`;
+    }
+  );
+
+  // Restore code blocks
+  markdown = markdown.replace(/__CODEBLOCK_(\d+)__/g, (_, i) => codeBlocks[i]);
+
+  return markdown;
 }

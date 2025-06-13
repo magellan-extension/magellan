@@ -193,23 +193,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   const searchModeContent = document.getElementById("searchModeContent");
 
   if (searchModeHeader && searchModeTitle && searchModeContent) {
-    chrome.storage.local.get(["searchModeCollapsed"], (result) => {
-      const searchModeIsCollapsed = result.searchModeCollapsed === true;
-      if (searchModeIsCollapsed) {
-        searchModeTitle.classList.add("collapsed");
-        searchModeContent.classList.add("collapsed");
-      } else {
-        searchModeTitle.classList.remove("collapsed");
-        searchModeContent.classList.remove("collapsed");
-      }
-    });
+    searchModeTitle.classList.add("collapsed");
+    searchModeContent.classList.add("collapsed");
 
     searchModeHeader.addEventListener("click", () => {
       const isCurrentlyCollapsed =
         searchModeTitle.classList.contains("collapsed");
       searchModeTitle.classList.toggle("collapsed", !isCurrentlyCollapsed);
       searchModeContent.classList.toggle("collapsed", !isCurrentlyCollapsed);
-      chrome.storage.local.set({ searchModeCollapsed: !isCurrentlyCollapsed });
     });
   }
 
@@ -623,15 +614,31 @@ function renderChatLog(chatHistory, currentStatus) {
       const button = document.createElement("button");
       button.className = "general-knowledge-prompt-button";
       button.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="2" y1="12" x2="22" y2="12"></line>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
         </svg>
-        <span>Prompt with general knowledge</span>
+        <span style="color: #10b981; font-weight: 500;">Prompt with general knowledge</span>
         <div class="spinner" style="display: none;"></div>
       `;
-
+      button.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid #10b981;
+        border-radius: 10px;
+        background-color: rgba(16, 185, 129, 0.1);
+        transition: all 0.2s ease;
+        cursor: pointer;
+      `;
+      button.addEventListener("mouseover", () => {
+        button.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
+      });
+      button.addEventListener("mouseout", () => {
+        button.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
+      });
       button.addEventListener("click", async (event) => {
         event.stopPropagation(); // Prevent container click events
 
@@ -875,7 +882,7 @@ async function handleSearch() {
   // Get current search mode
   const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
     await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
-  const isGeneralKnowledgeMode = searchMode === "general";
+  let isGeneralKnowledgeMode = searchMode === "general";
 
   if (isGeneralKnowledgeMode) {
     // For general knowledge mode, skip all page content checks
@@ -1102,7 +1109,7 @@ async function performLLMSearch(query, forTabId, options = {}) {
   // Get current search mode
   const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
     await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
-  const isGeneralKnowledgeMode =
+  let isGeneralKnowledgeMode =
     searchMode === "general" || forceGeneralKnowledge;
 
   if (!state) {
@@ -1117,7 +1124,6 @@ async function performLLMSearch(query, forTabId, options = {}) {
     if (currentActiveTabId === forTabId) renderPopupUI();
     return;
   }
-
 
   // Only require page content for non-general knowledge modes
   if (
@@ -1134,7 +1140,6 @@ async function performLLMSearch(query, forTabId, options = {}) {
     if (currentActiveTabId === forTabId) renderPopupUI();
     return;
   }
-
 
   try {
     // Skip relevance check if forcing general knowledge or in general knowledge mode
@@ -1188,6 +1193,7 @@ NONE
 LLM_CITATIONS_END
 `;
       llmResult = await ai.generateContent(webPrompt);
+      isGeneralKnowledgeMode = true;
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
