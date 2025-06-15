@@ -4,13 +4,52 @@ This document outlines the technical architecture of Magellan, with a focus on h
 
 ## Overview
 
-Magellan is built as a Chrome extension with three main components:
+Magellan is built as a Chrome extension with a modular architecture organized into several key components:
 
-1. Background Service Worker (`background.js`)
-2. Sidebar UI (`sidebar.js`)
-3. Content Scripts (injected into web pages)
+### Core Components
 
-The core functionality revolves around extracting, processing, and interacting with webpage content through AI.
+1. **Background Service Worker** (`core/background.js`)
+
+   - Manages extension lifecycle
+   - Handles tab state initialization
+   - Coordinates communication between components
+
+2. **UI Layer** (`ui/`)
+
+   - `sidebar.js` - Main sidebar interface and user interaction
+   - `ui.js` - Reusable UI components and utilities
+
+3. **Search System** (`search/`)
+
+   - `search.js` - Core search implementation and AI query handling
+   - `contentScript.js` - Page content extraction and interaction
+
+4. **API Integration** (`api/`)
+
+   - `api-key.js` - API key management and validation
+   - `google-ai.js` - Google AI SDK integration and query handling
+
+5. **State Management** (`state/`)
+
+   - `tabState.js` - Tab-specific state management and persistence
+
+6. **Core Utilities** (`core/`)
+   - `utils.js` - Shared utility functions and helpers
+
+### Component Interaction
+
+```mermaid
+graph TD
+    A[UI Layer] -->|User Input| B[Search System]
+    B -->|Query| C[API Integration]
+    B -->|Extract| D[Content Script]
+    D -->|Store| E[State Management]
+    E -->|Retrieve| B
+    C -->|Response| B
+    B -->|Update| A
+    F[Background Service] -->|Initialize| E
+    F -->|Monitor| D
+```
 
 ## Page Data Flow
 
@@ -340,3 +379,84 @@ Contributions are welcome and greatly appreciated.
 Feel free to suggest additional features as well.
 
 Thanks!
+
+## Component Details
+
+### UI Layer (`ui/`)
+
+The UI layer is responsible for all user interaction and presentation:
+
+1. **Sidebar Component** (`sidebar.js`)
+
+   - Manages the main extension interface
+   - Handles user input and query submission
+   - Displays chat history and responses
+   - Controls search mode selection
+   - Manages citation navigation
+
+2. **UI Utilities** (`ui.js`)
+   - Provides reusable UI components
+   - Handles DOM manipulation
+   - Manages highlight rendering
+   - Controls animation and transitions
+
+### Search System (`search/`)
+
+The search system coordinates content extraction and AI queries:
+
+1. **Search Implementation** (`search.js`)
+
+   - Implements search modes (Page Context, Blended, General Knowledge)
+   - Manages query processing
+   - Handles response parsing
+   - Coordinates with API integration
+
+2. **Content Script** (`contentScript.js`)
+   - Extracts page content
+   - Manages element identification
+   - Handles highlight management
+   - Communicates with the main extension
+
+### API Integration (`api/`)
+
+Handles all external API interactions:
+
+1. **API Key Management** (`api-key.js`)
+
+   - Manages API key storage
+   - Handles key validation
+   - Provides key retrieval
+
+2. **Google AI Integration** (`google-ai.js`)
+   - Implements Google AI SDK integration
+   - Manages API requests
+   - Handles response processing
+   - Implements retry logic
+
+### State Management (`state/`)
+
+The state management system maintains the application state:
+
+1. **Tab State** (`tabState.js`)
+   - Manages per-tab state
+   - Handles state persistence
+   - Coordinates state updates
+   - Maintains chat history
+   - Tracks citation state
+
+### Core Utilities (`core/`)
+
+Provides essential functionality used across components:
+
+1. **Background Service** (`background.js`)
+
+   - Manages extension lifecycle
+   - Initializes tab states
+   - Coordinates component communication
+   - Handles extension events
+
+2. **Utilities** (`utils.js`)
+   - Provides shared helper functions
+   - Implements common algorithms
+   - Handles data formatting
+   - Manages error handling

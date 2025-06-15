@@ -25,9 +25,9 @@ import {
   createInitialTabState,
   setTabState,
   removeTabState,
-} from "./tabState.js";
-import { contentScript_highlightElementsById } from "./contentScript.js";
-import { handleSearch } from "./search.js";
+} from "../state/tabState.js";
+import { contentScript_highlightElementsById } from "../search/contentScript.js";
+import { handleSearch } from "../search/search.js";
 import {
   renderPopupUI,
   updateStatus,

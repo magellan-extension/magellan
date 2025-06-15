@@ -18,13 +18,13 @@
  * @requires chrome.storage API for settings
  */
 
-import { parseMarkdown } from "./utils.js";
-import { tabStates, getTabState } from "./tabState.js";
+import { parseMarkdown } from "../core/utils.js";
+import { tabStates, getTabState } from "../state/tabState.js";
 import {
   contentScript_highlightElementsById,
   contentScript_clearHighlightsAndIds,
-} from "./contentScript.js";
-import { performLLMSearch } from "./search.js";
+} from "../search/contentScript.js";
+import { performLLMSearch } from "../search/search.js";
 import { currentActiveTabId, ai } from "./sidebar.js";
 
 /**

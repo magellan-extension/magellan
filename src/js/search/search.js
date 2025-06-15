@@ -31,14 +31,18 @@ import {
   addChatMessage,
   updateCitedSentences,
   updateTabStatus,
-} from "./tabState.js";
+} from "../state/tabState.js";
 import {
   contentScript_highlightElementsById,
   contentScript_clearHighlightsAndIds,
   contentScript_extractAndIdRelevantElements,
 } from "./contentScript.js";
-import { SEARCH_MODE_STORAGE_KEY, currentActiveTabId, ai } from "./sidebar.js";
-import { navigateToMatchOnPage, renderPopupUI } from "./ui.js";
+import {
+  SEARCH_MODE_STORAGE_KEY,
+  currentActiveTabId,
+  ai,
+} from "../ui/sidebar.js";
+import { navigateToMatchOnPage, renderPopupUI } from "../ui/ui.js";
 
 /**
  * Checks if the page content is relevant to the query
