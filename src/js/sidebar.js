@@ -15,6 +15,24 @@
  */
 
 import { parseMarkdown } from "./utils.js";
+import {
+  tabStates,
+  createInitialTabState,
+  getTabState,
+  setTabState,
+  updateTabStateProperty,
+  addChatMessage,
+  updateCitedSentences,
+  updateCurrentCitedSentenceIndex,
+  updatePageContent,
+  updateTabStatus,
+  removeTabState,
+} from "./tabState.js";
+import {
+  contentScript_clearHighlightsAndIds,
+  contentScript_extractAndIdRelevantElements,
+  contentScript_highlightElementsById,
+} from "./contentScript.js";
 
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
@@ -55,9 +73,6 @@ let ai = null;
  * @property {Array<Object>} pageIdentifiedElements - Elements identified in the page
  */
 
-/** @type {Object.<number, TabState>} State management for each tab */
-const tabStates = {};
-
 /** @type {number|null} ID of the currently active tab */
 let currentActiveTabId = null;
 
@@ -86,22 +101,6 @@ async function initializeAI() {
 }
 
 /**
- * Creates initial state for a new tab
- * @returns {TabState} Initial tab state
- */
-function createInitialTabState() {
-  return {
-    chatHistory: [],
-    citedSentences: [],
-    currentCitedSentenceIndex: -1,
-    status: "idle",
-    errorMessage: "",
-    fullPageTextContent: "",
-    pageIdentifiedElements: [],
-  };
-}
-
-/**
  * Initializes or refreshes the extension for the active tab
  * @async
  * @function
@@ -124,7 +123,7 @@ async function initializeOrRefreshForActiveTab() {
     currentActiveTabId = activeTab.id;
 
     if (!tabStates[currentActiveTabId]) {
-      tabStates[currentActiveTabId] = createInitialTabState();
+      setTabState(currentActiveTabId, createInitialTabState());
     }
     renderPopupUI();
   });
@@ -421,22 +420,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-chrome.tabs.onActivated.addListener((activeInfo) => {
-  currentActiveTabId = activeInfo.tabId;
-  if (!tabStates[currentActiveTabId]) {
-    tabStates[currentActiveTabId] = createInitialTabState();
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  currentActiveTabId = tabId;
+  if (!tabStates[tabId]) {
+    setTabState(tabId, createInitialTabState());
   }
   renderPopupUI();
 });
 
-chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
-  if (tabStates[tabId]) {
-    delete tabStates[tabId];
-    console.log(`Cleared state for closed tab ${tabId}`);
-  }
+chrome.tabs.onRemoved.addListener((tabId) => {
+  removeTabState(tabId);
   if (currentActiveTabId === tabId) {
     currentActiveTabId = null;
-    initializeOrRefreshForActiveTab();
   }
 });
 
@@ -452,30 +447,10 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
  * - Settings state
  */
 function renderPopupUI() {
-  if (!currentActiveTabId || !tabStates[currentActiveTabId]) {
-    updateStatus("Initializing or no active tab...", "warning");
-    const searchButton = document.getElementById("searchButton");
-    if (searchButton) searchButton.disabled = true;
-    const chatLogContainer = document.getElementById("chatLogContainer");
-    if (chatLogContainer) chatLogContainer.innerHTML = "";
-    const citationsContainer = document.getElementById("citationsContainer");
-    if (citationsContainer) citationsContainer.innerHTML = "";
-    updateNavigationButtonsInternal([], -1);
-    return;
-  }
-
-  const state = tabStates[currentActiveTabId];
-  const searchButton = document.getElementById("searchButton");
-  const searchQueryEl = document.getElementById("searchQuery");
+  const state = getTabState(currentActiveTabId);
+  if (!state) return;
 
   renderChatLog(state.chatHistory, state.status);
-
-  if (searchQueryEl) {
-    searchQueryEl.placeholder =
-      state.chatHistory.length === 0
-        ? "Ask about this page..."
-        : "Ask a follow-up...";
-  }
 
   let statusMessage = "";
   let statusType = "idle";
@@ -534,10 +509,12 @@ function renderPopupUI() {
 
   const isLoading =
     state.status === "extracting" || state.status === "querying_llm";
+  const searchButton = document.getElementById("searchButton");
   if (searchButton) {
     searchButton.classList.toggle("loading", isLoading);
     searchButton.disabled = isLoading;
   }
+  const searchQueryEl = document.getElementById("searchQuery");
   if (searchQueryEl) searchQueryEl.disabled = isLoading;
 
   renderCitations(
@@ -851,7 +828,7 @@ async function handleSearch() {
   }
 
   const tabIdForSearch = currentActiveTabId;
-  const state = tabStates[tabIdForSearch];
+  const state = getTabState(tabIdForSearch);
   if (!state) {
     console.error("State not found for active tab:", tabIdForSearch);
     updateStatus("Error: Tab state not found.", "error");
@@ -1104,7 +1081,7 @@ Respond with ONLY "RELEVANT" or "NOT_RELEVANT".
  */
 async function performLLMSearch(query, forTabId, options = {}) {
   const { forceGeneralKnowledge = false } = options;
-  const state = tabStates[forTabId];
+  const state = getTabState(forTabId);
 
   // Get current search mode
   const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
@@ -1114,11 +1091,14 @@ async function performLLMSearch(query, forTabId, options = {}) {
 
   if (!state) {
     if (state) {
-      state.status = "error";
-      state.errorMessage = "Page content not available for LLM search.";
-      state.chatHistory.push({
+      updateTabStatus(
+        forTabId,
+        "error",
+        "Page content not available for LLM search."
+      );
+      addChatMessage(forTabId, {
         role: "assistant",
-        content: `Error: ${state.errorMessage}`,
+        content: `Error: Page content not available for LLM search.`,
       });
     }
     if (currentActiveTabId === forTabId) renderPopupUI();
@@ -1131,11 +1111,14 @@ async function performLLMSearch(query, forTabId, options = {}) {
     !state.pageIdentifiedElements.length &&
     !state.fullPageTextContent
   ) {
-    state.status = "error";
-    state.errorMessage = "Page content not available for LLM search.";
-    state.chatHistory.push({
+    updateTabStatus(
+      forTabId,
+      "error",
+      "Page content not available for LLM search."
+    );
+    addChatMessage(forTabId, {
       role: "assistant",
-      content: `Error: ${state.errorMessage}`,
+      content: `Error: Page content not available for LLM search.`,
     });
     if (currentActiveTabId === forTabId) renderPopupUI();
     return;
@@ -1289,13 +1272,11 @@ LLM_CITATIONS_END
       lastMessage.content === assistantResponseText;
 
     if (!isDuplicate) {
-      state.citedSentences = currentCitationsForThisResponse;
-      state.currentCitedSentenceIndex =
-        state.citedSentences.length > 0 ? 0 : -1;
-      state.chatHistory.push({
+      updateCitedSentences(forTabId, currentCitationsForThisResponse);
+      addChatMessage(forTabId, {
         role: "assistant",
         content: assistantResponseText,
-        citations: state.citedSentences,
+        citations: currentCitationsForThisResponse,
         isExternalSource: isGeneralKnowledgeMode,
       });
     }
@@ -1358,20 +1339,23 @@ LLM_CITATIONS_END
       }
     }
 
-    state.status = "ready";
+    updateTabStatus(forTabId, "ready");
     if (currentActiveTabId === forTabId) {
       renderPopupUI();
     }
   } catch (error) {
     console.error("LLM Search Error:", error);
     if (tabStates[forTabId]) {
-      state.status = "error";
-      state.errorMessage = `LLM request error: ${
-        error.message || error.toString()
-      }`;
-      state.chatHistory.push({
+      updateTabStatus(
+        forTabId,
+        "error",
+        `LLM request error: ${error.message || error.toString()}`
+      );
+      addChatMessage(forTabId, {
         role: "assistant",
-        content: `Error: ${state.errorMessage}`,
+        content: `Error: LLM request error: ${
+          error.message || error.toString()
+        }`,
       });
       if (currentActiveTabId === forTabId) renderPopupUI();
     }
@@ -1390,7 +1374,7 @@ async function navigateToMatchOnPage(
   newIndexInPopupList,
   isInitialScroll = false
 ) {
-  const state = tabStates[forTabId];
+  const state = getTabState(forTabId);
   if (
     !state ||
     !state.citedSentences ||
@@ -1471,210 +1455,4 @@ async function navigateToMatchOnPage(
       }
     })
     .catch((err) => console.error("Error executing navigation script:", err));
-}
-
-// --- CONTENT SCRIPT FUNCTIONS ---
-// (No changes to content script functions)
-function contentScript_extractAndIdRelevantElements() {
-  const selectors =
-    "p, h1, h2, h3, h4, h5, h6, li, span, blockquote, td, th, pre," +
-    "div:not(:has(p, h1, h2, h3, h4, h5, h6, li, article, section, main, aside, nav, header, footer, form)), " +
-    "article, section, main";
-  const nodes = Array.from(document.body.querySelectorAll(selectors));
-  const identifiedElements = [];
-  const MIN_TEXT_LENGTH = 15;
-  const MAX_TEXT_LENGTH_PER_NODE = 2500;
-  let idCounter = 0;
-  function isVisible(elem) {
-    if (!(elem instanceof Element)) return false;
-    const style = getComputedStyle(elem);
-    if (
-      style.display === "none" ||
-      style.visibility === "hidden" ||
-      style.opacity === "0" ||
-      elem.getAttribute("aria-hidden") === "true"
-    )
-      return false;
-    if (
-      elem.offsetWidth === 0 &&
-      elem.offsetHeight === 0 &&
-      !elem.matches("meta, link, script, style, title, noscript")
-    )
-      return false;
-    if (
-      style.position === "absolute" &&
-      (style.left === "-9999px" || style.top === "-9999px")
-    )
-      return false;
-    let current = elem;
-    while (current && current !== document.body) {
-      const tagName = current.tagName.toUpperCase();
-      if (
-        [
-          "SCRIPT",
-          "STYLE",
-          "NOSCRIPT",
-          "TEXTAREA",
-          "IFRAME",
-          "CANVAS",
-          "SVG",
-        ].includes(tagName)
-      )
-        return false;
-      if (
-        current === elem &&
-        [
-          "NAV",
-          "ASIDE",
-          "FOOTER",
-          "HEADER",
-          "FORM",
-          "BUTTON",
-          "A",
-          "INPUT",
-          "SELECT",
-        ].includes(tagName)
-      ) {
-        let hasDirectOrSelectableChildText = false;
-        for (const child of elem.childNodes) {
-          if (
-            child.nodeType === Node.TEXT_NODE &&
-            child.textContent.trim().length > 5
-          ) {
-            hasDirectOrSelectableChildText = true;
-            break;
-          }
-          if (
-            child.nodeType === Node.ELEMENT_NODE &&
-            child.matches(selectors) &&
-            isVisible(child)
-          ) {
-            hasDirectOrSelectableChildText = true;
-            break;
-          }
-        }
-        if (!hasDirectOrSelectableChildText) return false;
-      }
-      current = current.parentElement;
-    }
-    return true;
-  }
-  const uniqueTextsSet = new Set();
-  for (const node of nodes) {
-    if (!isVisible(node)) continue;
-    let parentWithId = node.parentElement;
-    let alreadyProcessedByParent = false;
-    while (parentWithId && parentWithId !== document.body) {
-      if (parentWithId.dataset.magellanId) {
-        alreadyProcessedByParent = true;
-        break;
-      }
-      parentWithId = parentWithId.parentElement;
-    }
-    if (alreadyProcessedByParent) continue;
-    let textToUse = "";
-    let directText = "";
-    for (const child of node.childNodes) {
-      if (child.nodeType === Node.TEXT_NODE) {
-        directText += child.textContent;
-      } else if (
-        child.nodeType === Node.ELEMENT_NODE &&
-        !child.matches(selectors) &&
-        isVisible(child)
-      ) {
-        directText += child.textContent;
-      }
-    }
-    directText = directText.replace(/\s+/g, " ").trim();
-    if (
-      directText.length >= MIN_TEXT_LENGTH &&
-      directText.length <= MAX_TEXT_LENGTH_PER_NODE
-    ) {
-      textToUse = directText;
-    } else if (
-      directText.length === 0 ||
-      directText.length > MAX_TEXT_LENGTH_PER_NODE
-    ) {
-      const hasSelectorChildren = Array.from(
-        node.querySelectorAll(selectors)
-      ).some((child) => child !== node && node.contains(child));
-      if (!hasSelectorChildren) {
-        const fullInnerText = node.innerText
-          ? node.innerText.replace(/\s+/g, " ").trim()
-          : "";
-        if (
-          fullInnerText.length >= MIN_TEXT_LENGTH &&
-          fullInnerText.length <= MAX_TEXT_LENGTH_PER_NODE
-        ) {
-          textToUse = fullInnerText;
-        }
-      }
-    }
-    if (
-      textToUse &&
-      textToUse.split(" ").length > 2 &&
-      !uniqueTextsSet.has(textToUse)
-    ) {
-      const rect = node.getBoundingClientRect();
-      const viewportArea = window.innerWidth * window.innerHeight;
-      const elementArea = rect.width * rect.height;
-      if (
-        !["ARTICLE", "MAIN"].includes(node.tagName.toUpperCase()) &&
-        elementArea > viewportArea * 0.7 &&
-        rect.width > window.innerWidth * 0.9
-      ) {
-        continue;
-      }
-      const elementId = `mgl-node-${idCounter++}`;
-      node.dataset.magellanId = elementId;
-      identifiedElements.push({ id: elementId, text: textToUse });
-      uniqueTextsSet.add(textToUse);
-    }
-  }
-  const fullTextForLLM = identifiedElements
-    .map((el) => `[${el.id}] ${el.text}`)
-    .join("\n\n");
-  return { identifiedElements, fullTextForLLM };
-}
-
-function contentScript_clearHighlightsAndIds() {
-  const highlightClasses = [
-    "mgl-cited-element-highlight",
-    "mgl-active-element-highlight",
-  ];
-  highlightClasses.forEach((cls) => {
-    document
-      .querySelectorAll(`.${cls}`)
-      .forEach((el) => el.classList.remove(cls));
-  });
-  const idElements = document.querySelectorAll("[data-magellan-id]");
-  idElements.forEach((el) => {
-    el.removeAttribute("data-magellan-id");
-  });
-  return {
-    clearedIds: idElements.length,
-    clearedHighlights: highlightClasses.length,
-  };
-}
-
-function contentScript_highlightElementsById(elementIdsToHighlight) {
-  const highlightClass = "mgl-cited-element-highlight";
-  const activeClass = "mgl-active-element-highlight";
-  let highlightCount = 0;
-  document
-    .querySelectorAll(`.${highlightClass}`)
-    .forEach((el) => el.classList.remove(highlightClass));
-  document
-    .querySelectorAll(`.${activeClass}`)
-    .forEach((el) => el.classList.remove(activeClass));
-  elementIdsToHighlight.forEach((id) => {
-    const element = document.querySelector(`[data-magellan-id="${id}"]`);
-    if (element) {
-      element.classList.add(highlightClass);
-      highlightCount++;
-    } else {
-      console.warn(`Highlighting: Element with Magellan ID "${id}" not found.`);
-    }
-  });
-  return { highlightCount };
 }
