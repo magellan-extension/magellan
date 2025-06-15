@@ -32,14 +32,13 @@ import {
   updateCitedSentences,
   updateTabStatus,
 } from "./tabState.js";
-import { contentScript_highlightElementsById } from "./contentScript.js";
 import {
-  renderPopupUI,
-  navigateToMatchOnPage,
-  SEARCH_MODE_STORAGE_KEY,
-  currentActiveTabId,
-  ai,
-} from "./sidebar.js";
+  contentScript_highlightElementsById,
+  contentScript_clearHighlightsAndIds,
+  contentScript_extractAndIdRelevantElements,
+} from "./contentScript.js";
+import { SEARCH_MODE_STORAGE_KEY, currentActiveTabId, ai } from "./sidebar.js";
+import { navigateToMatchOnPage, renderPopupUI } from "./ui.js";
 
 /**
  * Checks if the page content is relevant to the query
@@ -361,6 +360,154 @@ export async function performLLMSearch(query, forTabId, options = {}) {
         }`,
       });
       if (currentActiveTabId === forTabId) renderPopupUI();
+    }
+  }
+}
+
+/**
+ * Handles the search action
+ * @async
+ * @function
+ *
+ * This function:
+ * 1. Gets the search query and validates input
+ * 2. Updates UI to searching state
+ * 3. Extracts page content if needed
+ * 4. Delegates to search.js for AI-powered search
+ * 5. Updates UI with results
+ *
+ * @throws {Error} If search fails or AI is not initialized
+ * @see search.js for search implementation details
+ */
+export async function handleSearch() {
+  if (!currentActiveTabId) return;
+  if (!ai) {
+    updateStatus("AI not initialized. Please configure API Key.", "error");
+    return;
+  }
+
+  const tabIdForSearch = currentActiveTabId;
+  const state = getTabState(tabIdForSearch);
+  if (!state) {
+    console.error("State not found for active tab:", tabIdForSearch);
+    updateStatus("Error: Tab state not found.", "error");
+    return;
+  }
+
+  const searchQueryEl = document.getElementById("searchQuery");
+  const query = searchQueryEl.value.trim();
+
+  if (!query) {
+    state.errorMessage = "Please enter a search query.";
+    renderPopupUI();
+    setTimeout(() => {
+      if (
+        tabStates[tabIdForSearch] &&
+        state.errorMessage === "Please enter a search query."
+      ) {
+        state.errorMessage = "";
+        if (currentActiveTabId === tabIdForSearch) renderPopupUI();
+      }
+    }, 2000);
+    return;
+  }
+
+  state.chatHistory.push({ role: "user", content: query });
+  searchQueryEl.value = "";
+
+  // Get current search mode
+  const { [SEARCH_MODE_STORAGE_KEY]: searchMode } =
+    await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
+  let isGeneralKnowledgeMode = searchMode === "general";
+
+  if (isGeneralKnowledgeMode) {
+    // For general knowledge mode, skip all page content checks
+    state.status = "querying_llm";
+    state.errorMessage = "";
+    state.citedSentences = [];
+    state.currentCitedSentenceIndex = -1;
+    state.pageIdentifiedElements = [];
+    state.fullPageTextContent = "";
+    renderPopupUI();
+    await performLLMSearch(query, tabIdForSearch);
+    return;
+  }
+
+  state.status = "extracting";
+  state.errorMessage = "";
+  state.citedSentences = [];
+  state.currentCitedSentenceIndex = -1;
+  renderPopupUI();
+
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tabIdForSearch },
+      func: contentScript_clearHighlightsAndIds,
+    });
+
+    const injectionResults = await chrome.scripting.executeScript({
+      target: { tabId: tabIdForSearch },
+      func: contentScript_extractAndIdRelevantElements,
+    });
+
+    if (chrome.runtime.lastError) {
+      throw new Error(
+        `Extraction script error: ${chrome.runtime.lastError.message}`
+      );
+    }
+    const extractionResult = injectionResults?.[0]?.result;
+    if (
+      !extractionResult ||
+      !extractionResult.identifiedElements ||
+      typeof extractionResult.fullTextForLLM !== "string"
+    ) {
+      throw new Error(
+        "No text or IDs found or an error occurred during extraction."
+      );
+    }
+
+    if (!tabStates[tabIdForSearch]) {
+      console.log("Tab closed during text extraction for tab:", tabIdForSearch);
+      return;
+    }
+
+    state.pageIdentifiedElements = extractionResult.identifiedElements;
+    state.fullPageTextContent = extractionResult.fullTextForLLM;
+
+    if (
+      !state.fullPageTextContent.trim() &&
+      state.pageIdentifiedElements.length === 0
+    ) {
+      throw new Error("Page seems to be empty or no text could be extracted.");
+    }
+
+    state.status = "querying_llm";
+    if (currentActiveTabId === tabIdForSearch) renderPopupUI();
+
+    await performLLMSearch(query, tabIdForSearch);
+  } catch (error) {
+    console.error("Search process error:", error);
+    if (tabStates[tabIdForSearch]) {
+      // If in blended mode and extraction failed, fall back to general knowledge
+      if (searchMode === "blended") {
+        state.pageIdentifiedElements = [];
+        state.fullPageTextContent = "";
+        state.status = "querying_llm";
+        if (currentActiveTabId === tabIdForSearch) renderPopupUI();
+        await performLLMSearch(query, tabIdForSearch, {
+          forceGeneralKnowledge: true,
+        });
+        return;
+      }
+
+      state.status = "error";
+      state.errorMessage =
+        error.message || "An unexpected error occurred during search.";
+      state.chatHistory.push({
+        role: "assistant",
+        content: `Error: ${state.errorMessage}`,
+      });
+      if (currentActiveTabId === tabIdForSearch) renderPopupUI();
     }
   }
 }
