@@ -18,6 +18,7 @@ Magellan is built as a Chrome extension with a modular architecture organized in
 
    - `sidebar.js` - Main sidebar interface and user interaction
    - `ui.js` - Reusable UI components and utilities
+   - `theme.js` - Theme management and system theme synchronization
 
 3. **Search System** (`search/`)
 
@@ -49,6 +50,8 @@ graph TD
     B -->|Update| A
     F[Background Service] -->|Initialize| E
     F -->|Monitor| D
+    G[Theme System] -->|Apply Theme| A
+    G -->|Listen| H[System Theme]
 ```
 
 ## Page Data Flow
@@ -460,3 +463,65 @@ Provides essential functionality used across components:
    - Implements common algorithms
    - Handles data formatting
    - Manages error handling
+
+## Theme System
+
+### Overview
+
+The theme system provides consistent theming across all extension pages (sidebar, API key page) with support for:
+
+- Light and dark themes
+- System theme synchronization
+- Theme persistence
+- Automatic theme application
+
+### Theme Storage
+
+Themes are stored in Chrome's local storage:
+
+```typescript
+type ThemePreference = "light" | "dark" | "system";
+```
+
+### Theme Implementation
+
+1. **Theme Module** (`theme.js`)
+
+   - Centralized theme management
+   - System theme detection
+   - Theme persistence
+   - Automatic theme application
+
+2. **Theme Application**
+
+   - Uses CSS variables for theme colors
+   - Applies theme via `data-theme` attribute
+   - Supports dynamic theme switching
+   - Handles system theme changes
+
+3. **Theme Variables**
+
+   ```css
+   :root[data-theme="light"] {
+     --bg-primary: #ffffff;
+     --bg-secondary: #f3f4f6;
+     --text-primary: #1f2937;
+     --text-secondary: #4b5563;
+     /* ... other light theme variables ... */
+   }
+
+   :root[data-theme="dark"] {
+     --bg-primary: #1f2937;
+     --bg-secondary: #111827;
+     --text-primary: #f9fafb;
+     --text-secondary: #d1d5db;
+     /* ... other dark theme variables ... */
+   }
+   ```
+
+4. **Theme Features**
+   - Automatic theme detection on page load
+   - System theme synchronization
+   - Theme persistence across sessions
+   - Smooth theme transitions
+   - Consistent styling across all pages
