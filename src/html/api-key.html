@@ -4,6 +4,7 @@
     <title>Magellan - API Key</title>
     <style>
       :root {
+        /* Core colors - same for both themes */
         --primary: #6366f1;
         --primary-dark: #4f46e5;
         --error: #ef4444;
@@ -12,12 +13,30 @@
         --success-bg: rgba(16, 185, 129, 0.1);
         --warning: #f59e0b;
         --warning-bg: rgba(245, 158, 11, 0.1);
-        --bg-dark: #181f28;
-        --bg-light: #374151;
-        --text-primary: #f3f4f6;
-        --text-secondary: #9ca3af;
         --border-radius: 8px;
         --transition: all 0.2s ease;
+
+        /* Theme-specific variables */
+        --bg-primary: #181f28;
+        --bg-secondary: #374151;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --input-bg: var(--bg-primary);
+        --input-border: var(--border-color);
+        --dropdown-hover: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Light theme */
+      [data-theme="light"] {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: rgba(0, 0, 0, 0.1);
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-hover: #e5e7eb;
       }
 
       body {
@@ -26,7 +45,7 @@
         font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
           "Helvetica Neue", Arial, sans-serif;
         color: var(--text-primary);
-        background-color: var(--bg-dark);
+        background-color: var(--bg-primary);
         margin: 0;
         height: 95vh;
         display: flex;
@@ -59,13 +78,13 @@
       }
 
       .api-key-container {
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
         border-radius: var(--border-radius);
         padding: 20px;
         display: flex;
         flex-direction: column;
         gap: 16px;
-        border: 1px solid var(--primary-dark);
+        border: 1px solid var(--border-color);
       }
 
       .api-key-header {
@@ -104,22 +123,17 @@
         gap: 12px;
       }
 
-      .api-key-input,
-      .save-button,
-      .back-button {
+      .api-key-input {
         height: 40px;
         width: 100%;
         font-size: 14px;
         border-radius: var(--border-radius);
         padding: 10px 14px;
         box-sizing: border-box;
-      }
-
-      .api-key-input {
-        border: 1px solid var(--bg-light);
+        border: 1px solid var(--input-border);
         font-family: monospace;
         outline: none;
-        background-color: var(--bg-dark);
+        background-color: var(--input-bg);
         color: var(--text-primary);
         transition: var(--transition);
       }
@@ -172,41 +186,51 @@
       }
 
       .save-button {
+        height: 40px;
+        width: 100%;
         background-color: var(--success);
-        color: var(--text-primary);
+        color: white;
         font-weight: 500;
         cursor: pointer;
         transition: var(--transition);
         border: none;
+        border-radius: var(--border-radius);
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 14px;
       }
 
       .save-button:hover:not(:disabled) {
         background-color: #0d9b6c;
+        transform: translateY(-1px);
       }
 
       .back-button {
+        height: 40px;
+        width: 100%;
         background-color: var(--primary);
-        color: var(--text-primary);
+        color: white;
         font-weight: 500;
         cursor: pointer;
         transition: var(--transition);
         border: none;
+        border-radius: var(--border-radius);
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 14px;
       }
 
       .back-button:hover:not(:disabled) {
         background-color: var(--primary-dark);
+        transform: translateY(-1px);
       }
 
       button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
+        transform: none !important;
       }
 
       .button-group {
@@ -330,5 +354,6 @@
 
     <script src="../js/api/google-ai.js"></script>
     <script src="../js/api/api-key.js"></script>
+    <script type="module" src="../js/ui/theme.js"></script>
   </body>
 </html>

@@ -35,12 +35,16 @@ import {
   handlePrevMatch,
   handleRemoveHighlights,
 } from "./ui.js";
+import { initializeTheme } from "./theme.js";
 
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 export const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 
 /** @constant {string} Storage key for the search mode setting */
 export const SEARCH_MODE_STORAGE_KEY = "magellan_search_mode";
+
+/** @constant {string} Storage key for the theme setting */
+export const THEME_STORAGE_KEY = "magellan_theme";
 
 /** @type {GoogleGenAI|null} Instance of the Google AI client */
 export let ai = null;
@@ -147,6 +151,7 @@ async function initializeOrRefreshForActiveTab() {
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeAI();
   initializeOrRefreshForActiveTab();
+  initializeTheme();
 
   const searchButton = document.getElementById("searchButton");
   const searchQueryEl = document.getElementById("searchQuery");
@@ -436,6 +441,43 @@ document.addEventListener("DOMContentLoaded", async () => {
       chrome.storage.local.set({ citationsCollapsed: !isCurrentlyCollapsed });
     });
   }
+
+  // Theme toggle elements
+  const themeToggleDropdownItem = document.getElementById(
+    "themeToggleDropdownItem"
+  );
+  const themeToggleGroup = document.getElementById("themeToggleGroup");
+  const themeRadios = document.querySelectorAll('input[name="theme"]');
+
+  // Initialize theme radio buttons from storage
+  chrome.storage.local.get([THEME_STORAGE_KEY], (result) => {
+    const savedTheme = result[THEME_STORAGE_KEY] || "system";
+    document.querySelector(
+      `input[name="theme"][value="${savedTheme}"]`
+    ).checked = true;
+  });
+
+  // Theme toggle dropdown functionality
+  if (themeToggleDropdownItem && themeToggleGroup) {
+    themeToggleDropdownItem.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isVisible = themeToggleGroup.style.display !== "none";
+      themeToggleGroup.style.display = isVisible ? "none" : "block";
+      themeToggleDropdownItem.querySelector(".collapse-icon").style.transform =
+        isVisible ? "rotate(0deg)" : "rotate(90deg)";
+    });
+  }
+
+  // Theme radio button change handler
+  themeRadios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      if (radio.checked) {
+        const theme = radio.value;
+        chrome.storage.local.set({ [THEME_STORAGE_KEY]: theme });
+        initializeTheme(); // Use shared theme function
+      }
+    });
+  });
 });
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
