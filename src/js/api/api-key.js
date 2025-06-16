@@ -27,12 +27,16 @@ const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
  */
 async function validateApiKey(apiKey) {
   try {
+    console.log("Starting API key validation...");
     const response = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey
     );
+    console.log("Validation response status:", response.status);
     if (!response.ok) {
+      console.log("Validation failed with status:", response.status);
       throw new Error("Invalid API key");
     }
+    console.log("API key validation successful");
     return true;
   } catch (error) {
     console.error("API key validation error:", error);
@@ -77,7 +81,9 @@ function showApiKeyStatus(message, isError = false) {
  */
 async function initializeApiKey() {
   try {
-    const { apiKey } = await chrome.storage.local.get(["apiKey"]);
+    const { [API_KEY_STORAGE_KEY]: apiKey } = await chrome.storage.local.get([
+      API_KEY_STORAGE_KEY,
+    ]);
     if (apiKey) {
       const input = document.getElementById("apiKeyInput");
       input.value = apiKey;
@@ -122,23 +128,51 @@ document.getElementById("saveApiKey").addEventListener("click", async () => {
   }
 
   try {
+    console.log("Validating API key...");
     const isValid = await validateApiKey(apiKey);
     if (isValid) {
-      await chrome.storage.local.set({ apiKey });
+      console.log("API key is valid, saving to storage...");
+      await chrome.storage.local.set({ [API_KEY_STORAGE_KEY]: apiKey });
+
+      // Verify the key was saved
+      const verification = await chrome.storage.local.get([
+        API_KEY_STORAGE_KEY,
+      ]);
+      console.log(
+        "Verification - saved key:",
+        !!verification[API_KEY_STORAGE_KEY]
+      );
+
+      console.log("API key saved successfully, redirecting to sidebar...");
       updateApiKeyStatus(true);
       setTimeout(() => {
-        window.location.href = "sidebar.html";
-      }, 500);
+        console.log("Redirecting to sidebar.html...");
+        try {
+          // Check if we're in a popup context
+          if (window.location.search.includes("popup=true") || window.opener) {
+            // We're in a popup, close it and let the extension handle the side panel
+            window.close();
+          } else {
+            // We're in a side panel or regular page, redirect normally
+            window.location.href = "sidebar.html";
+          }
+        } catch (error) {
+          console.error("Error during redirection:", error);
+          // Fallback: try to reload the page
+          window.location.reload();
+        }
+      }, 200);
     } else {
+      console.log("API key validation failed");
       updateApiKeyStatus(false, "Invalid API key");
       // Clear the stored API key if the new one is invalid
-      await chrome.storage.local.remove(["apiKey"]);
+      await chrome.storage.local.remove([API_KEY_STORAGE_KEY]);
     }
   } catch (error) {
     console.error("Error validating API key:", error);
     updateApiKeyStatus(false, "Error validating API key");
     // Clear the stored API key on error
-    await chrome.storage.local.remove(["apiKey"]);
+    await chrome.storage.local.remove([API_KEY_STORAGE_KEY]);
   }
 });
 
@@ -146,7 +180,7 @@ document.getElementById("apiKeyInput").addEventListener("input", (e) => {
   const value = e.target.value.trim();
   if (value) {
     updateApiKeyStatus(null);
-    chrome.storage.local.remove(["apiKey"]);
+    chrome.storage.local.remove([API_KEY_STORAGE_KEY]);
   } else {
     updateApiKeyStatus(false, "Please enter an API key");
   }

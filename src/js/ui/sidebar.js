@@ -99,13 +99,28 @@ export let currentActiveTabId = null;
  * // AI client is ready to use
  */
 async function initializeAI() {
+  console.log("Initializing AI client...");
   const result = await chrome.storage.local.get([API_KEY_STORAGE_KEY]);
+  console.log("Storage result:", result);
+  console.log("API key found:", !!result[API_KEY_STORAGE_KEY]);
+
   if (!result[API_KEY_STORAGE_KEY]) {
+    console.log("No API key found, redirecting to API key page...");
     window.location.href = "../html/api-key.html";
     return;
   }
+
+  // Check if GoogleGenAI is available
+  if (typeof GoogleGenAI === "undefined") {
+    console.error("GoogleGenAI class is not available");
+    window.location.href = "../html/api-key.html";
+    return;
+  }
+
   try {
+    console.log("Creating GoogleGenAI instance...");
     ai = new GoogleGenAI({ apiKey: result[API_KEY_STORAGE_KEY] });
+    console.log("AI client initialized successfully");
   } catch (error) {
     console.error("Failed to initialize AI:", error);
     window.location.href = "../html/api-key.html";
