@@ -272,6 +272,17 @@ function renderChatLog(chatHistory, currentStatus) {
           },
         });
 
+        // Collapse citations section
+        document.getElementById("citationsTitle")?.classList.add("collapsed");
+        document
+          .getElementById("citationsContentWrapper")
+          ?.classList.add("collapsed");
+        await chrome.storage.local.set({ citationsCollapsed: true });
+
+        // Clear cited sentences from state
+        state.citedSentences = [];
+        state.currentCitedSentenceIndex = -1;
+
         state.status = "querying_llm";
         updateStatus("Asking Magellan AI...", "warning");
         document.getElementById("searchButton").disabled = true;

@@ -285,6 +285,18 @@ export async function performLLMSearch(query, forTabId, options = {}) {
         citations: currentCitationsForThisResponse,
         isExternalSource: isGeneralKnowledgeMode,
       });
+
+      // If this is a general knowledge answer, collapse citations
+      if (isGeneralKnowledgeMode) {
+        // Collapse citations section
+        if (currentActiveTabId === forTabId) {
+          document.getElementById("citationsTitle")?.classList.add("collapsed");
+          document
+            .getElementById("citationsContentWrapper")
+            ?.classList.add("collapsed");
+          await chrome.storage.local.set({ citationsCollapsed: true });
+        }
+      }
     }
 
     if (state.citedSentences.length > 0) {
