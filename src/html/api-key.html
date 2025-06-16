@@ -1,300 +1,353 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Magellan - API Key</title>
+    <meta charset="UTF-8" />
+    <title>Magellan - API Key Setup</title>
     <style>
       :root {
-        /* Core colors - same for both themes */
+        /* Core colors */
         --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --error: #ef4444;
-        --error-bg: rgba(239, 68, 68, 0.1);
+        --primary-hover: #4f46e5;
         --success: #10b981;
-        --success-bg: rgba(16, 185, 129, 0.1);
+        --error: #ef4444;
         --warning: #f59e0b;
-        --warning-bg: rgba(245, 158, 11, 0.1);
-        --border-radius: 8px;
-        --transition: all 0.2s ease;
 
-        /* Theme-specific variables */
-        --bg-primary: #181f28;
-        --bg-secondary: #374151;
-        --text-primary: #f3f4f6;
-        --text-secondary: #9ca3af;
-        --border-color: rgba(255, 255, 255, 0.1);
-        --input-bg: var(--bg-primary);
-        --input-border: var(--border-color);
-        --dropdown-hover: rgba(255, 255, 255, 0.1);
-      }
-
-      /* Light theme */
-      [data-theme="light"] {
+        /* Theme variables */
         --bg-primary: #ffffff;
         --bg-secondary: #f3f4f6;
         --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --border-color: rgba(0, 0, 0, 0.1);
-        --input-bg: var(--bg-secondary);
-        --input-border: var(--border-color);
-        --dropdown-hover: #e5e7eb;
+        --text-secondary: #4b5563;
+        --border-color: #e5e7eb;
+        --input-bg: #ffffff;
+        --input-border: #d1d5db;
+        --input-focus-border: #6366f1;
+        --input-focus-ring: rgba(99, 102, 241, 0.2);
+        --button-hover: #4f46e5;
+        --button-active: #4338ca;
+        --link-color: #6366f1;
+        --link-hover: #4f46e5;
+        --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
+          0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --transition: all 0.2s ease;
+
+        /* Dark theme */
+        --dark-bg-primary: #1f2937;
+        --dark-bg-secondary: #111827;
+        --dark-text-primary: #f9fafb;
+        --dark-text-secondary: #d1d5db;
+        --dark-border-color: #374151;
+        --dark-input-bg: #374151;
+        --dark-input-border: #4b5563;
+        --dark-input-focus-border: #6366f1;
+        --dark-input-focus-ring: rgba(99, 102, 241, 0.2);
+        --dark-card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3),
+          0 1px 2px -1px rgb(0 0 0 / 0.3);
+      }
+
+      :root[data-theme="dark"] {
+        --bg-primary: var(--dark-bg-primary);
+        --bg-secondary: var(--dark-bg-secondary);
+        --text-primary: var(--dark-text-primary);
+        --text-secondary: var(--dark-text-secondary);
+        --border-color: var(--dark-border-color);
+        --input-bg: var(--dark-input-bg);
+        --input-border: var(--dark-input-border);
+        --input-focus-border: var(--dark-input-focus-border);
+        --input-focus-ring: var(--dark-input-focus-ring);
+        --card-shadow: var(--dark-card-shadow);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
 
       body {
-        min-width: 320px;
-        padding: 16px;
-        font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
           "Helvetica Neue", Arial, sans-serif;
-        color: var(--text-primary);
         background-color: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.5;
+        height: 100vh;
         margin: 0;
-        height: 95vh;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
+        width: 100%;
       }
 
       .container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 1.5rem 0.75rem;
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        flex: 1;
-        min-height: 0;
-        justify-content: flex-start;
-        height: 100%;
-      }
-
-      .header {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 8px;
-        gap: 5px;
-      }
-
-      .title {
-        font-size: 24px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-right: 10px;
+        overflow-y: auto;
+        background-color: var(--bg-secondary);
       }
 
       .api-key-container {
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius);
-        padding: 20px;
+        padding: 1.5rem;
+        transition: var(--transition);
+        margin-top: 0;
+        width: 100%;
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 16px;
-        border: 1px solid var(--border-color);
       }
 
       .api-key-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        text-align: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .api-key-logo {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        border-radius: 8px;
       }
 
       .api-key-title {
-        font-size: 16px;
+        font-size: 1.25rem;
         font-weight: 600;
         color: var(--text-primary);
+        margin-bottom: 0.375rem;
+      }
+
+      .api-key-subtitle {
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        max-width: 24rem;
+        margin: 0 auto;
+        line-height: 1.4;
+      }
+
+      .api-key-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: var(--link-color);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.875rem;
+        border-radius: 6px;
+        transition: var(--transition);
+        margin: 0.75rem 0;
+        background-color: var(--primary);
+        color: white !important;
+      }
+
+      .api-key-link:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-1px);
+      }
+
+      .api-key-link svg {
+        transition: var(--transition);
+        width: 14px;
+        height: 14px;
+      }
+
+      .api-key-link:hover svg {
+        transform: translate(2px, -2px);
       }
 
       .api-key-description {
+        font-size: 0.8125rem;
         color: var(--text-secondary);
-        font-size: 14px;
-        line-height: 1.5;
-        padding: 12px;
-        border: 1px solid var(--error);
-        border-radius: var(--border-radius);
-        background-color: var(--error-bg);
-        margin: 8px 0;
+        background-color: var(--bg-primary);
+        padding: 0.875rem;
+        border-radius: 8px;
+        margin: 1.25rem 0;
+        border: 1px solid var(--border-color);
+        line-height: 1.4;
       }
 
       .api-key-description strong {
-        color: var(--error);
+        color: var(--text-primary);
         display: block;
-        margin-bottom: 4px;
-        font-weight: 600;
+        margin-bottom: 0.375rem;
+        font-size: 0.875rem;
       }
 
       .api-key-input-group {
         display: flex;
-        flex-direction: column;
-        gap: 12px;
+        gap: 1rem;
+        margin: 1.25rem 0;
+        position: relative;
       }
 
-      .api-key-input {
-        height: 40px;
-        width: 100%;
-        font-size: 14px;
-        border-radius: var(--border-radius);
-        padding: 10px 14px;
-        box-sizing: border-box;
-        border: 1px solid var(--input-border);
-        font-family: monospace;
-        outline: none;
-        background-color: var(--input-bg);
-        color: var(--text-primary);
-        transition: var(--transition);
+      .api-key-input-wrapper {
+        flex: 1;
+        position: relative;
       }
 
-      .api-key-input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-      }
-
-      .api-key-link {
-        color: white;
-        text-decoration: none;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        background-color: var(--primary);
-        padding: 8px 12px;
-        border-radius: var(--border-radius);
-        transition: var(--transition);
-      }
-
-      .api-key-link:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-1px);
-      }
-
-      .api-key-status {
-        font-size: 13px;
-        padding: 8px 12px;
-        border-radius: var(--border-radius);
+      .api-key-status-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
         display: none;
         transition: var(--transition);
       }
 
-      .api-key-status.visible {
+      .api-key-status-icon.visible {
         display: block;
       }
 
-      .api-key-status.success {
-        background-color: var(--success-bg);
+      .api-key-status-icon.success {
         color: var(--success);
-        outline: 1px solid rgba(16, 185, 129, 0.5);
       }
 
-      .api-key-status.error {
-        background-color: var(--error-bg);
+      .api-key-status-icon.error {
         color: var(--error);
-        outline: 1px solid rgba(239, 68, 68, 0.5);
+      }
+
+      .api-key-input {
+        width: 100%;
+        padding: 0.625rem 2.5rem 0.625rem 0.875rem;
+        font-size: 0.8125rem;
+        border: 1px solid var(--input-border);
+        border-radius: 6px;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
+        transition: var(--transition);
+        height: 36px;
+      }
+
+      .api-key-input:focus {
+        outline: none;
+        border-color: var(--input-focus-border);
+        box-shadow: 0 0 0 3px var(--input-focus-ring);
+      }
+
+      .api-key-input.error {
+        border-color: var(--error);
+      }
+
+      .api-key-input.success {
+        border-color: var(--success);
+      }
+
+      .button {
+        padding: 0.625rem 1rem;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+        white-space: nowrap;
+        color: white !important;
+        height: 36px;
+        min-width: 64px;
       }
 
       .save-button {
-        height: 40px;
-        width: 100%;
-        background-color: var(--success);
-        color: white;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-        border: none;
-        border-radius: var(--border-radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
+        background-color: var(--primary);
       }
 
-      .save-button:hover:not(:disabled) {
-        background-color: #0d9b6c;
-        transform: translateY(-1px);
+      .save-button:hover {
+        background-color: var(--primary-hover);
       }
 
       .back-button {
-        height: 40px;
-        width: 100%;
-        background-color: var(--primary);
-        color: white;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-        border: none;
-        border-radius: var(--border-radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
+        background-color: var(--bg-primary);
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color);
       }
 
-      .back-button:hover:not(:disabled) {
-        background-color: var(--primary-dark);
-        transform: translateY(-1px);
-      }
-
-      button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none !important;
-      }
-
-      .button-group {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
-      }
-
-      .button-group button {
-        flex: 1;
+      .back-button:hover {
+        background-color: var(--bg-secondary);
       }
 
       .footer {
         text-align: center;
-        font-size: 12px;
+        padding: 1rem 0.75rem;
         color: var(--text-secondary);
-        padding: 12px 0 0 0;
-        margin-top: auto;
+        font-size: 0.8125rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 4px;
-      }
-
-      .footer span {
-        display: flex;
-        align-items: center;
-      }
-
-      .footer img {
-        vertical-align: middle;
-        margin: 0 2px;
+        gap: 0.25rem;
+        flex-shrink: 0;
+        background-color: var(--bg-primary);
+        border-top: 1px solid var(--border-color);
       }
 
       .footer a {
+        color: var(--link-color);
         text-decoration: none;
-        color: inherit;
+        font-weight: 500;
+        transition: var(--transition);
       }
 
       .footer a:hover {
-        text-decoration: underline;
+        color: var(--link-hover);
+      }
+
+      .footer span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0.25rem;
+      }
+
+      .footer img {
+        width: 14px;
+        height: 14px;
+      }
+
+      @media (max-width: 400px) {
+        .container {
+          padding: 1rem 0.5rem;
+        }
+
+        .api-key-container {
+          padding: 1.25rem;
+        }
+
+        .api-key-input-group {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .api-key-input {
+          width: 100%;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <div class="header">
-        <img
-          src="../../public/logo.png"
-          alt="Logo"
-          style="width: 36px; height: auto; border-radius: 4px"
-        />
-        <div class="title">Magellan</div>
-      </div>
-
       <div class="api-key-container">
         <div class="api-key-header">
-          <div class="api-key-title">Configure API Key</div>
+          <img
+            src="../../public/logo.png"
+            alt="Magellan Logo"
+            class="api-key-logo"
+          />
+          <h1 class="api-key-title">Welcome to Magellan</h1>
+          <p class="api-key-subtitle">
+            To get started, you'll need a Gemini API key. It's free to use with
+            rate limiting.
+          </p>
           <a
-            href="https://ai.google.dev/gemini-api/docs/api-key"
+            href="https://makersuite.google.com/app/apikey"
             target="_blank"
             class="api-key-link"
           >
-            Get API Key
+            Get API Free Key
             <svg
               width="12"
               height="12"
@@ -315,25 +368,51 @@
 
         <div class="api-key-description">
           <strong>Privacy Notice</strong>
-          To use Magellan, you need a Gemini API key. The key is free to use
-          with rate limiting. Please note that while your API key is stored
-          securely in your browser, Google's Gemini AI may store and process the
-          content you search. Be cautious about which pages you run the
-          extension on, especially with sensitive or private information.
+          Your API key is stored securely in your browser. However, please note
+          that Google's Gemini AI may store and process the content you search.
+          Be cautious about which pages you run the extension on, especially
+          with sensitive or private information.
         </div>
 
         <div class="api-key-input-group">
-          <input
-            type="password"
-            id="apiKeyInput"
-            class="api-key-input"
-            placeholder="Enter your Gemini API key"
-          />
-          <button id="saveApiKey" class="save-button">Save</button>
-          <button id="backToPopup" class="back-button">Back to Search</button>
+          <div class="api-key-input-wrapper">
+            <input
+              type="password"
+              id="apiKeyInput"
+              class="api-key-input"
+              placeholder="Enter your Gemini API key"
+            />
+            <svg
+              class="api-key-status-icon success"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M20 6L9 17L4 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg
+              class="api-key-status-icon error"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6L6 18M6 6L18 18"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+          <button id="saveApiKey" class="button save-button">Save</button>
         </div>
-
-        <div id="apiKeyStatus" class="api-key-status"></div>
       </div>
     </div>
 

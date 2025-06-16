@@ -174,11 +174,13 @@ function renderChatLog(chatHistory, currentStatus) {
       if (msg.isExternalSource) {
         headerDiv.style.color = "#10b981";
         headerDiv.textContent = "Answer from general knowledge";
-        messageDiv.style.borderLeftColor = "#10b981";
+        messageDiv.classList.add("general-knowledge");
       } else {
         headerDiv.style.color = "#6366f1";
         headerDiv.textContent = "Answer from page context";
-        messageDiv.style.borderLeftColor = "#6366f1";
+        if (msg.citations && msg.citations.length > 0) {
+          messageDiv.classList.add("has-citations");
+        }
       }
       messageDiv.appendChild(headerDiv);
     }
@@ -254,6 +256,22 @@ function renderChatLog(chatHistory, currentStatus) {
         if (iconSvg) iconSvg.style.display = "none";
         if (spinnerDiv) spinnerDiv.style.display = "inline-block";
 
+        // Temporarily hide highlights by removing highlight classes
+        await chrome.scripting.executeScript({
+          target: { tabId: currentActiveTabId },
+          func: () => {
+            const highlightClasses = [
+              "mgl-cited-element-highlight",
+              "mgl-active-element-highlight",
+            ];
+            highlightClasses.forEach((cls) => {
+              document
+                .querySelectorAll(`.${cls}`)
+                .forEach((el) => el.classList.remove(cls));
+            });
+          },
+        });
+
         state.status = "querying_llm";
         updateStatus("Asking Magellan AI...", "warning");
         document.getElementById("searchButton").disabled = true;
@@ -278,15 +296,65 @@ function renderChatLog(chatHistory, currentStatus) {
 
     if (msg.role === "assistant" && msg.citations && msg.citations.length > 0) {
       messageDiv.classList.add("has-citations");
-      messageDiv.addEventListener("click", () => {
+      messageDiv.addEventListener("click", async () => {
         if (currentActiveTabId && tabStates[currentActiveTabId]) {
           const state = tabStates[currentActiveTabId];
-          state.citedSentences = msg.citations;
-          state.currentCitedSentenceIndex = 0;
 
-          chrome.storage.local.get(["highlightsVisible"], async (result) => {
-            const isVisible = result.highlightsVisible !== false;
+          // Check if this message is already active (clicked before)
+          const isActive =
+            state.citedSentences === msg.citations &&
+            document
+              .getElementById("citationsTitle")
+              ?.classList.contains("collapsed") === false;
 
+          if (isActive) {
+            // If already active, hide highlights and collapse citations
+            await chrome.scripting.executeScript({
+              target: { tabId: currentActiveTabId },
+              func: () => {
+                const highlightClasses = [
+                  "mgl-cited-element-highlight",
+                  "mgl-active-element-highlight",
+                ];
+                highlightClasses.forEach((cls) => {
+                  document
+                    .querySelectorAll(`.${cls}`)
+                    .forEach((el) => el.classList.remove(cls));
+                });
+              },
+            });
+
+            // Collapse citations section
+            document
+              .getElementById("citationsTitle")
+              ?.classList.add("collapsed");
+            document
+              .getElementById("citationsContentWrapper")
+              ?.classList.add("collapsed");
+            await chrome.storage.local.set({ citationsCollapsed: true });
+
+            // Clear cited sentences from state
+            state.citedSentences = [];
+            state.currentCitedSentenceIndex = -1;
+          } else {
+            // If not active, show highlights and expand citations
+            state.citedSentences = msg.citations;
+            state.currentCitedSentenceIndex = 0;
+
+            // Expand citations section
+            document
+              .getElementById("citationsTitle")
+              ?.classList.remove("collapsed");
+            document
+              .getElementById("citationsContentWrapper")
+              ?.classList.remove("collapsed");
+            await chrome.storage.local.set({ citationsCollapsed: false });
+
+            const { highlightsVisible } = await chrome.storage.local.get([
+              "highlightsVisible",
+            ]);
+
+            // Re-add highlight styles and show highlights
             await chrome.scripting.insertCSS({
               target: { tabId: currentActiveTabId },
               css: `
@@ -295,7 +363,7 @@ function renderChatLog(chatHistory, currentStatus) {
               `,
             });
 
-            if (isVisible) {
+            if (highlightsVisible) {
               const elementIdsToHighlight = msg.citations.map(
                 (cs) => cs.elementId
               );
@@ -306,9 +374,9 @@ function renderChatLog(chatHistory, currentStatus) {
               });
               navigateToMatchOnPage(currentActiveTabId, 0, true);
             }
+          }
 
-            renderPopupUI();
-          });
+          renderPopupUI();
         }
       });
     }
