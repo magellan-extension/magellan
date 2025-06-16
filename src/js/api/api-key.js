@@ -13,50 +13,30 @@ const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 
 /**
  * Validates a Google Gemini API key
- * @param {string} key - The API key to validate
- * @returns {Promise<{isValid: boolean, error: string|null}>} Validation result
+ * @param {string} apiKey - The API key to validate
+ * @returns {Promise<boolean>} Validation result
  * @throws {Error} If validation process fails
  *
  * @example
  * const result = await validateApiKey('AI...');
- * if (result.isValid) {
+ * if (result) {
  *   console.log('API key is valid');
  * } else {
- *   console.error(result.error);
+ *   console.error('Invalid API key');
  * }
  */
-async function validateApiKey(key) {
-  if (!key || !key.startsWith("AI") || key.length !== 39) {
-    return {
-      isValid: false,
-      error:
-        'Invalid API key format. Keys should start with "AI" and be 39 characters long.',
-    };
-  }
-
+async function validateApiKey(apiKey) {
   try {
-    const testAi = new GoogleGenAI({ apiKey: key });
-
-    const testPrompt = "Say 'test' if you can read this.";
-    const result = await testAi.generateContent(testPrompt);
-
-    if (!result || !result.text) {
-      return {
-        isValid: false,
-        error: "API key validation failed: No response received",
-      };
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey
+    );
+    if (!response.ok) {
+      throw new Error("Invalid API key");
     }
-
-    return {
-      isValid: true,
-      error: null,
-    };
+    return true;
   } catch (error) {
     console.error("API key validation error:", error);
-    return {
-      isValid: false,
-      error: `API key validation failed: ${error.message || "Unknown error"}`,
-    };
+    return false;
   }
 }
 
@@ -96,61 +76,80 @@ function showApiKeyStatus(message, isError = false) {
  * document.addEventListener('DOMContentLoaded', initializeApiKey);
  */
 async function initializeApiKey() {
-  const apiKeyInput = document.getElementById("apiKeyInput");
-  const saveButton = document.getElementById("saveApiKey");
-  const backButton = document.getElementById("backToPopup");
+  try {
+    const { apiKey } = await chrome.storage.local.get(["apiKey"]);
+    if (apiKey) {
+      const input = document.getElementById("apiKeyInput");
+      input.value = apiKey;
+      // Validate the stored key on load
+      const isValid = await validateApiKey(apiKey);
+      updateApiKeyStatus(isValid);
+    }
+  } catch (error) {
+    console.error("Error initializing API key:", error);
+  }
+}
 
-  const result = await chrome.storage.local.get([API_KEY_STORAGE_KEY]);
-  if (result[API_KEY_STORAGE_KEY]) {
-    apiKeyInput.value = result[API_KEY_STORAGE_KEY];
+function updateApiKeyStatus(isValid, message) {
+  const input = document.getElementById("apiKeyInput");
+  const successIcon = document.querySelector(".api-key-status-icon.success");
+  const errorIcon = document.querySelector(".api-key-status-icon.error");
+  const saveButton = document.getElementById("saveApiKey");
+
+  // Remove all status classes
+  input.classList.remove("success", "error");
+  successIcon.classList.remove("visible");
+  errorIcon.classList.remove("visible");
+
+  if (isValid === true) {
+    input.classList.add("success");
+    successIcon.classList.add("visible");
+    saveButton.disabled = false;
+  } else if (isValid === false || message) {
+    input.classList.add("error");
+    errorIcon.classList.add("visible");
+    saveButton.disabled = true;
+  } else {
+    saveButton.disabled = false;
+  }
+}
+
+document.getElementById("saveApiKey").addEventListener("click", async () => {
+  const apiKey = document.getElementById("apiKeyInput").value.trim();
+  if (!apiKey) {
+    updateApiKeyStatus(false, "Please enter an API key");
+    return;
   }
 
-  /**
-   * Handles the API key save operation
-   * @async
-   * @function
-   */
-  saveButton.addEventListener("click", async () => {
-    const apiKey = apiKeyInput.value.trim();
-
-    if (!apiKey) {
-      showApiKeyStatus("Please enter an API key", true);
-      return;
+  try {
+    const isValid = await validateApiKey(apiKey);
+    if (isValid) {
+      await chrome.storage.local.set({ apiKey });
+      updateApiKeyStatus(true);
+      setTimeout(() => {
+        window.location.href = "sidebar.html";
+      }, 500);
+    } else {
+      updateApiKeyStatus(false, "Invalid API key");
+      // Clear the stored API key if the new one is invalid
+      await chrome.storage.local.remove(["apiKey"]);
     }
+  } catch (error) {
+    console.error("Error validating API key:", error);
+    updateApiKeyStatus(false, "Error validating API key");
+    // Clear the stored API key on error
+    await chrome.storage.local.remove(["apiKey"]);
+  }
+});
 
-    saveButton.disabled = true;
-    saveButton.textContent = "Validating...";
-
-    try {
-      const validation = await validateApiKey(apiKey);
-
-      if (!validation.isValid) {
-        showApiKeyStatus(validation.error, true);
-        return;
-      }
-
-      await chrome.storage.local.set({ [API_KEY_STORAGE_KEY]: apiKey });
-      showApiKeyStatus("API key saved successfully");
-
-      const views = await chrome.extension.getViews({ type: "popup" });
-      if (views.length > 0) {
-        views[0].window.ai = new GoogleGenAI({ apiKey });
-      }
-    } catch (error) {
-      showApiKeyStatus("Failed to validate API key: " + error.message, true);
-    } finally {
-      saveButton.disabled = false;
-      saveButton.textContent = "Save";
-    }
-  });
-
-  /**
-   * Handles navigation back to the main popup
-   * @function
-   */
-  backButton.addEventListener("click", () => {
-    window.location.href = "../html/sidebar.html";
-  });
-}
+document.getElementById("apiKeyInput").addEventListener("input", (e) => {
+  const value = e.target.value.trim();
+  if (value) {
+    updateApiKeyStatus(null);
+    chrome.storage.local.remove(["apiKey"]);
+  } else {
+    updateApiKeyStatus(false, "Please enter an API key");
+  }
+});
 
 document.addEventListener("DOMContentLoaded", initializeApiKey);
