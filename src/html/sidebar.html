@@ -789,23 +789,23 @@
       }
       .chat-log-container::-webkit-scrollbar-track,
       .citations-container::-webkit-scrollbar-track {
-        background: var(--scrollbar-track);
+        background: var(--bg-primary);
         border-radius: 4px;
       }
       .chat-log-container::-webkit-scrollbar-thumb,
       .citations-container::-webkit-scrollbar-thumb {
-        background: var(--scrollbar-thumb);
+        background: var(--border-color);
         border-radius: 4px;
-        border: 2px solid var(--scrollbar-track);
+        border: 2px solid var(--bg-primary);
       }
       .chat-log-container::-webkit-scrollbar-thumb:hover,
       .citations-container::-webkit-scrollbar-thumb:hover {
-        background: var(--scrollbar-thumb-hover);
+        background: var(--text-secondary);
       }
       .chat-log-container,
       .citations-container {
         scrollbar-width: thin;
-        scrollbar-color: var(--scrollbar-track) var(--scrollbar-track);
+        scrollbar-color: var(--border-color) var(--bg-primary);
       }
 
       .search-mode-section {
@@ -943,6 +943,31 @@
         width: 16px;
         height: 16px;
         color: var(--text-secondary);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+        border: 2px solid var(--bg-primary);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-color) var(--bg-primary);
       }
     </style>
   </head>
