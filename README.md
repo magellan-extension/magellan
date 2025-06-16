@@ -20,6 +20,7 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
 - 📚 **Smart Citations** – Get direct links to the relevant parts of the page
 - 🎯 **Visual Highlights** – See exactly where the information comes from with highlighted text
 - 💬 **Conversation History** – Keep track of your questions and answers
+- 🎨 **Theme Support** – Choose between light and dark themes, or sync with your system
 - 🧼 **Sleek, Responsive UI** – Clean design that fits right into your browser workflow
 - 💸 **100% Free** – No subscriptions, no paywalls, no data harvesting
 
@@ -97,6 +98,7 @@ magellan/
 │   │   │   └── tabState.js   # Tab state management
 │   │   └── ui/           # User interface
 │   │       ├── sidebar.js    # Sidebar component
+│   │       ├── theme.js      # Theme management
 │   │       └── ui.js         # UI utilities and components
 │   └── html/              # HTML files
 ├── public/                # Static assets

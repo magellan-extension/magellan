@@ -4,6 +4,7 @@
     <title>Magellan</title>
     <style>
       :root {
+        /* Core colors - same for both themes */
         --primary: #6366f1;
         --primary-dark: #4f46e5;
         --error: #ef4444;
@@ -12,15 +13,45 @@
         --success-bg: rgba(16, 185, 129, 0.1);
         --warning: #f59e0b;
         --warning-bg: rgba(245, 158, 11, 0.1);
-        --bg-dark: #181f28;
-        --bg-light: #374151;
+        --border-radius: 8px;
+
+        /* Theme-specific variables */
+        --bg-primary: #181f28;
+        --bg-secondary: #374151;
         --text-primary: #f3f4f6;
         --text-secondary: #9ca3af;
-        --border-radius: 8px;
-        --transition: all 0.2s ease;
+        --border-color: rgba(255, 255, 255, 0.1);
         --highlight-bg: rgba(99, 102, 241, 0.4);
         --user-message-bg: var(--primary);
-        --assistant-message-bg: var(--bg-light);
+        --assistant-message-bg: var(--bg-secondary);
+        --scrollbar-track: var(--bg-primary);
+        --scrollbar-thumb: var(--bg-secondary);
+        --scrollbar-thumb-hover: #5a6678;
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-bg: var(--bg-secondary);
+        --dropdown-hover: rgba(255, 255, 255, 0.1);
+        --dropdown-divider: var(--border-color);
+      }
+
+      /* Light theme */
+      [data-theme="light"] {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: rgba(0, 0, 0, 0.1);
+        --highlight-bg: rgba(99, 102, 241, 0.2);
+        --user-message-bg: var(--primary);
+        --assistant-message-bg: #e5e7eb;
+        --scrollbar-track: var(--bg-primary);
+        --scrollbar-thumb: #d1d5db;
+        --scrollbar-thumb-hover: #9ca3af;
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-bg: var(--bg-secondary);
+        --dropdown-hover: #e5e7eb;
+        --dropdown-divider: var(--border-color);
       }
 
       body {
@@ -29,7 +60,7 @@
         font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
           "Helvetica Neue", Arial, sans-serif;
         color: var(--text-primary);
-        background-color: var(--bg-dark);
+        background-color: var(--bg-primary);
         margin: 0;
         height: 95vh;
         display: flex;
@@ -86,7 +117,7 @@
 
       .settings-icon:hover,
       .settings-icon.active {
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
         color: var(--text-primary);
       }
 
@@ -99,7 +130,7 @@
         position: absolute;
         top: calc(100% + 4px);
         right: 0;
-        background-color: var(--bg-light);
+        background-color: var(--dropdown-bg);
         border-radius: var(--border-radius);
         padding: 4px 0;
         min-width: 200px;
@@ -110,6 +141,7 @@
         transition: opacity 0.2s ease, visibility 0s linear 0.2s,
           transform 0.2s ease;
         z-index: 1000;
+        border: 1px solid var(--border-color);
       }
 
       .settings-dropdown.visible {
@@ -134,7 +166,7 @@
       }
 
       .settings-dropdown-item:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--dropdown-hover);
       }
 
       .settings-dropdown-item svg {
@@ -150,7 +182,7 @@
 
       .settings-dropdown-divider {
         height: 1px;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--dropdown-divider);
         margin: 4px 0;
       }
 
@@ -173,7 +205,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
         transition: 0.4s;
         border-radius: 20px;
       }
@@ -220,7 +252,7 @@
         -webkit-appearance: none;
         width: 100%;
         height: 6px;
-        background: var(--bg-light);
+        background: var(--bg-secondary);
         border-radius: 3px;
         outline: none;
         padding: 0;
@@ -234,7 +266,7 @@
         height: 16px;
         background: var(--primary);
         border-radius: 50%;
-        border: 2px solid var(--bg-dark);
+        border: 2px solid var(--bg-primary);
         cursor: pointer;
       }
 
@@ -257,7 +289,7 @@
         color: var(--text-secondary);
         text-align: center;
         padding: 8px 12px;
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
         border-radius: var(--border-radius);
         display: none;
         transition: var(--transition);
@@ -296,7 +328,7 @@
         overflow-y: auto;
         overflow-x: hidden;
         padding: 10px;
-        background-color: var(--bg-dark);
+        background-color: var(--bg-primary);
         border-radius: var(--border-radius);
         display: flex;
         flex-direction: column;
@@ -431,7 +463,7 @@
       }
 
       .assistant-message {
-        background-color: #2a2a2a;
+        background-color: var(--assistant-message-bg);
         color: var(--text-primary);
         align-self: flex-start;
         border-bottom-left-radius: 4px;
@@ -445,8 +477,7 @@
       }
 
       .assistant-message.has-citations:hover {
-        background-color: #363636;
-        transform: translateX(4px);
+        background-color: var(--dropdown-hover);
       }
 
       .assistant-message.loading-dots span {
@@ -478,7 +509,7 @@
       .general-knowledge-prompt-container {
         margin-top: 12px;
         padding-top: 8px;
-        border-top: 1px solid var(--bg-light);
+        border-top: 1px solid var(--bg-secondary);
       }
       .general-knowledge-prompt-button {
         display: inline-flex;
@@ -521,10 +552,10 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        background-color: var(--bg-light);
-        padding: 8px 12px;
+        background-color: var(--input-bg);
+        padding: 6px 12px;
         border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--input-border);
         flex-shrink: 0;
       }
 
@@ -534,7 +565,7 @@
         border: none;
         color: var(--text-primary);
         font-size: 14px;
-        padding: 8px 0;
+        padding: 6px 0;
         outline: none;
       }
       #searchQuery::placeholder {
@@ -632,13 +663,13 @@
       }
 
       .citations-container {
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
         border-radius: var(--border-radius);
         padding: 8px;
         margin-bottom: 8px;
         max-height: 160px;
         overflow-y: auto;
-        border: 1px solid var(--primary-dark);
+        border: 1px solid var(--border-color);
         min-height: 60px;
         display: flex;
         flex-direction: column;
@@ -659,7 +690,7 @@
         padding: 8px 10px;
         font-size: 13px;
         cursor: pointer;
-        border-bottom: 1px solid var(--bg-dark);
+        border-bottom: 1px solid var(--border-color);
         color: var(--text-primary);
         transition: background-color 0.2s ease;
         display: flex;
@@ -670,7 +701,7 @@
         border-bottom: none;
       }
       .citation-item:hover {
-        background-color: #3d3d3d;
+        background-color: var(--dropdown-hover);
       }
       .citation-item.active-citation {
         background-color: var(--primary);
@@ -681,7 +712,7 @@
         font-size: 11px;
         font-weight: bold;
         color: var(--primary-dark);
-        background-color: var(--bg-dark);
+        background-color: var(--bg-primary);
         padding: 3px 6px;
         border-radius: 4px;
         min-width: 20px;
@@ -706,7 +737,7 @@
       }
       .nav-button {
         flex: 1;
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
         color: var(--text-primary);
         font-size: 13px;
         padding: 8px 12px;
@@ -716,7 +747,7 @@
         transition: var(--transition);
       }
       .nav-button:not(:disabled):hover {
-        background-color: #3d3d3d;
+        background-color: var(--dropdown-hover);
         transform: translateY(-1px);
       }
       .nav-button:disabled {
@@ -758,36 +789,35 @@
       }
       .chat-log-container::-webkit-scrollbar-track,
       .citations-container::-webkit-scrollbar-track {
-        background: var(--bg-dark);
+        background: var(--bg-primary);
         border-radius: 4px;
       }
       .chat-log-container::-webkit-scrollbar-thumb,
       .citations-container::-webkit-scrollbar-thumb {
-        background: var(--bg-light);
+        background: var(--border-color);
         border-radius: 4px;
-        border: 2px solid var(--bg-dark);
+        border: 2px solid var(--bg-primary);
       }
       .chat-log-container::-webkit-scrollbar-thumb:hover,
       .citations-container::-webkit-scrollbar-thumb:hover {
-        background: #5a6678;
+        background: var(--text-secondary);
       }
       .chat-log-container,
       .citations-container {
         scrollbar-width: thin;
-        scrollbar-color: var(--bg-light) var(--bg-dark);
+        scrollbar-color: var(--border-color) var(--bg-primary);
       }
 
       .search-mode-section {
         margin: 8px 0;
-        border: 1px solid var(--bg-light);
+        border: 1px solid var(--bg-secondary);
         border-radius: var(--border-radius);
         overflow: hidden;
       }
 
       .search-mode-header {
         padding: 8px 12px;
-        background-color: var(--bg-light);
-        border-bottom: 1px solid var(--bg-light);
+        background-color: var(--bg-secondary);
         cursor: pointer;
         user-select: none;
       }
@@ -851,7 +881,7 @@
       }
 
       .search-mode-option:hover {
-        background-color: var(--bg-light);
+        background-color: var(--bg-secondary);
       }
 
       .search-mode-radio {
@@ -873,6 +903,71 @@
         font-size: 12px;
         color: var(--text-secondary);
         line-height: 1.4;
+      }
+
+      /* Add theme toggle styles */
+      .theme-toggle-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 12px;
+      }
+
+      .theme-toggle-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+        color: var(--text-primary);
+      }
+
+      .theme-toggle-option:hover {
+        background-color: var(--dropdown-hover);
+      }
+
+      .theme-toggle-option input[type="radio"] {
+        margin: 0;
+      }
+
+      .theme-toggle-label {
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .theme-toggle-label svg {
+        width: 16px;
+        height: 16px;
+        color: var(--text-secondary);
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 4px;
+        border: 2px solid var(--bg-primary);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-color) var(--bg-primary);
       }
     </style>
   </head>
@@ -919,6 +1014,100 @@
                   <input type="checkbox" id="highlightsToggle" checked />
                   <span class="toggle-slider"></span>
                 </div>
+              </div>
+              <div class="settings-dropdown-divider"></div>
+              <div class="settings-dropdown-item" id="themeToggleDropdownItem">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Theme
+                <svg
+                  class="collapse-icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 5l7 7-7 7"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+              <div
+                class="theme-toggle-group"
+                id="themeToggleGroup"
+                style="display: none"
+              >
+                <label class="theme-toggle-option">
+                  <input type="radio" name="theme" value="light" />
+                  <span class="theme-toggle-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    Light
+                  </span>
+                </label>
+                <label class="theme-toggle-option">
+                  <input type="radio" name="theme" value="dark" />
+                  <span class="theme-toggle-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    Dark
+                  </span>
+                </label>
+                <label class="theme-toggle-option">
+                  <input type="radio" name="theme" value="system" />
+                  <span class="theme-toggle-label">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                    System
+                  </span>
+                </label>
               </div>
               <div class="settings-dropdown-divider"></div>
               <div class="settings-dropdown-item" id="clearChatDropdownItem">
