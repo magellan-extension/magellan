@@ -95,6 +95,14 @@ export async function performLLMSearch(query, forTabId, options = {}) {
   let isGeneralKnowledgeMode =
     searchMode === "general" || forceGeneralKnowledge;
 
+  // Get the last 10 messages from chat history for context
+  const recentMessages = state.chatHistory.slice(-10);
+  const conversationContext = recentMessages
+    .map(
+      (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+    )
+    .join("\n\n");
+
   if (!state) {
     if (state) {
       updateTabStatus(
@@ -140,19 +148,23 @@ export async function performLLMSearch(query, forTabId, options = {}) {
     if (isGeneralKnowledgeMode) {
       // General Knowledge Only mode
       const webPrompt = `
-  You are an AI assistant helping a user with their question. Please use your general knowledge and reasoning capabilities to provide a helpful answer.
-  
-  User's question: "${query}"
-  
-  Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
-  Format your response as follows:
-  LLM_ANSWER_START
-  [Your answer to the query]
-  LLM_ANSWER_END
-  LLM_CITATIONS_START
-  NONE
-  LLM_CITATIONS_END
-  `;
+You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer.
+
+Recent conversation history:
+${conversationContext}
+
+User's question: "${query}"
+
+Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
+
+Format your response as follows:
+LLM_ANSWER_START
+[Your answer to the query]
+LLM_ANSWER_END
+LLM_CITATIONS_START
+NONE
+LLM_CITATIONS_END
+`;
       llmResult = await ai.generateContent(webPrompt);
     } else if (searchMode === "page" && !isRelevant) {
       // Page Context Only mode - no relevant content found
@@ -168,53 +180,48 @@ export async function performLLMSearch(query, forTabId, options = {}) {
     } else if (searchMode === "blended" && !isRelevant) {
       // Blended mode - fallback to general knowledge
       const webPrompt = `
-  You are an AI assistant helping a user with their question. Please use your general knowledge and reasoning capabilities to provide a helpful answer.
-  
-  User's question: "${query}"
-  
-  Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
-  Format your response as follows:
-  LLM_ANSWER_START
-  [Your answer to the query]
-  LLM_ANSWER_END
-  LLM_CITATIONS_START
-  NONE
-  LLM_CITATIONS_END
-  `;
+You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer.
+
+Recent conversation history:
+${conversationContext}
+
+User's question: "${query}"
+
+Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
+
+Format your response as follows:
+LLM_ANSWER_START
+[Your answer to the query]
+LLM_ANSWER_END
+LLM_CITATIONS_START
+NONE
+LLM_CITATIONS_END
+`;
       llmResult = await ai.generateContent(webPrompt);
       isGeneralKnowledgeMode = true;
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
-  You are an AI assistant helping a user understand the content of a webpage.
-  The user has asked the following question: "${query}"
-  
-  Here is the relevant text content extracted from the page. Each piece of text is preceded by its unique element ID in square brackets (e.g., [mgl-node-0]).
-  The goal is to identify the most specific, relevant sections.
-  --- START OF PAGE CONTENT ---
-  ${state.fullPageTextContent}
-  --- END OF PAGE CONTENT ---
-  
-  Please perform the following tasks:
-  1.  Provide a concise answer to the user's question based *only* on the provided page content.
-      If the answer cannot be found in the content, explicitly state that. Do not make up information.
-  2.  Identify element IDs from the "PAGE CONTENT" above whose text directly supports your answer or is most relevant to the user's query.
-      *   **Prioritize the SMALLEST, most specific HTML elements** that contain the relevant information. For example, if a specific sentence is in a <p> tag inside a <div>, prefer the ID of the <p> tag if its text is listed.
-      *   **Avoid selecting IDs of very large elements** (e.g., main content containers, sidebars, or elements whose text seems to span a huge portion of the page content provided) unless absolutely necessary because no smaller element contains the specific information.
-      *   List *only the element IDs* (the string inside the brackets, e.g., mgl-node-0), one ID per line.
-      *   Do not include the sentence text in this citation list.
-      If no relevant elements can be found, or if you stated the answer cannot be found, leave the citations section empty or write "NONE".
-  
-  Format your response as follows:
-  LLM_ANSWER_START
-  [Your answer to the query based on the page content]
-  LLM_ANSWER_END
-  LLM_CITATIONS_START
-  [element_id_1_from_page_content]
-  [element_id_2_from_page_content]
-  ...
-  LLM_CITATIONS_END
-  `;
+You are an AI assistant helping a user with their question about a web page. Please use the page content and conversation history to provide a helpful answer.
+
+Recent conversation history:
+${conversationContext}
+
+Page content:
+${state.fullPageTextContent}
+
+User's question: "${query}"
+
+Please provide a clear and informative answer based on the page content and conversation history. If you need to cite specific parts of the page, use the element IDs in square brackets like [mgl-node-0]. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
+
+Format your response as follows:
+LLM_ANSWER_START
+[Your answer to the query]
+LLM_ANSWER_END
+LLM_CITATIONS_START
+[List of element IDs to cite, one per line, or NONE if no citations]
+LLM_CITATIONS_END
+`;
       llmResult = await ai.generateContent(pagePrompt);
     }
 
@@ -232,8 +239,9 @@ export async function performLLMSearch(query, forTabId, options = {}) {
       /LLM_CITATIONS_START\s*([\s\S]*?)\s*LLM_CITATIONS_END/
     );
 
+    // Clean the assistant response text by removing any node IDs
     const assistantResponseText = answerMatch
-      ? answerMatch[1].trim()
+      ? answerMatch[1].trim().replace(/\s*\[mgl-node-\d+\]/g, "")
       : "LLM did not provide an answer in the expected format. Please try again.";
     const rawCitationIds = citationsMatch ? citationsMatch[1].trim() : "";
     const parsedElementIds = rawCitationIds
