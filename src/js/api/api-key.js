@@ -186,4 +186,11 @@ document.getElementById("apiKeyInput").addEventListener("input", (e) => {
   }
 });
 
+// Add Enter key handler for the input field
+document.getElementById("apiKeyInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    document.getElementById("saveApiKey").click();
+  }
+});
+
 document.addEventListener("DOMContentLoaded", initializeApiKey);
