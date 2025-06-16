@@ -5,7 +5,7 @@
   "description": "Ask AI questions about any webpage and get instant answers. 100% free, no strings attached.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
   "background": {
-    "service_worker": "src/js/background.js"
+    "service_worker": "src/js/core/background.js"
   },
   "side_panel": {
     "default_path": "src/html/sidebar.html"
