@@ -212,7 +212,7 @@ ${state.fullPageTextContent}
 
 User's question: "${query}"
 
-Please provide a clear and informative answer based on the page content and conversation history. If you need to cite specific parts of the page, use the element IDs in square brackets like [mgl-node-0]. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
+Please provide a clear and informative answer based on the page content and conversation history. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
 
 Format your response as follows:
 LLM_ANSWER_START
@@ -241,7 +241,7 @@ LLM_CITATIONS_END
 
     // Clean the assistant response text by removing any node IDs
     const assistantResponseText = answerMatch
-      ? answerMatch[1].trim().replace(/\s*\[mgl-node-\d+\]/g, "")
+      ? answerMatch[1].trim()
       : "LLM did not provide an answer in the expected format. Please try again.";
     const rawCitationIds = citationsMatch ? citationsMatch[1].trim() : "";
     const parsedElementIds = rawCitationIds
