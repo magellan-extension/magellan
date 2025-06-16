@@ -84,10 +84,20 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
 magellan/
 ├── src/                    # Source code
 │   ├── js/                # JavaScript files
-│   │   ├── api-key.js     # API key management
-│   │   ├── background.js  # Background service worker
-│   │   ├── google-ai.js   # Google AI SDK integration
-│   │   └── sidebar.js     # Main UI and interaction logic
+│   │   ├── api/          # API integration
+│   │   │   ├── api-key.js    # API key management
+│   │   │   └── google-ai.js  # Google AI SDK integration
+│   │   ├── core/         # Core functionality
+│   │   │   ├── background.js # Background service worker
+│   │   │   └── utils.js      # Utility functions
+│   │   ├── search/       # Search functionality
+│   │   │   ├── search.js     # Search implementation
+│   │   │   └── contentScript.js # Content script for page interaction
+│   │   ├── state/        # State management
+│   │   │   └── tabState.js   # Tab state management
+│   │   └── ui/           # User interface
+│   │       ├── sidebar.js    # Sidebar component
+│   │       └── ui.js         # UI utilities and components
 │   └── html/              # HTML files
 ├── public/                # Static assets
 ├── docs/                  # Documentation
