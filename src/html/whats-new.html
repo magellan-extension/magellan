@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>What's New - Magellan</title>
+    <style>
+      :root {
+        /* Core colors - same for both themes */
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --error: #ef4444;
+        --error-bg: rgba(239, 68, 68, 0.1);
+        --success: #10b981;
+        --success-bg: rgba(16, 185, 129, 0.1);
+        --warning: #f59e0b;
+        --warning-bg: rgba(245, 158, 11, 0.1);
+        --border-radius: 6px;
+        --transition: all 0.2s ease;
+
+        /* Theme-specific variables */
+        --bg-primary: #181f28;
+        --bg-secondary: #374151;
+        --text-primary: #f3f4f6;
+        --text-secondary: #9ca3af;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --highlight-bg: rgba(99, 102, 241, 0.4);
+        --scrollbar-track: var(--bg-primary);
+        --scrollbar-thumb: var(--bg-secondary);
+        --scrollbar-thumb-hover: #5a6678;
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-bg: var(--bg-secondary);
+        --dropdown-hover: rgba(255, 255, 255, 0.1);
+        --dropdown-divider: var(--border-color);
+      }
+
+      /* Light theme */
+      [data-theme="light"] {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f3f4f6;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --border-color: rgba(0, 0, 0, 0.1);
+        --highlight-bg: rgba(99, 102, 241, 0.2);
+        --scrollbar-track: var(--bg-primary);
+        --scrollbar-thumb: #d1d5db;
+        --scrollbar-thumb-hover: #9ca3af;
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-bg: var(--bg-secondary);
+        --dropdown-hover: #e5e7eb;
+        --dropdown-divider: var(--border-color);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
+          "Helvetica Neue", Arial, sans-serif;
+        color: var(--text-primary);
+        background-color: var(--bg-primary);
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+        padding: 16px;
+        max-width: 100%;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-shrink: 0;
+      }
+
+      .logo {
+        width: 48px;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .title-section {
+        flex: 1;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+
+      .content {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 8px;
+      }
+
+      .update-section {
+        margin-bottom: 32px;
+      }
+
+      .update-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .update-title svg {
+        width: 20px;
+        height: 20px;
+        color: var(--primary);
+      }
+
+      .update-description {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+      }
+
+      .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 16px;
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius);
+        margin-bottom: 8px;
+        border: 1px solid var(--border-color);
+        transition: var(--transition);
+      }
+
+      .feature-item:hover {
+        border-color: var(--primary);
+        transform: translateY(-1px);
+      }
+
+      .feature-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--success);
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .feature-content {
+        flex: 1;
+      }
+
+      .feature-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+
+      .feature-description {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+
+      .highlight-box {
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--primary-dark) 100%
+        );
+        border-radius: var(--border-radius);
+        padding: 16px;
+        margin: 16px 0;
+        color: white;
+        text-align: center;
+      }
+
+      .highlight-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      .highlight-text {
+        font-size: 14px;
+        opacity: 0.9;
+        line-height: 1.5;
+      }
+
+      .footer {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+
+      .button {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .button:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+      }
+
+      .button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+        border: 2px solid var(--bg-primary);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-color) var(--bg-primary);
+      }
+
+      @media (max-width: 400px) {
+        .container {
+          padding: 12px;
+        }
+
+        .title {
+          font-size: 20px;
+        }
+
+        .update-title {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="../../public/logo.png" alt="Magellan Logo" class="logo" />
+        <div class="title-section">
+          <div class="title">What's New</div>
+          <div class="subtitle">Latest updates and improvements</div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="update-section">
+          <div class="update-title">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L2 7L12 12L22 7L12 2Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M2 17L12 22L22 17"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M2 12L12 17L22 12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            v1.1.0 — Latest Updates
+          </div>
+          <div class="update-description">
+            We've been working hard to improve Magellan with new features and
+            better performance. Here's what's new!
+          </div>
+
+          <div class="highlight-box">
+            <div class="highlight-title">🎉 Chat History</div>
+            <div class="highlight-text">
+              The AI now remembers your conversation context, providing more
+              coherent and contextual responses throughout your chat.
+            </div>
+          </div>
+
+          <ul class="feature-list">
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Conversation Context</div>
+                <div class="feature-description">
+                  The AI now maintains context of your conversation, allowing
+                  for more natural follow-up questions and coherent responses.
+                </div>
+              </div>
+            </li>
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Light Mode & Theme Toggle</div>
+                <div class="feature-description">
+                  Choose between light, dark, or system themes with automatic
+                  switching based on your preferences.
+                </div>
+              </div>
+            </li>
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Enhanced Search Modes</div>
+                <div class="feature-description">
+                  Choose between Page Context, Blended, or General Knowledge
+                  modes for more precise results.
+                </div>
+              </div>
+            </li>
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Improved Citations</div>
+                <div class="feature-description">
+                  Better highlighting and navigation through cited content with
+                  enhanced visual feedback.
+                </div>
+              </div>
+            </li>
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Better Performance</div>
+                <div class="feature-description">
+                  Faster response times and more reliable AI interactions with
+                  improved error handling.
+                </div>
+              </div>
+            </li>
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Refactored UI</div>
+                <div class="feature-description">
+                  Cleaner, more intuitive interface with better organization and
+                  improved user experience.
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="update-section">
+          <div class="update-title">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M13 2L3 14H12L11 22L21 10H12L13 2Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            What's Next
+          </div>
+          <div class="update-description">
+            We're working on exciting new features including custom search
+            context and integration with more AI models.
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <button id="getStartedButton" class="button">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M5 12H19M19 12L12 5M19 12L12 19"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Continue
+        </button>
+      </div>
+    </div>
+
+    <script src="../js/ui/theme.js" type="module"></script>
+    <script src="../js/ui/whats-new.js" type="module"></script>
+  </body>
+</html>
