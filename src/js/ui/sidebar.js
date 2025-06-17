@@ -46,6 +46,9 @@ export const SEARCH_MODE_STORAGE_KEY = "magellan_search_mode";
 /** @constant {string} Storage key for the theme setting */
 export const THEME_STORAGE_KEY = "magellan_theme";
 
+/** @constant {string} Storage key for tracking if the user has seen the what's new screen */
+export const WHATS_NEW_SEEN_KEY = "magellan_whats_new_seen";
+
 /** @type {GoogleGenAI|null} Instance of the Google AI client */
 export let ai = null;
 
@@ -165,6 +168,17 @@ async function initializeOrRefreshForActiveTab() {
 // Initialize the extension when the page loads
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeAI();
+
+  // Check if user should see the "What's New" screen
+  const { [WHATS_NEW_SEEN_KEY]: whatsNewSeen } = await chrome.storage.local.get(
+    [WHATS_NEW_SEEN_KEY]
+  );
+  if (!whatsNewSeen) {
+    console.log("User hasn't seen what's new screen, redirecting...");
+    window.location.href = "../html/whats-new.html";
+    return;
+  }
+
   initializeOrRefreshForActiveTab();
   initializeTheme();
 
@@ -421,6 +435,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateStatus("Chat cleared. Ask a new question.", "idle");
       }
       handleRemoveHighlights();
+      closeSettingsDropdown();
+    });
+  }
+
+  const whatsNewDropdownItem = document.getElementById("whatsNewDropdownItem");
+  if (whatsNewDropdownItem) {
+    whatsNewDropdownItem.addEventListener("click", () => {
+      window.location.href = "../html/whats-new.html";
       closeSettingsDropdown();
     });
   }

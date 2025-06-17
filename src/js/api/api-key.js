@@ -11,6 +11,9 @@
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
 
+/** @constant {string} Storage key for tracking if the user has seen the what's new screen */
+const WHATS_NEW_SEEN_KEY = "magellan_whats_new_seen";
+
 /**
  * Validates a Google Gemini API key
  * @param {string} apiKey - The API key to validate
@@ -143,10 +146,18 @@ document.getElementById("saveApiKey").addEventListener("click", async () => {
         !!verification[API_KEY_STORAGE_KEY]
       );
 
-      console.log("API key saved successfully, redirecting to sidebar...");
+      console.log(
+        "API key saved successfully, checking if user should see what's new..."
+      );
       updateApiKeyStatus(true);
+
+      // Check if user has seen the what's new screen
+      const { [WHATS_NEW_SEEN_KEY]: whatsNewSeen } =
+        await chrome.storage.local.get([WHATS_NEW_SEEN_KEY]);
+      const targetPage = whatsNewSeen ? "sidebar.html" : "whats-new.html";
+
       setTimeout(() => {
-        console.log("Redirecting to sidebar.html...");
+        console.log(`Redirecting to ${targetPage}...`);
         try {
           // Check if we're in a popup context
           if (window.location.search.includes("popup=true") || window.opener) {
@@ -154,7 +165,7 @@ document.getElementById("saveApiKey").addEventListener("click", async () => {
             window.close();
           } else {
             // We're in a side panel or regular page, redirect normally
-            window.location.href = "sidebar.html";
+            window.location.href = targetPage;
           }
         } catch (error) {
           console.error("Error during redirection:", error);
