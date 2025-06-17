@@ -19,6 +19,7 @@ Magellan is built as a Chrome extension with a modular architecture organized in
    - `sidebar.js` - Main sidebar interface and user interaction
    - `ui.js` - Reusable UI components and utilities
    - `theme.js` - Theme management and system theme synchronization
+   - `whats-new.js` - What's new page for user onboarding and updates
 
 3. **Search System** (`search/`)
 
@@ -52,6 +53,8 @@ graph TD
     F -->|Monitor| D
     G[Theme System] -->|Apply Theme| A
     G -->|Listen| H[System Theme]
+    I[What's New Page] -->|Onboarding| A
+    I -->|Storage| J[User Preferences]
 ```
 
 ## Page Data Flow
@@ -398,10 +401,24 @@ The UI layer is responsible for all user interaction and presentation:
    - Manages citation navigation
 
 2. **UI Utilities** (`ui.js`)
+
    - Provides reusable UI components
    - Handles DOM manipulation
    - Manages highlight rendering
    - Controls animation and transitions
+
+3. **What's New Component** (`whats-new.js`)
+
+   - Manages the what's new page interface
+   - Handles user onboarding flow
+   - Controls navigation between pages
+   - Manages storage for user interaction tracking
+
+4. **Theme Component** (`theme.js`)
+   - Centralized theme management across all extension pages
+   - Handles system theme detection and synchronization
+   - Manages theme persistence in Chrome storage
+   - Provides automatic theme application and switching
 
 ### Search System (`search/`)
 
@@ -468,7 +485,7 @@ Provides essential functionality used across components:
 
 ### Overview
 
-The theme system provides consistent theming across all extension pages (sidebar, API key page) with support for:
+The theme system provides consistent theming across all extension pages (sidebar, API key page, what's new page) with support for:
 
 - Light and dark themes
 - System theme synchronization

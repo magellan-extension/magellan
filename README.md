@@ -99,6 +99,7 @@ magellan/
 │   │   └── ui/           # User interface
 │   │       ├── sidebar.js    # Sidebar component
 │   │       ├── theme.js      # Theme management
+│   │       ├── whats-new.js  # Displays extension updates
 │   │       └── ui.js         # UI utilities and components
 │   └── html/              # HTML files
 ├── public/                # Static assets
