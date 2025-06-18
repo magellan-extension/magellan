@@ -56,6 +56,8 @@ let currentFile = null;
 export function initializeFileUpload() {
   const fileInput = document.getElementById("fileInput");
   const uploadButton = document.getElementById("uploadButton");
+  const removeDocumentButton = document.getElementById("removeDocumentButton");
+  const errorToastClose = document.getElementById("errorToastClose");
 
   if (!fileInput || !uploadButton) {
     console.error("File upload elements not found");
@@ -73,6 +75,16 @@ export function initializeFileUpload() {
       fileInput.click();
     }
   });
+
+  // Remove document button click handler
+  if (removeDocumentButton) {
+    removeDocumentButton.addEventListener("click", removeCurrentFile);
+  }
+
+  // Error toast close button handler
+  if (errorToastClose) {
+    errorToastClose.addEventListener("click", hideErrorToast);
+  }
 
   // Load existing file from storage
   loadFileFromStorage();
@@ -141,14 +153,22 @@ async function processFile(file) {
  * @returns {boolean} Whether the file is valid
  */
 function validateFile(file) {
-  // Check file size
   const extension = "." + file.name.split(".").pop().toLowerCase();
   const isPDF = extension === ".pdf";
-  const maxSize = isPDF ? MAX_FILE_SIZE * 2 : MAX_FILE_SIZE; // Allow larger PDFs (20MB)
+  const maxSize = isPDF ? MAX_FILE_SIZE * 2 : MAX_FILE_SIZE;
+  const fileSizeText = formatFileSize(file.size);
+  const maxSizeText = formatFileSize(maxSize);
 
   if (file.size > maxSize) {
-    const maxSizeText = formatFileSize(maxSize);
-    showFileUploadError(`File too large. Maximum size is ${maxSizeText}.`);
+    if (isPDF) {
+      showFileUploadError(
+        `PDF file too large (${fileSizeText}). Maximum size for PDFs is ${maxSizeText}. Please try a smaller PDF.`
+      );
+    } else {
+      showFileUploadError(
+        `File too large (${fileSizeText}). Maximum size is ${maxSizeText}. Please try a smaller file.`
+      );
+    }
     return false;
   }
 
@@ -390,6 +410,9 @@ function showFileUploadLoading() {
  */
 function showFileUploadError(message) {
   const uploadButton = document.getElementById("uploadButton");
+  const documentStatusBar = document.getElementById("documentStatusBar");
+  const errorToast = document.getElementById("errorToast");
+  const errorToastMessage = document.getElementById("errorToastMessage");
 
   if (uploadButton) {
     // Reset upload button
@@ -405,6 +428,41 @@ function showFileUploadError(message) {
     // Show error toast or notification
     console.error("File upload error:", message);
   }
+
+  // Hide document status bar on error
+  if (documentStatusBar) {
+    documentStatusBar.style.display = "none";
+  }
+
+  // Show error toast
+  if (errorToast && errorToastMessage) {
+    errorToastMessage.textContent = message;
+    errorToast.style.display = "flex";
+
+    // Trigger animation
+    setTimeout(() => {
+      errorToast.classList.add("show");
+    }, 10);
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      hideErrorToast();
+    }, 5000);
+  }
+}
+
+/**
+ * Hides the error toast
+ * @function
+ */
+function hideErrorToast() {
+  const errorToast = document.getElementById("errorToast");
+  if (errorToast) {
+    errorToast.classList.remove("show");
+    setTimeout(() => {
+      errorToast.style.display = "none";
+    }, 300);
+  }
 }
 
 /**
@@ -414,6 +472,8 @@ function showFileUploadError(message) {
  */
 function updateFileUploadUI(file) {
   const uploadButton = document.getElementById("uploadButton");
+  const documentStatusBar = document.getElementById("documentStatusBar");
+  const documentName = document.getElementById("documentName");
 
   if (uploadButton) {
     // Reset upload button
@@ -426,6 +486,12 @@ function updateFileUploadUI(file) {
     uploadButton.classList.add("has-file");
     uploadButton.title = `File: ${file.name}\nClick to remove`;
   }
+
+  // Show document status bar
+  if (documentStatusBar && documentName) {
+    documentName.textContent = file.name;
+    documentStatusBar.style.display = "flex";
+  }
 }
 
 /**
@@ -434,6 +500,7 @@ function updateFileUploadUI(file) {
  */
 function resetFileUploadUI() {
   const uploadButton = document.getElementById("uploadButton");
+  const documentStatusBar = document.getElementById("documentStatusBar");
 
   if (uploadButton) {
     // Reset upload button
@@ -445,6 +512,11 @@ function resetFileUploadUI() {
     uploadButton.disabled = false;
     uploadButton.classList.remove("has-file");
     uploadButton.title = "Upload document";
+  }
+
+  // Hide document status bar
+  if (documentStatusBar) {
+    documentStatusBar.style.display = "none";
   }
 }
 
