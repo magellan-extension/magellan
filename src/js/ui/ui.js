@@ -34,6 +34,7 @@ import { currentActiveTabId, ai } from "./sidebar.js";
  * @property {Array<import('./search.js').Citation>} [citations] - Citations for assistant messages
  * @property {boolean} [isExternalSource] - True if the answer is from general knowledge
  * @property {boolean} [gkPrompted] - True if "prompt with GK" was clicked for this message
+ * @property {boolean} [isTyping] - True if the message is currently being typed out
  */
 
 /**
@@ -141,6 +142,79 @@ export function renderPopupUI() {
 }
 
 /**
+ * Creates a typing animation for assistant messages
+ * @function
+ * @param {HTMLElement} contentDiv - The content div to animate
+ * @param {string} fullContent - The complete content to type out
+ * @param {number} [speed=30] - Base milliseconds between characters
+ * @returns {Promise<void>}
+ */
+async function typeMessage(contentDiv, fullContent, speed = 30) {
+  // Clear content and add cursor
+  contentDiv.innerHTML = '<span class="typing-cursor">|</span>';
+
+  let currentIndex = 0;
+  const totalLength = fullContent.length;
+  let lastScrollTime = 0;
+  const scrollThrottle = 100; // Only scroll every 100ms during typing
+
+  const typeNextCharacter = () => {
+    if (currentIndex >= totalLength) {
+      // Remove cursor when done
+      const cursor = contentDiv.querySelector(".typing-cursor");
+      if (cursor) cursor.remove();
+
+      // Apply markdown formatting to the final content
+      contentDiv.innerHTML = parseMarkdown(fullContent);
+
+      // Scroll to bottom after typing is complete (instant for immediate visibility)
+      const chatLogContainer = document.getElementById("chatLogContainer");
+      if (chatLogContainer) {
+        chatLogContainer.scrollTop = chatLogContainer.scrollHeight;
+      }
+
+      return;
+    }
+
+    // Add next character
+    const char = fullContent[currentIndex];
+    const cursor = contentDiv.querySelector(".typing-cursor");
+    if (cursor) {
+      cursor.insertAdjacentText("beforebegin", char);
+    }
+    currentIndex++;
+
+    // Scroll to bottom during typing (throttled to avoid performance issues)
+    const now = Date.now();
+    if (now - lastScrollTime > scrollThrottle) {
+      const chatLogContainer = document.getElementById("chatLogContainer");
+      if (chatLogContainer) {
+        chatLogContainer.scrollTo({
+          top: chatLogContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+      lastScrollTime = now;
+    }
+
+    // Add some randomness to typing speed for more natural feel
+    const randomDelay = speed + Math.random() * 20 - 10;
+    let finalDelay = Math.max(10, randomDelay);
+
+    // Pause longer at punctuation marks for more natural typing
+    if (char === "." || char === "!" || char === "?" || char === ",") {
+      finalDelay += 100; // Extra pause at punctuation
+    } else if (char === " " && Math.random() < 0.3) {
+      finalDelay += 50; // Occasional pause at spaces
+    }
+
+    setTimeout(typeNextCharacter, finalDelay);
+  };
+
+  typeNextCharacter();
+}
+
+/**
  * Renders the chat conversation history
  * @function
  * @param {Array<ChatMessage>} chatHistory - Chat messages to display
@@ -152,6 +226,7 @@ export function renderPopupUI() {
  * - General knowledge prompts
  * - Citation handling
  * - Loading indicators
+ * - Typing animations for assistant messages
  */
 function renderChatLog(chatHistory, currentStatus) {
   const chatLogContainer = document.getElementById("chatLogContainer");
@@ -189,7 +264,26 @@ function renderChatLog(chatHistory, currentStatus) {
     contentDiv.style.wordBreak = "break-word";
 
     if (msg.role === "assistant") {
-      contentDiv.innerHTML = parseMarkdown(msg.content);
+      // Check if this message should be animated (is the last assistant message and not already typed)
+      const isLastAssistantMessage = chatHistory
+        .slice(index + 1)
+        .every((m) => m.role === "user");
+
+      if (
+        isLastAssistantMessage &&
+        !msg.isTyping &&
+        currentStatus === "ready"
+      ) {
+        // Mark as typing and start animation
+        msg.isTyping = true;
+        // Small delay before starting to type, like ChatGPT
+        setTimeout(() => {
+          typeMessage(contentDiv, msg.content);
+        }, 300);
+      } else {
+        // Already typed or not the last message, show full content
+        contentDiv.innerHTML = parseMarkdown(msg.content);
+      }
     } else {
       contentDiv.style.whiteSpace = "pre-wrap";
       contentDiv.textContent = msg.content;
@@ -402,7 +496,10 @@ function renderChatLog(chatHistory, currentStatus) {
     chatLogContainer.appendChild(loadingDiv);
   }
 
-  chatLogContainer.scrollTop = chatLogContainer.scrollHeight;
+  chatLogContainer.scrollTo({
+    top: chatLogContainer.scrollHeight,
+    behavior: "smooth",
+  });
 }
 
 /**

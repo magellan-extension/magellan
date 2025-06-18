@@ -473,6 +473,29 @@
         font-style: italic;
       }
 
+      /* Typing cursor animation */
+      .typing-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.2em;
+        background-color: var(--text-primary);
+        margin-left: 2px;
+        animation: blink 1s infinite;
+        vertical-align: text-bottom;
+        font-weight: bold;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
       .user-message {
         background-color: var(--user-message-bg);
         color: white;
