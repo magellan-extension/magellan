@@ -47,6 +47,7 @@ import {
   renderPopupUI,
   refocusSearchInput,
 } from "../ui/ui.js";
+import { getCurrentFile, getCurrentFileContent } from "../ui/fileUpload.js";
 
 /**
  * Checks if the page content is relevant to the query
@@ -393,6 +394,23 @@ LLM_CITATIONS_END
 }
 
 /**
+ * Checks if the current page is a PDF
+ * @async
+ * @param {number} tabId - The ID of the tab to check
+ * @returns {Promise<boolean>} Whether the page is a PDF
+ */
+async function isPDFPage(tabId) {
+  try {
+    const tabs = await chrome.tabs.get(tabId);
+    const url = tabs.url || "";
+    return url.toLowerCase().endsWith(".pdf");
+  } catch (error) {
+    console.error("Error checking if page is PDF:", error);
+    return false;
+  }
+}
+
+/**
  * Handles the search action
  * @async
  * @function
@@ -450,6 +468,10 @@ export async function handleSearch() {
     await chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY]);
   let isGeneralKnowledgeMode = searchMode === "general";
 
+  // Check if there's an uploaded file
+  const uploadedFile = getCurrentFile();
+  const uploadedFileContent = getCurrentFileContent();
+
   if (isGeneralKnowledgeMode) {
     // For general knowledge mode, skip all page content checks
     state.status = "querying_llm";
@@ -463,6 +485,34 @@ export async function handleSearch() {
     return;
   }
 
+  // If we have an uploaded file, use it as page context
+  if (uploadedFile && uploadedFileContent) {
+    state.status = "querying_llm";
+    state.errorMessage = "";
+    state.citedSentences = [];
+    state.currentCitedSentenceIndex = -1;
+    state.pageIdentifiedElements = [];
+    state.fullPageTextContent = uploadedFileContent;
+    renderPopupUI();
+    await performLLMSearch(query, tabIdForSearch);
+    return;
+  }
+
+  // Check if the current page is a PDF
+  const isPDF = await isPDFPage(tabIdForSearch);
+  if (isPDF && !isGeneralKnowledgeMode) {
+    state.status = "error";
+    state.errorMessage =
+      "This appears to be a PDF page. Please upload the PDF document using the upload button.";
+    state.chatHistory.push({
+      role: "assistant",
+      content: `This appears to be a PDF page. For better results, please upload the PDF document using the upload button. You can also switch to "General Knowledge Only" mode to ask questions without page context.`,
+    });
+    if (currentActiveTabId === tabIdForSearch) renderPopupUI();
+    return;
+  }
+
+  // Otherwise, extract content from the current page
   state.status = "extracting";
   state.errorMessage = "";
   state.citedSentences = [];

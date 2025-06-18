@@ -36,6 +36,7 @@ import {
   handleRemoveHighlights,
 } from "./ui.js";
 import { initializeTheme } from "./theme.js";
+import { initializeFileUpload } from "./fileUpload.js";
 
 /** @constant {string} Storage key for the API key in Chrome's local storage */
 export const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
@@ -181,6 +182,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initializeOrRefreshForActiveTab();
   initializeTheme();
+  initializeFileUpload();
 
   const searchButton = document.getElementById("searchButton");
   const searchQueryEl = document.getElementById("searchQuery");
