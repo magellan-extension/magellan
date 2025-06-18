@@ -127,7 +127,15 @@ export function renderPopupUI() {
     searchButton.disabled = isLoading;
   }
   const searchQueryEl = document.getElementById("searchQuery");
-  if (searchQueryEl) searchQueryEl.disabled = isLoading;
+  if (searchQueryEl) {
+    const wasDisabled = searchQueryEl.disabled;
+    searchQueryEl.disabled = isLoading;
+
+    // Refocus search input when it's re-enabled after a search
+    if (wasDisabled && !isLoading && state.status === "ready") {
+      refocusSearchInput();
+    }
+  }
 
   renderCitations(
     state.citedSentences,
@@ -139,6 +147,20 @@ export function renderPopupUI() {
     state.citedSentences,
     state.currentCitedSentenceIndex
   );
+}
+
+/**
+ * Refocuses the search input field for better UX
+ * @function
+ * @description
+ * Brings focus back to the search input after a search completes,
+ * allowing users to easily continue typing without manual navigation.
+ */
+export function refocusSearchInput() {
+  const searchQueryEl = document.getElementById("searchQuery");
+  if (searchQueryEl) {
+    searchQueryEl.focus();
+  }
 }
 
 /**
@@ -172,6 +194,9 @@ async function typeMessage(contentDiv, fullContent, speed = 30) {
       if (chatLogContainer) {
         chatLogContainer.scrollTop = chatLogContainer.scrollHeight;
       }
+
+      // Refocus search input for better UX
+      refocusSearchInput();
 
       return;
     }
@@ -500,6 +525,14 @@ function renderChatLog(chatHistory, currentStatus) {
     top: chatLogContainer.scrollHeight,
     behavior: "smooth",
   });
+
+  // Refocus search input if we're in ready state and this is the last assistant message
+  if (currentStatus === "ready" && chatHistory.length > 0) {
+    const lastMessage = chatHistory[chatHistory.length - 1];
+    if (lastMessage.role === "assistant" && !lastMessage.isTyping) {
+      refocusSearchInput();
+    }
+  }
 }
 
 /**

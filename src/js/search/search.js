@@ -42,7 +42,11 @@ import {
   currentActiveTabId,
   ai,
 } from "../ui/sidebar.js";
-import { navigateToMatchOnPage, renderPopupUI } from "../ui/ui.js";
+import {
+  navigateToMatchOnPage,
+  renderPopupUI,
+  refocusSearchInput,
+} from "../ui/ui.js";
 
 /**
  * Checks if the page content is relevant to the query
@@ -424,6 +428,8 @@ export async function handleSearch() {
   if (!query) {
     state.errorMessage = "Please enter a search query.";
     renderPopupUI();
+    // Refocus search input for better UX
+    refocusSearchInput();
     setTimeout(() => {
       if (
         tabStates[tabIdForSearch] &&
