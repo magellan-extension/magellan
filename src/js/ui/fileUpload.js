@@ -142,7 +142,9 @@ async function processFile(file) {
     console.log("File processed successfully:", currentFile.name);
   } catch (error) {
     console.error("Error processing file:", error);
-    showFileUploadError("Failed to process file. Please try again.");
+    showFileUploadError(
+      "Failed to process file. Ensure it is type PDF and please try again."
+    );
   }
 }
 
