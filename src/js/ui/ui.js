@@ -168,17 +168,16 @@ export function refocusSearchInput() {
  * @function
  * @param {HTMLElement} contentDiv - The content div to animate
  * @param {string} fullContent - The complete content to type out
- * @param {number} [speed=30] - Base milliseconds between characters
+ * @param {number} [speed=15] - Base milliseconds between characters
  * @returns {Promise<void>}
  */
-async function typeMessage(contentDiv, fullContent, speed = 30) {
-  // Clear content and add cursor
+async function typeMessage(contentDiv, fullContent, speed = 15) {
   contentDiv.innerHTML = '<span class="typing-cursor">|</span>';
 
   let currentIndex = 0;
   const totalLength = fullContent.length;
   let lastScrollTime = 0;
-  const scrollThrottle = 100; // Only scroll every 100ms during typing
+  const scrollThrottle = 100;
 
   const typeNextCharacter = () => {
     if (currentIndex >= totalLength) {
@@ -186,7 +185,6 @@ async function typeMessage(contentDiv, fullContent, speed = 30) {
       const cursor = contentDiv.querySelector(".typing-cursor");
       if (cursor) cursor.remove();
 
-      // Apply markdown formatting to the final content
       contentDiv.innerHTML = parseMarkdown(fullContent);
 
       // Scroll to bottom after typing is complete (instant for immediate visibility)
@@ -195,13 +193,11 @@ async function typeMessage(contentDiv, fullContent, speed = 30) {
         chatLogContainer.scrollTop = chatLogContainer.scrollHeight;
       }
 
-      // Refocus search input for better UX
       refocusSearchInput();
 
       return;
     }
 
-    // Add next character
     const char = fullContent[currentIndex];
     const cursor = contentDiv.querySelector(".typing-cursor");
     if (cursor) {
@@ -222,15 +218,13 @@ async function typeMessage(contentDiv, fullContent, speed = 30) {
       lastScrollTime = now;
     }
 
-    // Add some randomness to typing speed for more natural feel
-    const randomDelay = speed + Math.random() * 20 - 10;
-    let finalDelay = Math.max(10, randomDelay);
+    const randomDelay = speed + Math.random() * 10 - 5;
+    let finalDelay = Math.max(5, randomDelay);
 
-    // Pause longer at punctuation marks for more natural typing
     if (char === "." || char === "!" || char === "?" || char === ",") {
-      finalDelay += 100; // Extra pause at punctuation
+      finalDelay += 50; // Extra pause at punctuation
     } else if (char === " " && Math.random() < 0.3) {
-      finalDelay += 50; // Occasional pause at spaces
+      finalDelay += 25; // Occasional pause at spaces
     }
 
     setTimeout(typeNextCharacter, finalDelay);
