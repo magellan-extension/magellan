@@ -36,7 +36,11 @@ Magellan is built as a Chrome extension with a modular architecture organized in
    - `tabState.js` - Tab-specific state management and persistence
 
 6. **Core Utilities** (`core/`)
+
    - `utils.js` - Shared utility functions and helpers
+
+7. **File Upload System** (`ui/`)
+   - `fileUpload.js` - Document upload, processing, and text extraction
 
 ### Component Interaction
 
@@ -55,6 +59,8 @@ graph TD
     G -->|Listen| H[System Theme]
     I[What's New Page] -->|Onboarding| A
     I -->|Storage| J[User Preferences]
+    K[File Upload System] -->|Process Documents| B
+    K -->|Store Content| E
 ```
 
 ## Page Data Flow
@@ -133,6 +139,74 @@ type IdentifiedElement = {
 [mgl-node-1] Second paragraph text
 ...
 ```
+
+## Document Processing
+
+### File Upload System
+
+Magellan includes a comprehensive document upload and processing system that allows users to analyze various document formats:
+
+#### Supported Formats
+
+- **PDF** (.pdf) - Advanced text extraction with layout preservation
+
+#### Upload Interface
+
+The upload system provides a compact, integrated interface:
+
+- **Upload Button**: Small "+" icon positioned before the search input
+- **Visual Feedback**: Button changes color when a document is uploaded
+- **Tooltip Information**: Shows file name and upload status
+- **One-Click Removal**: Click the upload button again to remove the document
+
+#### Document Processing Pipeline
+
+```mermaid
+graph TD
+    A[File Selection] -->|Validate| B[File Validation]
+    B -->|Extract| C[Text Extraction]
+    C -->|Process| D[Content Processing]
+    D -->|Store| E[State Management]
+    E -->|Use| F[Search System]
+```
+
+#### Text Extraction Methods
+
+1. **PDF Processing**
+   - Uses PDF.js library for client-side PDF parsing
+   - Extracts text from all pages with layout preservation
+   - Handles complex PDF structures and formatting
+   - Provides progress updates for large documents
+   - Error handling for password-protected or corrupted files
+
+#### Content Integration
+
+Uploaded PDFs integrate seamlessly with the search system:
+
+- **Context Replacement**: Uploaded PDF content replaces page content
+- **Search Modes**: Works with all search modes (Page Context, Blended, General Knowledge)
+- **Citation System**: PDF content can be cited in responses
+- **Conversation History**: PDF context persists across conversations
+- **Storage**: PDF content is stored in tab state for session persistence
+
+#### Error Handling
+
+The upload system includes comprehensive error handling:
+
+- **File Validation**: Checks file type, size, and format
+- **Extraction Errors**: Handles corrupted or unsupported files
+- **Size Limits**: Enforces reasonable file size limits (20MB for PDFs)
+- **User Feedback**: Clear error messages and recovery options
+- **PDF-Specific**: Special handling for password-protected or complex PDFs
+
+#### PDF Page Detection
+
+The system intelligently detects when users are viewing PDF pages in the browser:
+
+- **URL Detection**: Identifies PDF pages by URL ending (.pdf)
+- **Smart Guidance**: Prompts users to upload the document instead of using page context
+- **Fallback Options**: Suggests switching to general knowledge mode
+- **Better Results**: Ensures users get optimal text extraction through the upload system
 
 ## State Management
 

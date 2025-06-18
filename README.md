@@ -17,6 +17,8 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
     - **Page Context**: Search only within the current page content
     - **Blended**: Search page first, then use general knowledge if needed
     - **General Knowledge**: Use only general knowledge, ignore page content
+- 📄 **Document Upload** – Upload PDF files for analysis
+  - **Smart Context**: Uses uploaded PDFs as page context for searches
 - 📚 **Smart Citations** – Get direct links to the relevant parts of the page
 - 🎯 **Visual Highlights** – See exactly where the information comes from with highlighted text
 - 💬 **Conversation History** – Keep track of your questions and answers
@@ -50,7 +52,8 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
      - **Page Context**: Best for understanding specific content on the page
      - **Blended**: Good for general questions that might need additional context
      - **General Knowledge**: Use when you want answers not limited to the page content
-   - Type your question about the current page
+   - **Upload Documents**: Click the upload button (+) to add PDF files for analysis
+   - Type your question about the current page or uploaded PDF
    - Get AI-powered answers with highlighted citations
 
 💡 **Pro Tip**: For quick access, set up a keyboard shortcut in Chrome's extension settings:
