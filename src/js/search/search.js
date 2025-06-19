@@ -155,7 +155,11 @@ export async function performLLMSearch(query, forTabId, options = {}) {
       const webPrompt = `
 You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer.
 
-Recent conversation history:
+IMPORTANT: If the previous conversation included answers that said information was not found on the page, IGNORE those previous answers. Do NOT assume the answer is unknown just because it was not found on the page. Use your own general knowledge to answer the user's question as best as possible, even if previous answers were incomplete or negative.
+
+Fact-check and verify any previous answers. If you know the correct information, display it, regardless of what the page or previous answers might have said.
+
+Recent conversation history (for context, but do not let previous 'not found' answers limit you):
 ${conversationContext}
 
 User's question: "${query}"
@@ -171,17 +175,6 @@ NONE
 LLM_CITATIONS_END
 `;
       llmResult = await ai.generateContent(webPrompt);
-    } else if (searchMode === "page" && !isRelevant) {
-      // Page Context Only mode - no relevant content found
-      llmResult = {
-        text: `LLM_ANSWER_START
-  I apologize, but I cannot find any relevant information on this page to answer your question. You can try searching with general knowledge by changing the search mode or clicking the button below.
-  
-  LLM_ANSWER_END
-  LLM_CITATIONS_START
-  NONE
-  LLM_CITATIONS_END`,
-      };
     } else if (searchMode === "blended" && !isRelevant) {
       // Blended mode - fallback to general knowledge
       const webPrompt = `
@@ -204,6 +197,16 @@ LLM_CITATIONS_END
 `;
       llmResult = await ai.generateContent(webPrompt);
       isGeneralKnowledgeMode = true;
+    } else if (searchMode === "page" && !isRelevant) {
+      // Page Context Only mode - no relevant content found
+      llmResult = {
+        text: `LLM_ANSWER_START
+I apologize, but I cannot find any relevant information on this page to answer your question. You can try searching with general knowledge by changing the search mode or clicking the button below.
+LLM_ANSWER_END
+LLM_CITATIONS_START
+NONE
+LLM_CITATIONS_END`,
+      };
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
