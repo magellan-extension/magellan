@@ -212,7 +212,7 @@ LLM_CITATIONS_END`,
       const pagePrompt = `
 You are an AI assistant helping a user with their question about a web page. Please use the page content and conversation history to provide a helpful answer.
 
-Recent conversation history:
+Recent conversation history (use this to resolve pronouns or the subject of the user's question, e.g., "he", "she", "it", etc.):
 ${conversationContext}
 
 The user has asked the following question: "${query}"
@@ -224,8 +224,7 @@ ${state.fullPageTextContent}
 --- END OF PAGE CONTENT ---
 
 Please perform the following tasks:
-1.  Provide a concise answer to the user's question based *only* on the provided page content.
-    If the answer cannot be found in the content, explicitly state that. Do not make up information.
+1.  Use the conversation history above to resolve the subject of the user's question (for example, if the user asks "how old is he?", use the previous messages to determine who "he" refers to). Then, provide a concise answer to the user's question based *only* on the provided page content. If the answer cannot be found in the content, explicitly state that. Do not make up information.
 2.  Identify element IDs from the "PAGE CONTENT" above whose text directly supports your answer or is most relevant to the user's query.
     *   **Prioritize the SMALLEST, most specific HTML elements** that contain the relevant information. For example, if a specific sentence is in a <p> tag inside a <div>, prefer the ID of the <p> tag if its text is listed.
     *   **Avoid selecting IDs of very large elements** (e.g., main content containers, sidebars, or elements whose text seems to span a huge portion of the page content provided) unless absolutely necessary because no smaller element contains the specific information.
