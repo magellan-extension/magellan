@@ -178,9 +178,28 @@ async function typeMessage(contentDiv, fullContent, speed = 15) {
   const totalLength = fullContent.length;
   let lastScrollTime = 0;
   const scrollThrottle = 100;
+  let finished = false;
+
+  // Set a 10-second timeout to show the full message if not done
+  const forceShowTimeout = setTimeout(() => {
+    if (!finished) {
+      finished = true;
+      const cursor = contentDiv.querySelector(".typing-cursor");
+      if (cursor) cursor.remove();
+      contentDiv.innerHTML = parseMarkdown(fullContent);
+      const chatLogContainer = document.getElementById("chatLogContainer");
+      if (chatLogContainer) {
+        chatLogContainer.scrollTop = chatLogContainer.scrollHeight;
+      }
+      refocusSearchInput();
+    }
+  }, 10000);
 
   const typeNextCharacter = () => {
+    if (finished) return;
     if (currentIndex >= totalLength) {
+      finished = true;
+      clearTimeout(forceShowTimeout);
       // Remove cursor when done
       const cursor = contentDiv.querySelector(".typing-cursor");
       if (cursor) cursor.remove();

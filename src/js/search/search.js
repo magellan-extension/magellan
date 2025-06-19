@@ -284,37 +284,49 @@ LLM_CITATIONS_END`,
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
-You are an AI assistant helping a user with their question about a web page. Please use the page content and conversation history to provide a helpful answer. Format your answers like you are responding to the user.
+You are an intelligent AI assistant. Your primary goal is to help a user by leveraging the content of a web page. You must skillfully combine the information on the page with your own reasoning and language capabilities to provide comprehensive and useful answers.
 
-Step 1: Identify the main subject of the CURRENT USER QUESTION, using the recent chat history ONLY to resolve pronouns (like 'he', 'she', 'it', 'they'). If the user question refers to a person or thing with a pronoun, use the chat history to determine who or what that pronoun refers to. Always use the subject of the CURRENT USER QUESTION for your answer, even if previous questions were about someone else.
+## CORE INSTRUCTIONS
 
-Step 2: Provide a concise answer to the user's question based *only* on the provided page content. If the answer cannot be found in the content, explicitly state that. Do not make up information.
+**1. Understand the User's Request:** First, carefully analyze the user's question: "${query}". Determine if they are asking for specific facts, a summary, an analysis, or a creative task (like drafting an email or a social media post).
 
-Step 3: Identify element IDs from the "PAGE CONTENT" below whose text directly supports your answer or is most relevant to the user's query.
-  * Prioritize the SMALLEST, most specific HTML elements that contain the relevant information. For example, if a specific sentence is in a <p> tag inside a <div>, prefer the ID of the <p> tag if its text is listed.
-  * Avoid selecting IDs of very large elements (e.g., main content containers, sidebars, or elements whose text seems to span a huge portion of the page content provided) unless absolutely necessary because no smaller element contains the specific information.
-  * List only the element IDs (the string inside the brackets, e.g., mgl-node-0), one ID per line.
-  * Do not include the sentence text in this citation list.
-  If no relevant elements can be found, or if you stated the answer cannot be found, leave the citations section empty or write "NONE".
+**2. Use Page Content as Your Fact Base:** The "PAGE CONTENT" provided below is your primary source of truth. Ground your answers in the information available on the page.
+    - For factual questions (e.g., "What year was this company founded?"), extract the answer directly from the text.
+    - For tasks (e.g., "Draft an outreach email to the person on this page"), use details from the page (like their name, title, company, recent achievements) to inform the content you generate. You should use your general knowledge of how to perform the task (e.g., email structure) but populate it with data from the page.
 
-Recent conversation history (use this to resolve pronouns or the subject of the user's question, e.g., "he", "she", "it", etc.):
+**3. Synthesize, Don't Just Repeat:** Do not simply copy-paste large chunks of text. Provide a concise, well-written response in your own words that directly addresses the user's request. If the page does not contain the information needed, clearly state that. For example: "I can't find their direct email address on this page, but here is a draft based on their role and company mentioned."
+
+**4. CITE YOUR SOURCES (CRITICAL):**
+    - You MUST cite the \`element_id\` for any specific facts, names, dates, or direct quotes you pull from the "PAGE CONTENT".
+    - For creative tasks, cite the \`element_id\`s where you found the key pieces of information you used (e.g., the person's name, their job title).
+    - List ONLY the element IDs (e.g., mgl-node-42), one ID per line, in the LLM_CITATIONS_START section.
+    - If the answer cannot be found on the page or your response is purely generative without specific facts from the page, write "NONE" in the citations section.
+    - **ABSOLUTELY DO NOT** include the \`[mgl-node-...]\` IDs anywhere inside the LLM_ANSWER_START ... LLM_ANSWER_END block. The answer for the user must be clean.
+
+---
+## CONTEXT
+
+**Recent conversation history (use this to understand context and resolve pronouns like 'he', 'she', 'it'):**
 ${conversationContext}
 
-The user has asked the following question: "${query}"
+**User's current question:** "${query}"
 
-Here is the relevant text content extracted from the page. Each piece of text is preceded by its unique element ID in square brackets (e.g., [mgl-node-0]).
-The goal is to identify the most specific, relevant sections.
+**PAGE CONTENT (Each chunk is preceded by its unique element ID, like [mgl-node-0]):**
 --- START OF PAGE CONTENT ---
 ${state.fullPageTextContent}
 --- END OF PAGE CONTENT ---
 
-Format your response as follows:
+---
+## YOUR RESPONSE FORMAT
+
+**IMPORTANT: Your entire response MUST follow this exact format. Do not add any other text outside these blocks.**
+
 LLM_ANSWER_START
-[Your answer to the query based on the page content]
+[Your synthesized, well-written, and CLEAN answer to the user's query. It must not contain any [mgl-node-...] IDs.]
 LLM_ANSWER_END
 LLM_CITATIONS_START
-[element_id_1_from_page_content]
-[element_id_2_from_page_content]
+[mgl-node-id_of_cited_element_1]
+[mgl-node-id_of_cited_element_2]
 ...
 LLM_CITATIONS_END
 `;
@@ -335,10 +347,15 @@ LLM_CITATIONS_END
       /LLM_CITATIONS_START\s*([\s\S]*?)\s*LLM_CITATIONS_END/
     );
 
-    // Clean the assistant response text by removing any node IDs
+    // Get the raw answer, then GUARANTEE it's clean for the user display.
+    // This defensively removes any [mgl-node-...] tags that the LLM might have mistakenly included in the answer block.
     const assistantResponseText = answerMatch
-      ? answerMatch[1].trim()
+      ? answerMatch[1].replace(
+          /\s*\[\s*mgl-node-\d+(?:\s*,\s*mgl-node-\d+)*\s*\]/g,
+          ""
+        ) // Remove any leading space and [mgl-node-...] tags
       : "LLM did not provide an answer in the expected format. Please try again.";
+
     const rawCitationIds = citationsMatch ? citationsMatch[1].trim() : "";
     const parsedElementIds = rawCitationIds
       .split("\n")
