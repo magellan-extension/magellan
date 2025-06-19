@@ -50,28 +50,113 @@ import {
 import { getCurrentFile, getCurrentFileContent } from "../ui/fileUpload.js";
 
 /**
- * Checks if the page content is relevant to the query
+ * Checks if the page content is relevant to the subject of the chat history and query
  * @async
  * @param {string} query - User's search query
  * @param {string} pageContent - Content from the page
+ * @param {Array<Object>} chatHistory - Recent chat history (array of messages with {role, content})
  * @returns {Promise<boolean>} Whether the page content is relevant
  */
+export async function isPageContentRelevant(query, pageContent, chatHistory) {
+  // Use the last 4 messages for focused pronoun resolution.
+  const recentMessages = chatHistory.slice(-4);
+  const conversationContext = recentMessages
+    .map(
+      (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+    )
+    .join("\n\n");
 
-export async function isPageContentRelevant(query, pageContent) {
+  console.log("Relevance Check Context:\n", conversationContext);
+  console.log("Relevance Check Query:", query);
+
   const relevancePrompt = `
-  You are an AI assistant helping determine if a webpage's content is relevant to a user's question.
-  The user has asked: "${query}"
-  
-  Here is the content from the webpage:
-  ${pageContent}
-  
-  Please determine if the webpage content is relevant to answering the user's question.
-  Respond with ONLY "RELEVANT" or "NOT_RELEVANT".
-  `;
+You are a highly precise, logical AI engine. Your goal is to determine if a webpage is relevant to a user's question by first identifying the definitive subject of the conversation. Follow these steps meticulously.
+
+## LOGICAL STEPS
+
+**1. Isolate the Subject from the Conversation:**
+   - First, examine the "User's current question".
+   - If the question names a specific subject (e.g., "who is ronaldo", "what is photosynthesis"), that is the **Final Subject**.
+   - If the question uses a pronoun (e.g., "he", "she", "it", "his"), you MUST determine what it refers to based *only* on the "Recent chat history".
+   - **CRITICAL RULE:** The most recent named person or thing in the conversation is the antecedent. For example, if the last assistant message was about "LeBron James", and the user asks "how old is he", the **Final Subject** is "LeBron James".
+   - **DO NOT** use the "Webpage content" to influence your decision for the Final Subject. This step is about the conversation ONLY.
+
+**2. Compare the Final Subject to the Webpage:**
+   - Once you have determined the **Final Subject** from Step 1, you will then analyze the "Webpage content".
+   - Ask yourself: "Is this webpage primarily about the Final Subject?" A brief mention is not enough.
+
+**3. Output the Verdict:**
+   - If the webpage is primarily about the **Final Subject**, your output must be ONLY "RELEVANT".
+   - If the webpage is NOT about the **Final Subject**, your output must be ONLY "NOT_RELEVANT".
+
+---
+## EXAMPLES
+
+**Example 1: Pronoun follows a new subject (your failing case)**
+- Chat History: "...Assistant: LeBron James is an American professional basketball player..."
+- Current Question: "how old is he"
+- Webpage Content: A biography of Lionel Messi.
+- **Thought Process:**
+    1.  The question "how old is he" uses a pronoun.
+    2.  I look at the chat history. The most recent subject mentioned is "LeBron James".
+    3.  Therefore, the **Final Subject** is "LeBron James".
+    4.  I now look at the Webpage Content. It is about "Lionel Messi".
+    5.  "Lionel Messi" is not "LeBron James". The page is not relevant.
+- **Output:** NOT_RELEVANT
+
+**Example 2: Pronoun refers to page subject (correct case)**
+- Chat History: "...Assistant: He is Lionel Messi..."
+- Current Question: "how old is he"
+- Webpage Content: A biography of Lionel Messi.
+- **Thought Process:**
+    1.  The question "how old is he" uses a pronoun.
+    2.  I look at the chat history. The most recent subject mentioned is "Lionel Messi".
+    3.  Therefore, the **Final Subject** is "Lionel Messi".
+    4.  I now look at the Webpage Content. It is about "Lionel Messi".
+    5.  The Final Subject and the page content match. The page is relevant.
+- **Output:** RELEVANT
+
+**Example 3: Explicit new subject (working case)**
+- Chat History: "...Assistant: He is Lionel Messi..."
+- Current Question: "who is ronaldo"
+- Webpage Content: A biography of Lionel Messi.
+- **Thought Process:**
+    1.  The question explicitly names the subject "ronaldo".
+    2.  Therefore, the **Final Subject** is "Ronaldo".
+    3.  I now look at the Webpage Content. It is about "Lionel Messi".
+    4.  "Lionel Messi" is not "Ronaldo". The page is not relevant.
+- **Output:** NOT_RELEVANT
+
+---
+## YOUR TURN
+
+**Recent chat history:**
+${conversationContext}
+
+**User's current question:** "${query}"
+
+**Webpage content (summary):**
+${pageContent.substring(0, 4000)}
+
+**Your decision (output ONLY "RELEVANT" or "NOT_RELEVANT"):**
+`;
 
   try {
     const result = await ai.generateContent(relevancePrompt);
-    const response = result.text.trim().toUpperCase();
+    // Adding defensive trimming and handling of potential model verbosity.
+    const response = result.text
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z_]/g, "");
+    console.log("Relevance Check Raw Response:", result.text);
+    console.log("Relevance Check Parsed Response:", response);
+    // Final sanity check
+    if (response !== "RELEVANT" && response !== "NOT_RELEVANT") {
+      console.warn(
+        `Unexpected relevance response: "${response}". Defaulting to NOT_RELEVANT.`
+      );
+      return false;
+    }
     return response === "RELEVANT";
   } catch (error) {
     console.error("Error checking content relevance:", error);
@@ -145,42 +230,31 @@ export async function performLLMSearch(query, forTabId, options = {}) {
 
   try {
     // Skip relevance check if forcing general knowledge or in general knowledge mode
-    const isRelevant = isGeneralKnowledgeMode
-      ? false
-      : await isPageContentRelevant(query, state.fullPageTextContent);
+    let isRelevant = false;
+    if (isGeneralKnowledgeMode) {
+      isRelevant = false;
+    } else if (searchMode === "blended") {
+      isRelevant = await isPageContentRelevant(
+        query,
+        state.fullPageTextContent,
+        state.chatHistory
+      );
+    } else if (searchMode === "page") {
+      // In page mode, always assume relevant (skip check)
+      isRelevant = true;
+    }
 
     let llmResult;
-    if (isGeneralKnowledgeMode) {
-      // General Knowledge Only mode
+    if (isGeneralKnowledgeMode || (searchMode === "blended" && !isRelevant)) {
+      // General Knowledge Only mode or blended without relevancy
       const webPrompt = `
-You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer.
+You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer. Format your answers like you are responding to the user.
 
 IMPORTANT: If the previous conversation included answers that said information was not found on the page, IGNORE those previous answers. Do NOT assume the answer is unknown just because it was not found on the page. Use your own general knowledge to answer the user's question as best as possible, even if previous answers were incomplete or negative.
 
 Fact-check and verify any previous answers. If you know the correct information, display it, regardless of what the page or previous answers might have said.
 
 Recent conversation history (for context, but do not let previous 'not found' answers limit you):
-${conversationContext}
-
-User's question: "${query}"
-
-Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
-
-Format your response as follows:
-LLM_ANSWER_START
-[Your answer to the query]
-LLM_ANSWER_END
-LLM_CITATIONS_START
-NONE
-LLM_CITATIONS_END
-`;
-      llmResult = await ai.generateContent(webPrompt);
-    } else if (searchMode === "blended" && !isRelevant) {
-      // Blended mode - fallback to general knowledge
-      const webPrompt = `
-You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer.
-
-Recent conversation history:
 ${conversationContext}
 
 User's question: "${query}"
@@ -210,7 +284,18 @@ LLM_CITATIONS_END`,
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
-You are an AI assistant helping a user with their question about a web page. Please use the page content and conversation history to provide a helpful answer.
+You are an AI assistant helping a user with their question about a web page. Please use the page content and conversation history to provide a helpful answer. Format your answers like you are responding to the user.
+
+Step 1: Identify the main subject of the CURRENT USER QUESTION, using the recent chat history ONLY to resolve pronouns (like 'he', 'she', 'it', 'they'). If the user question refers to a person or thing with a pronoun, use the chat history to determine who or what that pronoun refers to. Always use the subject of the CURRENT USER QUESTION for your answer, even if previous questions were about someone else.
+
+Step 2: Provide a concise answer to the user's question based *only* on the provided page content. If the answer cannot be found in the content, explicitly state that. Do not make up information.
+
+Step 3: Identify element IDs from the "PAGE CONTENT" below whose text directly supports your answer or is most relevant to the user's query.
+  * Prioritize the SMALLEST, most specific HTML elements that contain the relevant information. For example, if a specific sentence is in a <p> tag inside a <div>, prefer the ID of the <p> tag if its text is listed.
+  * Avoid selecting IDs of very large elements (e.g., main content containers, sidebars, or elements whose text seems to span a huge portion of the page content provided) unless absolutely necessary because no smaller element contains the specific information.
+  * List only the element IDs (the string inside the brackets, e.g., mgl-node-0), one ID per line.
+  * Do not include the sentence text in this citation list.
+  If no relevant elements can be found, or if you stated the answer cannot be found, leave the citations section empty or write "NONE".
 
 Recent conversation history (use this to resolve pronouns or the subject of the user's question, e.g., "he", "she", "it", etc.):
 ${conversationContext}
@@ -222,15 +307,6 @@ The goal is to identify the most specific, relevant sections.
 --- START OF PAGE CONTENT ---
 ${state.fullPageTextContent}
 --- END OF PAGE CONTENT ---
-
-Please perform the following tasks:
-1.  Use the conversation history above to resolve the subject of the user's question (for example, if the user asks "how old is he?", use the previous messages to determine who "he" refers to). Then, provide a concise answer to the user's question based *only* on the provided page content. If the answer cannot be found in the content, explicitly state that. Do not make up information.
-2.  Identify element IDs from the "PAGE CONTENT" above whose text directly supports your answer or is most relevant to the user's query.
-    *   **Prioritize the SMALLEST, most specific HTML elements** that contain the relevant information. For example, if a specific sentence is in a <p> tag inside a <div>, prefer the ID of the <p> tag if its text is listed.
-    *   **Avoid selecting IDs of very large elements** (e.g., main content containers, sidebars, or elements whose text seems to span a huge portion of the page content provided) unless absolutely necessary because no smaller element contains the specific information.
-    *   List *only the element IDs* (the string inside the brackets, e.g., mgl-node-0), one ID per line.
-    *   Do not include the sentence text in this citation list.
-    If no relevant elements can be found, or if you stated the answer cannot be found, leave the citations section empty or write "NONE".
 
 Format your response as follows:
 LLM_ANSWER_START
