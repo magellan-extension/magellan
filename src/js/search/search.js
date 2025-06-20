@@ -248,11 +248,15 @@ export async function performLLMSearch(query, forTabId, options = {}) {
     if (isGeneralKnowledgeMode || (searchMode === "blended" && !isRelevant)) {
       // General Knowledge Only mode or blended without relevancy
       const webPrompt = `
-You are an AI assistant helping a user with their question. Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer. Format your answers like you are responding to the user.
+You are an AI assistant named Magellan, helping a user with their question. Sometimes, the user may not enter a question or may just greet you or say something conversational. In those cases, respond in a friendly, conversational way—greet the user, offer help, or ask how you can assist, just like a helpful assistant.
+
+Please use your general knowledge, reasoning capabilities, and conversation history to provide a helpful answer. Format your answers like you are responding to the user.
 
 IMPORTANT: If the previous conversation included answers that said information was not found on the page, IGNORE those previous answers. Do NOT assume the answer is unknown just because it was not found on the page. Use your own general knowledge to answer the user's question as best as possible, even if previous answers were incomplete or negative.
 
 Fact-check and verify any previous answers. If you know the correct information, display it, regardless of what the page or previous answers might have said.
+
+**NEVER include citations, element IDs, or references to citations anywhere except inside the LLM_CITATIONS_START ... LLM_CITATIONS_END section.**
 
 Recent conversation history (for context, but do not let previous 'not found' answers limit you):
 ${conversationContext}
@@ -284,7 +288,11 @@ LLM_CITATIONS_END`,
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
       const pagePrompt = `
-You are an intelligent AI assistant. Your primary goal is to help a user by leveraging the content of a web page. You must skillfully combine the information on the page with your own reasoning and language capabilities to provide comprehensive and useful answers.
+You are an intelligent AI assistant named Magellan. Sometimes, the user may not enter a question or may just greet you or say something conversational. In those cases, respond in a friendly, conversational way—greet the user, offer help, or ask how you can assist, just like a helpful assistant.
+
+Your primary goal is to help a user by leveraging the content of a web page. You must skillfully combine the information on the page with your own reasoning and language capabilities to provide comprehensive and useful answers.
+
+**NEVER include citations, element IDs, or references to citations anywhere except inside the LLM_CITATIONS_START ... LLM_CITATIONS_END section.**
 
 ## CORE INSTRUCTIONS
 
@@ -367,12 +375,22 @@ LLM_CITATIONS_END
           s.startsWith("mgl-node-")
       );
 
+    // Deduplicate and filter overlapping citations
+    const uniqueElementIds = [];
+    const seenIds = new Set();
+    for (const id of parsedElementIds) {
+      if (!seenIds.has(id)) {
+        uniqueElementIds.push(id);
+        seenIds.add(id);
+      }
+    }
+
     const currentCitationsForThisResponse = [];
     if (
-      parsedElementIds.length > 0 &&
+      uniqueElementIds.length > 0 &&
       state.pageIdentifiedElements.length > 0
     ) {
-      parsedElementIds.forEach((elementId, index) => {
+      uniqueElementIds.forEach((elementId, index) => {
         const identifiedElement = state.pageIdentifiedElements.find(
           (el) => el.id === elementId
         );
