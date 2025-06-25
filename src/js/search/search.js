@@ -57,7 +57,12 @@ import { getCurrentFile, getCurrentFileContent } from "../ui/fileUpload.js";
  * @param {Array<Object>} chatHistory - Recent chat history (array of messages with {role, content})
  * @returns {Promise<boolean>} Whether the page content is relevant
  */
-export async function isPageContentRelevant(query, pageContent, chatHistory) {
+export async function isPageContentRelevant(
+  query,
+  pageContent,
+  chatHistory,
+  isDocumentAttached
+) {
   // Use the last 4 messages for focused pronoun resolution.
   const recentMessages = chatHistory.slice(-4);
   const conversationContext = recentMessages
@@ -69,76 +74,76 @@ export async function isPageContentRelevant(query, pageContent, chatHistory) {
   console.log("Relevance Check Context:\n", conversationContext);
   console.log("Relevance Check Query:", query);
 
+  const sourceType = isDocumentAttached ? "uploaded document" : "webpage";
+  const sourceLabel = isDocumentAttached ? "Document" : "Webpage";
+
   const relevancePrompt = `
-You are a highly precise, logical AI engine. Your goal is to determine if a webpage is relevant to a user's question by first identifying the definitive subject of the conversation. Follow these steps meticulously.
+You are a highly precise, logical AI engine. Your goal is to determine if the content from a ${sourceType} (referred to as the 'source') is relevant to a user's question. The variable isDocumentAttached = ${isDocumentAttached} indicates whether the content is from an uploaded document (true) or a webpage (false).
 
-## LOGICAL STEPS
+## INSTRUCTIONS
 
-**1. Isolate the Subject from the Conversation:**
-   - First, examine the "User's current question".
-   - If the question names a specific subject (e.g., "who is ronaldo", "what is photosynthesis"), that is the **Final Subject**.
-   - If the question uses a pronoun (e.g., "he", "she", "it", "his"), you MUST determine what it refers to based *only* on the "Recent chat history".
-   - **CRITICAL RULE:** The most recent named person or thing in the conversation is the antecedent. For example, if the last assistant message was about "LeBron James", and the user asks "how old is he", the **Final Subject** is "LeBron James".
-   - **DO NOT** use the "Webpage content" to influence your decision for the Final Subject. This step is about the conversation ONLY.
+- If the user's question is about the source itself (e.g., "what is this document about?", "summarize this document", "what is this page about?", "summarize this page", etc.), you MUST consider the content RELEVANT.
+- Otherwise, follow these steps:
+  1. Isolate the subject of the user's question. If the question uses a pronoun (e.g., "he", "she", "it"), resolve it using only the recent chat history.
+  2. Compare the subject to the source content:
+     - If the source is primarily about the subject, your output must be ONLY "RELEVANT".
+     - If the source is NOT about the subject, your output must be ONLY "NOT_RELEVANT".
 
-**2. Compare the Final Subject to the Webpage:**
-   - Once you have determined the **Final Subject** from Step 1, you will then analyze the "Webpage content".
-   - Ask yourself: "Is this webpage primarily about the Final Subject?" A brief mention is not enough.
-
-**3. Output the Verdict:**
-   - If the webpage is primarily about the **Final Subject**, your output must be ONLY "RELEVANT".
-   - If the webpage is NOT about the **Final Subject**, your output must be ONLY "NOT_RELEVANT".
-
----
 ## EXAMPLES
 
-**Example 1: Pronoun follows a new subject (your failing case)**
+Example 1: User asks about the source itself
+- isDocumentAttached: true
+- User's question: "what is this document about?"
+- Output: RELEVANT
+
+Example 2: User asks about the source itself
+- isDocumentAttached: false
+- User's question: "what is this page about?"
+- Output: RELEVANT
+
+Example 3: Pronoun follows a new subject
 - Chat History: "...Assistant: LeBron James is an American professional basketball player..."
-- Current Question: "how old is he"
-- Webpage Content: A biography of Lionel Messi.
-- **Thought Process:**
-    1.  The question "how old is he" uses a pronoun.
-    2.  I look at the chat history. The most recent subject mentioned is "LeBron James".
-    3.  Therefore, the **Final Subject** is "LeBron James".
-    4.  I now look at the Webpage Content. It is about "Lionel Messi".
-    5.  "Lionel Messi" is not "LeBron James". The page is not relevant.
-- **Output:** NOT_RELEVANT
+- User's question: "how old is he"
+- Source Content: A biography of Lionel Messi.
+- Thought Process:
+    1. The question "how old is he" uses a pronoun.
+    2. The most recent subject mentioned is "LeBron James".
+    3. The source content is about "Lionel Messi".
+    4. "Lionel Messi" is not "LeBron James". The source is not relevant.
+- Output: NOT_RELEVANT
 
-**Example 2: Pronoun refers to page subject (correct case)**
+Example 4: Pronoun refers to source subject
 - Chat History: "...Assistant: He is Lionel Messi..."
-- Current Question: "how old is he"
-- Webpage Content: A biography of Lionel Messi.
-- **Thought Process:**
-    1.  The question "how old is he" uses a pronoun.
-    2.  I look at the chat history. The most recent subject mentioned is "Lionel Messi".
-    3.  Therefore, the **Final Subject** is "Lionel Messi".
-    4.  I now look at the Webpage Content. It is about "Lionel Messi".
-    5.  The Final Subject and the page content match. The page is relevant.
-- **Output:** RELEVANT
+- User's question: "how old is he"
+- Source Content: A biography of Lionel Messi.
+- Thought Process:
+    1. The question "how old is he" uses a pronoun.
+    2. The most recent subject mentioned is "Lionel Messi".
+    3. The source content is about "Lionel Messi".
+    4. The subject and the source content match. The source is relevant.
+- Output: RELEVANT
 
-**Example 3: Explicit new subject (working case)**
+Example 5: Explicit new subject
 - Chat History: "...Assistant: He is Lionel Messi..."
-- Current Question: "who is ronaldo"
-- Webpage Content: A biography of Lionel Messi.
-- **Thought Process:**
-    1.  The question explicitly names the subject "ronaldo".
-    2.  Therefore, the **Final Subject** is "Ronaldo".
-    3.  I now look at the Webpage Content. It is about "Lionel Messi".
-    4.  "Lionel Messi" is not "Ronaldo". The page is not relevant.
-- **Output:** NOT_RELEVANT
+- User's question: "who is ronaldo"
+- Source Content: A biography of Lionel Messi.
+- Thought Process:
+    1. The question explicitly names the subject "ronaldo".
+    2. The source content is about "Lionel Messi".
+    3. "Lionel Messi" is not "Ronaldo". The source is not relevant.
+- Output: NOT_RELEVANT
 
 ---
-## YOUR TURN
 
-**Recent chat history:**
+Recent chat history:
 ${conversationContext}
 
-**User's current question:** "${query}"
+User's current question: "${query}"
 
-**Webpage content (summary):**
+Source content (summary):
 ${pageContent.substring(0, 4000)}
 
-**Your decision (output ONLY "RELEVANT" or "NOT_RELEVANT"):**
+Your decision (output ONLY "RELEVANT" or "NOT_RELEVANT"): 
 `;
 
   try {
@@ -176,7 +181,7 @@ ${pageContent.substring(0, 4000)}
  * @throws {Error} If search fails or AI is not initialized
  */
 export async function performLLMSearch(query, forTabId, options = {}) {
-  const { forceGeneralKnowledge = false } = options;
+  const { forceGeneralKnowledge = false, isDocumentAttached = false } = options;
   const state = getTabState(forTabId);
 
   // Get current search mode
@@ -237,7 +242,8 @@ export async function performLLMSearch(query, forTabId, options = {}) {
       isRelevant = await isPageContentRelevant(
         query,
         state.fullPageTextContent,
-        state.chatHistory
+        state.chatHistory,
+        isDocumentAttached
       );
     } else if (searchMode === "page") {
       // In page mode, always assume relevant (skip check)
@@ -596,7 +602,12 @@ export async function handleSearch() {
 
   // Check if there's an uploaded file
   const uploadedFile = getCurrentFile();
-  const uploadedFileContent = getCurrentFileContent();
+  let uploadedFileContent = getCurrentFileContent();
+  let uploadedFileContextPrefix = "";
+  if (uploadedFile && uploadedFileContent) {
+    uploadedFileContextPrefix = `The following content is from an uploaded document named \"${uploadedFile.name}\".\n\n`;
+    uploadedFileContent = uploadedFileContextPrefix + uploadedFileContent;
+  }
 
   if (isGeneralKnowledgeMode) {
     // For general knowledge mode, skip all page content checks
@@ -619,8 +630,9 @@ export async function handleSearch() {
     state.currentCitedSentenceIndex = -1;
     state.pageIdentifiedElements = [];
     state.fullPageTextContent = uploadedFileContent;
+    console.log(state.fullPageTextContent);
     renderPopupUI();
-    await performLLMSearch(query, tabIdForSearch);
+    await performLLMSearch(query, tabIdForSearch, { isDocumentAttached: true });
     return;
   }
 
