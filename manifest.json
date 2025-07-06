@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Magellan AI: Free Knowledge Assistant for Any Webpage",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Your free all-in-one AI tool for searching, summarizing, and answering questions from any webpage or uploaded document.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
   "background": {
