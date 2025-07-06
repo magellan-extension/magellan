@@ -605,14 +605,195 @@
 
       .input-container {
         display: flex;
-        align-items: center;
-        gap: 6px;
+        flex-direction: column;
         background-color: var(--input-bg);
-        padding: 4px 10px;
+        padding: 6px 12px 12px 12px;
         border-radius: 16px;
         border: 1px solid var(--input-border);
         flex-shrink: 0;
         flex: 1;
+        min-height: 100px;
+        gap: 8px;
+        position: relative;
+        overflow: visible;
+      }
+
+      .search-bar-row {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 10px;
+        width: 100%;
+      }
+
+      .search-bar-row textarea#searchQuery {
+        flex: 1;
+        resize: vertical;
+        min-height: 28px;
+        max-height: 80px;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: inherit;
+        padding: 6px 0;
+        outline: none;
+        border-radius: 8px;
+        line-height: 1.4;
+        box-sizing: border-box;
+      }
+      .search-bar-row textarea#searchQuery::placeholder {
+        color: var(--text-secondary);
+      }
+
+      .search-bar-actions {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-top: 8px;
+        position: relative;
+        overflow: visible;
+      }
+      .search-bar-actions .upload-button.with-text {
+        position: static;
+        margin-bottom: 0;
+      }
+      .search-bar-actions .search-mode-button.with-text {
+        position: static;
+        margin-bottom: 0;
+      }
+      .search-bar-actions .upload-button.with-text {
+        margin-right: 8px;
+      }
+      #searchButton {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        padding: 0;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+      #searchButton svg {
+        width: 18px;
+        height: 18px;
+      }
+      .upload-button.with-text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        gap: 4px;
+        background-color: rgba(0, 0, 0, 0.03);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        height: 32px;
+        padding: 0 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        flex-shrink: 0;
+      }
+      .upload-button.with-text svg {
+        width: 14px;
+        height: 14px;
+      }
+      .upload-button.with-text:hover {
+        background-color: var(--dropdown-hover);
+        border-color: var(--primary);
+        color: var(--text-primary);
+      }
+
+      .upload-button.with-text.has-file {
+        background-color: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.2);
+        color: var(--success);
+      }
+      .upload-button.with-text.has-file:hover {
+        background-color: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: var(--error);
+      }
+      .upload-button.with-text.has-file:hover::after {
+        content: "Click to remove";
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        border: 1px solid var(--border-color);
+        z-index: 1000;
+      }
+
+      .search-bar-row textarea#searchQuery {
+        flex: 1;
+        resize: vertical;
+        min-height: 36px;
+        max-height: 120px;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 15px;
+        padding: 8px 0;
+        outline: none;
+        border-radius: 8px;
+        line-height: 1.5;
+        box-sizing: border-box;
+      }
+      .search-bar-row textarea#searchQuery::placeholder {
+        color: var(--text-secondary);
+      }
+
+      .search-bar-actions {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+        width: 100%;
+        margin-top: 8px;
+      }
+      #searchButton {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        padding: 0;
+        flex-shrink: 0;
+      }
+      #searchButton svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .attachment-section {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-top: 4px;
+        border-top: 1px solid var(--border-color);
       }
 
       #searchQuery {
@@ -620,9 +801,10 @@
         background: transparent;
         border: none;
         color: var(--text-primary);
-        font-size: 13px;
-        padding: 4px 0;
+        font-size: 14px;
+        padding: 8px 0;
         outline: none;
+        min-height: 24px;
       }
 
       #searchQuery::placeholder {
@@ -634,8 +816,8 @@
         color: white;
         border: none;
         border-radius: 50%;
-        width: 28px;
-        height: 28px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -646,8 +828,8 @@
       }
 
       #searchButton svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
       }
 
       #searchButton:hover:not(:disabled) {
@@ -669,8 +851,8 @@
 
       .spinner {
         display: none;
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
         border-top-color: var(--text-primary);
@@ -1030,9 +1212,9 @@
         background-color: var(--bg-secondary);
         color: var(--text-secondary);
         border: 1px solid var(--border-color);
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
+        border-radius: 8px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1050,8 +1232,8 @@
       }
 
       .upload-button svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
       }
 
       .upload-button.has-file {
@@ -1255,6 +1437,51 @@
       .error-toast-close svg {
         width: 12px;
         height: 12px;
+      }
+
+      .search-mode-button.with-text {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: fit-content;
+        gap: 4px;
+        background-color: rgba(0, 0, 0, 0.03);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        height: 32px;
+        padding: 0 8px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        flex-shrink: 0;
+      }
+      .search-mode-button.with-text svg {
+        width: 14px;
+        height: 14px;
+      }
+      .search-mode-button.with-text:hover {
+        background-color: var(--dropdown-hover);
+        border-color: var(--primary);
+        color: var(--text-primary);
+      }
+
+      .search-bar-row textarea#searchQuery {
+        flex: 1;
+        resize: vertical;
+        min-height: 28px;
+        max-height: 80px;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: inherit;
+        padding: 6px 0;
+        outline: none;
+        border-radius: 8px;
+        line-height: 1.4;
+        box-sizing: border-box;
       }
     </style>
   </head>
@@ -1492,89 +1719,6 @@
 
       <div id="status" class="status">Enter a query to start.</div>
 
-      <div class="search-mode-section">
-        <div class="search-mode-header" id="searchModeHeader">
-          <div class="search-mode-title" id="searchModeTitle">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            Search Mode
-            <svg
-              class="collapse-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9 5l7 7-7 7"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-        <div class="search-mode-content" id="searchModeContent">
-          <div class="search-mode-options">
-            <label class="search-mode-option">
-              <input
-                type="radio"
-                name="searchMode"
-                value="page"
-                class="search-mode-radio"
-              />
-              <div class="search-mode-info">
-                <div class="search-mode-name">Page Context Only</div>
-                <div class="search-mode-description">
-                  Search only within the current page content or uploaded
-                  document.
-                </div>
-              </div>
-            </label>
-            <label class="search-mode-option">
-              <input
-                type="radio"
-                name="searchMode"
-                value="blended"
-                class="search-mode-radio"
-              />
-              <div class="search-mode-info">
-                <div class="search-mode-name">Blended Search</div>
-                <div class="search-mode-description">
-                  Search page/document first, then use general knowledge if
-                  needed.
-                </div>
-              </div>
-            </label>
-            <label class="search-mode-option">
-              <input
-                type="radio"
-                name="searchMode"
-                value="general"
-                class="search-mode-radio"
-              />
-              <div class="search-mode-info">
-                <div class="search-mode-name">General Knowledge Only</div>
-                <div class="search-mode-description">
-                  Use only general knowledge, ignore page content.
-                </div>
-              </div>
-            </label>
-          </div>
-        </div>
-      </div>
-
       <!-- Document Status Bar -->
       <div
         class="document-status-bar"
@@ -1663,58 +1807,89 @@
       </div>
 
       <div class="input-section">
-        <button id="uploadButton" class="upload-button" title="Upload Document">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </button>
+        <input
+          type="file"
+          id="fileInput"
+          accept=".txt,.pdf,.doc,.docx,.md,.rtf"
+          style="display: none"
+        />
         <div class="input-container">
-          <input
-            type="file"
-            id="fileInput"
-            accept=".txt,.pdf,.doc,.docx,.md,.rtf"
-            style="display: none"
-          />
-          <input
-            type="text"
-            id="searchQuery"
-            placeholder="Ask about this page..."
-          />
-          <button id="searchButton">
-            <div class="spinner"></div>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <div class="search-bar-row">
+            <textarea
+              id="searchQuery"
+              placeholder="Ask about this page..."
+              rows="2"
+            ></textarea>
+          </div>
+          <div class="search-bar-actions">
+            <button
+              id="uploadButton"
+              class="upload-button with-text"
+              title="Upload Document"
+              type="button"
             >
-              <path
-                d="M22 2L11 13"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M22 2L15 22L11 13L2 9L22 2Z"
-                stroke="currentColor"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </button>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 5v14M5 12h14"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Attachments</span>
+            </button>
+            <button
+              id="searchModeButton"
+              class="search-mode-button with-text"
+              title="Blended Search - Search page/document first, then use general knowledge if needed"
+              type="button"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Blended</span>
+            </button>
+            <button id="searchButton">
+              <div class="spinner"></div>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M22 2L11 13"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M22 2L15 22L11 13L2 9L22 2Z"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 

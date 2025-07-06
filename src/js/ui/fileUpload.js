@@ -422,6 +422,7 @@ function showFileUploadError(message) {
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
+      <span>Attachments</span>
     `;
     uploadButton.disabled = false;
     uploadButton.title = "Upload document";
@@ -478,11 +479,12 @@ function updateFileUploadUI(file) {
   const documentName = document.getElementById("documentName");
 
   if (uploadButton) {
-    // Reset upload button
+    // Update upload button with file indicator
     uploadButton.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
+      <span>Attached</span>
     `;
     uploadButton.disabled = false;
     uploadButton.classList.add("has-file");
@@ -505,11 +507,12 @@ function resetFileUploadUI() {
   const documentStatusBar = document.getElementById("documentStatusBar");
 
   if (uploadButton) {
-    // Reset upload button
+    // Reset upload button to original state
     uploadButton.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
+      <span>Attachments</span>
     `;
     uploadButton.disabled = false;
     uploadButton.classList.remove("has-file");

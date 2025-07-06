@@ -205,51 +205,32 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Initialize search mode from storage
   chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY], (result) => {
-    if (result[SEARCH_MODE_STORAGE_KEY] === undefined) {
-      chrome.storage.local.set({ [SEARCH_MODE_STORAGE_KEY]: "blended" });
-      document.querySelector(
-        'input[name="searchMode"][value="blended"]'
-      ).checked = true;
-    } else {
-      document.querySelector(
-        `input[name="searchMode"][value="${result[SEARCH_MODE_STORAGE_KEY]}"]`
-      ).checked = true;
-    }
-    updateSearchQueryPlaceholder(result[SEARCH_MODE_STORAGE_KEY] || "blended");
-    updateSearchModeTitle(result[SEARCH_MODE_STORAGE_KEY] || "blended");
+    const currentMode = result[SEARCH_MODE_STORAGE_KEY] || "blended";
+    chrome.storage.local.set({ [SEARCH_MODE_STORAGE_KEY]: currentMode });
+    updateSearchQueryPlaceholder(currentMode);
+    updateSearchModeButtonText(currentMode);
   });
 
-  // Add event listeners for search mode change
-  document.querySelectorAll('input[name="searchMode"]').forEach((radio) => {
-    radio.addEventListener("change", () => {
-      if (radio.checked) {
-        chrome.storage.local.set({ [SEARCH_MODE_STORAGE_KEY]: radio.value });
-        updateSearchQueryPlaceholder(radio.value);
-        updateSearchModeTitle(radio.value);
+  // Search Mode Button Click Functionality
+  const searchModeButton = document.getElementById("searchModeButton");
 
-        if (searchModeTitle && searchModeContent) {
-          searchModeTitle.classList.add("collapsed");
-          searchModeContent.classList.add("collapsed");
-          chrome.storage.local.set({ searchModeCollapsed: true });
-        }
-      }
-    });
-  });
+  if (searchModeButton) {
+    searchModeButton.addEventListener("click", (event) => {
+      event.stopPropagation();
 
-  // Search Mode Collapse/Expand Functionality
-  const searchModeHeader = document.getElementById("searchModeHeader");
-  const searchModeTitle = document.getElementById("searchModeTitle");
-  const searchModeContent = document.getElementById("searchModeContent");
+      // Get current mode and cycle to next
+      chrome.storage.local.get([SEARCH_MODE_STORAGE_KEY], (result) => {
+        const currentMode = result[SEARCH_MODE_STORAGE_KEY] || "blended";
+        const modes = ["blended", "page", "general"];
+        const currentIndex = modes.indexOf(currentMode);
+        const nextIndex = (currentIndex + 1) % modes.length;
+        const nextMode = modes[nextIndex];
 
-  if (searchModeHeader && searchModeTitle && searchModeContent) {
-    searchModeTitle.classList.add("collapsed");
-    searchModeContent.classList.add("collapsed");
-
-    searchModeHeader.addEventListener("click", () => {
-      const isCurrentlyCollapsed =
-        searchModeTitle.classList.contains("collapsed");
-      searchModeTitle.classList.toggle("collapsed", !isCurrentlyCollapsed);
-      searchModeContent.classList.toggle("collapsed", !isCurrentlyCollapsed);
+        // Update storage and UI
+        chrome.storage.local.set({ [SEARCH_MODE_STORAGE_KEY]: nextMode });
+        updateSearchQueryPlaceholder(nextMode);
+        updateSearchModeButtonText(nextMode);
+      });
     });
   }
 
@@ -268,35 +249,38 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   /**
-   * Updates the search mode dropdown title
+   * Updates the search mode button text and tooltip
    * @function
    * @param {string} mode - The current search mode ('page', 'blended', 'general')
-   * @description Updates the search mode dropdown title with appropriate icon and label.
-   * Provides visual feedback about the current search mode and its behavior.
-   *
-   * @example
-   * updateSearchModeTitle('page'); // Shows "Search Mode: Page Context"
-   * updateSearchModeTitle('blended'); // Shows "Search Mode: Blended"
-   * updateSearchModeTitle('general'); // Shows "Search Mode: Gen. Knowledge"
+   * @description Updates the search mode button text and tooltip to reflect the current mode.
    */
-  function updateSearchModeTitle(mode) {
-    const searchModeTitle = document.getElementById("searchModeTitle");
-    if (searchModeTitle) {
-      const modeLabels = {
-        page: "Page Context",
-        blended: "Blended",
-        general: "Gen. Knowledge",
+  function updateSearchModeButtonText(mode) {
+    const searchModeButton = document.getElementById("searchModeButton");
+    if (searchModeButton) {
+      const modeConfig = {
+        page: {
+          label: "Page Context",
+          tooltip:
+            "Page Context Only - Search only within the current page content or uploaded document",
+        },
+        blended: {
+          label: "Blended",
+          tooltip:
+            "Blended Search - Search page/document first, then use general knowledge if needed",
+        },
+        general: {
+          label: "Gen. Knowledge",
+          tooltip:
+            "General Knowledge Only - Use only general knowledge, ignore page content",
+        },
       };
-      const label = modeLabels[mode] || "Blended";
-      searchModeTitle.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Search Mode: ${label}
-        <svg class="collapse-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      `;
+
+      const config = modeConfig[mode] || modeConfig.blended;
+      const span = searchModeButton.querySelector("span");
+      if (span) {
+        span.textContent = config.label;
+      }
+      searchModeButton.title = config.tooltip;
     }
   }
 
