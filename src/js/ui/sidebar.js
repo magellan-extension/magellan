@@ -261,26 +261,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         page: {
           label: "Page Context",
           tooltip:
-            "Page Context Only - Search only within the current page content or uploaded document",
+            "Search only within the current page content or uploaded document",
         },
         blended: {
           label: "Blended",
           tooltip:
-            "Blended Search - Search page/document first, then use general knowledge if needed",
+            "Search page/document first, then use general knowledge if needed",
         },
         general: {
           label: "Gen. Knowledge",
-          tooltip:
-            "General Knowledge Only - Use only general knowledge, ignore page content",
+          tooltip: "Use only general knowledge, ignore page content",
         },
       };
 
       const config = modeConfig[mode] || modeConfig.blended;
       const span = searchModeButton.querySelector("span");
+      const tooltip = searchModeButton.querySelector(".custom-tooltip");
+
       if (span) {
         span.textContent = config.label;
       }
-      searchModeButton.title = config.tooltip;
+      if (tooltip) {
+        tooltip.textContent = config.tooltip;
+      }
     }
   }
 

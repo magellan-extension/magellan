@@ -1467,6 +1467,40 @@
         color: var(--text-primary);
       }
 
+      .search-mode-button.with-text {
+        position: relative;
+      }
+
+      .custom-tooltip {
+        position: absolute;
+        top: -60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: normal;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease, visibility 0.15s ease;
+        pointer-events: none;
+        max-width: 160px;
+        width: auto;
+        line-height: 1.2;
+        text-align: center;
+      }
+
+      .search-mode-button.with-text:hover .custom-tooltip {
+        opacity: 1;
+        visibility: visible;
+      }
+
       .search-bar-row textarea#searchQuery {
         flex: 1;
         resize: vertical;
@@ -1825,7 +1859,6 @@
             <button
               id="uploadButton"
               class="upload-button with-text"
-              title="Upload Document"
               type="button"
             >
               <svg
@@ -1846,7 +1879,6 @@
             <button
               id="searchModeButton"
               class="search-mode-button with-text"
-              title="Blended Search - Search page/document first, then use general knowledge if needed"
               type="button"
             >
               <svg
@@ -1863,6 +1895,7 @@
                 />
               </svg>
               <span>Blended</span>
+              <div class="custom-tooltip"></div>
             </button>
             <button id="searchButton">
               <div class="spinner"></div>
