@@ -49,6 +49,146 @@ import {
 } from "../ui/ui.js";
 import { getCurrentFile, getCurrentFileContent } from "../ui/fileUpload.js";
 
+const MCP_MAX_ATTEMPTS = 4;
+const MCP_RETRY_BASE_DELAY_MS = 250;
+
+/**
+ * Simple async wait helper for MCP retries.
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Builds the full MCP prompt by appending deterministic response rules.
+ * @param {string} basePrompt - The main task-specific prompt
+ * @param {Object} options
+ * @param {"general"|"page"|"blended"} options.mode - The active search mode
+ * @param {boolean} options.requireCitations - Whether citations are required
+ * @param {number} options.attempt - Current attempt count
+ * @returns {string} Prompt with MCP instructions appended
+ */
+function buildMcpPrompt(basePrompt, { mode, requireCitations, attempt }) {
+  const citationDirective = requireCitations
+    ? `- Populate the "citations" array with only the element IDs (e.g., "mgl-node-4") that directly support the answer. Order them by how they appear in the answer. If no element applies, return an empty array.`
+    : `- Return an empty array for "citations".`;
+
+  const attemptReminder =
+    attempt > 0
+      ? `\nWARNING: Your previous response violated MCP. Return valid JSON that follows the schema exactly. No commentary or markdown.`
+      : "";
+
+  return `${basePrompt}
+
+MAGELLAN CONTROL PROTOCOL (MCP)
+
+Respond with VALID JSON only (no markdown fences, no prose). The JSON must follow this schema:
+{
+  "answer": "string",
+  "citations": ["mgl-node-#"...],
+  "mode": "${mode}",
+  "confidence": "high" | "medium" | "low"
+}
+
+- "answer" must be a standalone response with no element IDs or bracketed citations.
+${citationDirective}
+- "confidence" reflects how certain you are ("high", "medium", or "low").
+- Do not add extra keys.
+${attemptReminder}`.trim();
+}
+
+/**
+ * Attempts to parse a JSON object from an LLM response, even if the model added prose.
+ * @param {string} rawText
+ * @returns {Object}
+ */
+function extractJsonFromText(rawText) {
+  if (!rawText) throw new Error("Empty LLM response.");
+  const trimmed = rawText.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch (_) {
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      const possibleJson = trimmed.slice(start, end + 1);
+      return JSON.parse(possibleJson);
+    }
+    throw new Error("Unable to locate JSON payload in LLM response.");
+  }
+}
+
+/**
+ * Normalizes the MCP payload into a predictable structure.
+ * @param {string} rawText
+ * @returns {{answer: string, citations: string[], mode: string, confidence: string}}
+ */
+function normalizeMcpPayload(rawText) {
+  const parsed = extractJsonFromText(rawText);
+  const answer = typeof parsed.answer === "string" ? parsed.answer.trim() : "";
+  if (!answer) {
+    throw new Error("MCP response missing 'answer'.");
+  }
+
+  const citations = Array.isArray(parsed.citations)
+    ? parsed.citations
+        .map((id) => (typeof id === "string" ? id.trim() : ""))
+        .filter((id) => id.length > 0)
+    : [];
+
+  const mode = typeof parsed.mode === "string" ? parsed.mode.trim() : "page";
+  const confidence =
+    typeof parsed.confidence === "string"
+      ? parsed.confidence.trim().toLowerCase()
+      : "medium";
+
+  return { answer, citations, mode, confidence };
+}
+
+/**
+ * Runs the MCP flow with retries to guarantee deterministic JSON responses.
+ * @param {string} basePrompt
+ * @param {Object} options
+ * @param {"general"|"page"|"blended"} options.mode
+ * @param {boolean} options.requireCitations
+ * @returns {Promise<{answer: string, citations: string[], mode: string, confidence: string}>}
+ */
+async function runMcpCompletion(basePrompt, { mode, requireCitations }) {
+  if (!ai) {
+    throw new Error("AI client not initialized.");
+  }
+
+  let lastError;
+  for (let attempt = 0; attempt < MCP_MAX_ATTEMPTS; attempt++) {
+    try {
+      const prompt = buildMcpPrompt(basePrompt, {
+        mode,
+        requireCitations,
+        attempt,
+      });
+      const llmResult = await ai.generateContent(prompt);
+      const llmRawResponse = llmResult.text ?? "";
+      console.log("LLM Raw Response:", llmRawResponse);
+
+      return normalizeMcpPayload(llmRawResponse);
+    } catch (error) {
+      lastError = error;
+      console.warn(
+        `Failed to get valid MCP response (attempt ${attempt + 1}):`,
+        error.message || error
+      );
+      if (attempt < MCP_MAX_ATTEMPTS - 1) {
+        const backoff = MCP_RETRY_BASE_DELAY_MS * (attempt + 1);
+        await wait(backoff);
+      }
+    }
+  }
+
+  throw lastError || new Error("Unable to parse MCP response.");
+}
+
 /**
  * Checks if the page content is relevant to the subject of the chat history and query
  * @async
@@ -250,7 +390,7 @@ export async function performLLMSearch(query, forTabId, options = {}) {
       isRelevant = true;
     }
 
-    let llmResult;
+    let llmResponse;
     if (isGeneralKnowledgeMode || (searchMode === "blended" && !isRelevant)) {
       // General Knowledge Only mode or blended without relevancy
       const webPrompt = `
@@ -262,34 +402,23 @@ IMPORTANT: If the previous conversation included answers that said information w
 
 Fact-check and verify any previous answers. If you know the correct information, display it, regardless of what the page or previous answers might have said.
 
-**NEVER include citations, element IDs, or references to citations anywhere except inside the LLM_CITATIONS_START ... LLM_CITATIONS_END section.**
-
 Recent conversation history (for context, but do not let previous 'not found' answers limit you):
 ${conversationContext}
 
 User's question: "${query}"
 
 Please provide a clear and informative answer. If you're uncertain about any part of your response, please indicate that. Keep your answer concise and to the point.
-
-Format your response as follows:
-LLM_ANSWER_START
-[Your answer to the query]
-LLM_ANSWER_END
-LLM_CITATIONS_START
-NONE
-LLM_CITATIONS_END
 `;
-      llmResult = await ai.generateContent(webPrompt);
+      llmResponse = await runMcpCompletion(webPrompt, {
+        mode: "general",
+        requireCitations: false,
+      });
       isGeneralKnowledgeMode = true;
     } else if (searchMode === "page" && !isRelevant) {
       // Page Context Only mode - no relevant content found
-      llmResult = {
-        text: `LLM_ANSWER_START
-I apologize, but I cannot find any relevant information on this page to answer your question. You can try searching with general knowledge by changing the search mode or clicking the button below.
-LLM_ANSWER_END
-LLM_CITATIONS_START
-NONE
-LLM_CITATIONS_END`,
+      llmResponse = {
+        answer: `I apologize, but I cannot find any relevant information on this page to answer your question. You can try searching with general knowledge by changing the search mode or clicking the button below.`,
+        citations: [],
       };
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
@@ -298,7 +427,7 @@ You are an intelligent AI assistant named Magellan. Sometimes, the user may not 
 
 Your primary goal is to help a user by leveraging the content of a web page. You must skillfully combine the information on the page with your own reasoning and language capabilities to provide comprehensive and useful answers.
 
-**NEVER include citations, element IDs, or references to citations anywhere except inside the LLM_CITATIONS_START ... LLM_CITATIONS_END section.**
+Do not place element IDs or citation brackets directly in the prose; MCP will collect citations separately.
 
 ## CORE INSTRUCTIONS
 
@@ -310,12 +439,9 @@ Your primary goal is to help a user by leveraging the content of a web page. You
 
 **3. Synthesize, Don't Just Repeat:** Do not simply copy-paste large chunks of text. Provide a concise, well-written response in your own words that directly addresses the user's request. If the page does not contain the information needed, clearly state that. For example: "I can't find their direct email address on this page, but here is a draft based on their role and company mentioned."
 
-**4. CITE YOUR SOURCES (CRITICAL):**
-    - You MUST cite the \`element_id\` for any specific facts, names, dates, or direct quotes you pull from the "PAGE CONTENT".
-    - For creative tasks, cite the \`element_id\`s where you found the key pieces of information you used (e.g., the person's name, their job title).
-    - List ONLY the element IDs (e.g., mgl-node-42), one ID per line, in the LLM_CITATIONS_START section.
-    - If the answer cannot be found on the page or your response is purely generative without specific facts from the page, write "NONE" in the citations section.
-    - **ABSOLUTELY DO NOT** include the \`[mgl-node-...]\` IDs anywhere inside the LLM_ANSWER_START ... LLM_ANSWER_END block. The answer for the user must be clean.
+**4. Cite Your Sources (CRITICAL):**
+    - Reference the \`element_id\` (e.g., mgl-node-42) for any specific facts, names, dates, or direct quotes taken from the page.
+    - If no page elements apply, explicitly state that in your reasoning and leave citations empty.
 
 ---
 ## CONTEXT
@@ -329,62 +455,33 @@ ${conversationContext}
 --- START OF PAGE CONTENT ---
 ${state.fullPageTextContent}
 --- END OF PAGE CONTENT ---
-
----
-## YOUR RESPONSE FORMAT
-
-**IMPORTANT: Your entire response MUST follow this exact format. Do not add any other text outside these blocks.**
-
-LLM_ANSWER_START
-[Your synthesized, well-written, and CLEAN answer to the user's query. It must not contain any [mgl-node-...] IDs.]
-LLM_ANSWER_END
-LLM_CITATIONS_START
-[mgl-node-id_of_cited_element_1]
-[mgl-node-id_of_cited_element_2]
-...
-LLM_CITATIONS_END
 `;
-      llmResult = await ai.generateContent(pagePrompt);
+      llmResponse = await runMcpCompletion(pagePrompt, {
+        mode: searchMode === "blended" ? "blended" : "page",
+        requireCitations: true,
+      });
     }
-
-    const llmRawResponse = llmResult.text;
 
     if (!tabStates[forTabId]) {
       console.log("Tab closed during LLM search for tab:", forTabId);
       return;
     }
 
-    const answerMatch = llmRawResponse.match(
-      /LLM_ANSWER_START\s*([\s\S]*?)\s*LLM_ANSWER_END/
-    );
-    const citationsMatch = llmRawResponse.match(
-      /LLM_CITATIONS_START\s*([\s\S]*?)\s*LLM_CITATIONS_END/
-    );
-
-    // Get the raw answer, then GUARANTEE it's clean for the user display.
-    // This defensively removes any [mgl-node-...] tags that the LLM might have mistakenly included in the answer block.
-    const assistantResponseText = answerMatch
-      ? answerMatch[1].replace(
-          /\s*\[\s*mgl-node-\d+(?:\s*,\s*mgl-node-\d+)*\s*\]/g,
-          ""
-        ) // Remove any leading space and [mgl-node-...] tags
-      : "LLM did not provide an answer in the expected format. Please try again.";
-
-    const rawCitationIds = citationsMatch ? citationsMatch[1].trim() : "";
-    const parsedElementIds = rawCitationIds
-      .split("\n")
-      .map((s) => s.trim().replace(/^\[|\]$/g, ""))
-      .filter(
-        (s) =>
-          s.length > 0 &&
-          s.toUpperCase() !== "NONE" &&
-          s.startsWith("mgl-node-")
-      );
+    const assistantResponseText = (llmResponse.answer || "").replace(
+      /\s*\[\s*mgl-node-\d+(?:\s*,\s*mgl-node-\d+)*\s*\]/g,
+      ""
+    ); // Defensive cleanup in case the model leaked citations
 
     // Deduplicate and filter overlapping citations
     const uniqueElementIds = [];
     const seenIds = new Set();
-    for (const id of parsedElementIds) {
+    const citationsArray = Array.isArray(llmResponse.citations)
+      ? llmResponse.citations
+      : [];
+    for (const rawId of citationsArray) {
+      const id = typeof rawId === "string" ? rawId.trim() : "";
+      if (!id || id.toUpperCase() === "NONE" || !id.startsWith("mgl-node-"))
+        continue;
       if (!seenIds.has(id)) {
         uniqueElementIds.push(id);
         seenIds.add(id);
