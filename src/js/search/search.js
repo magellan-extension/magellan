@@ -168,6 +168,11 @@ async function runMcpCompletion(basePrompt, { mode, requireCitations }) {
         requireCitations,
         attempt,
       });
+      // Update model with :online suffix if real-time is enabled
+      const { getModelForRequest } = await import("../ui/sidebar.js");
+      const modelForRequest = await getModelForRequest();
+      ai.setModel(modelForRequest);
+
       const llmResult = await ai.generateContent(prompt);
       const llmRawResponse = llmResult.text ?? "";
       console.log("LLM Raw Response:", llmRawResponse);
@@ -287,6 +292,11 @@ Your decision (output ONLY "RELEVANT" or "NOT_RELEVANT"):
 `;
 
   try {
+    // Update model with :online suffix if real-time is enabled
+    const { getModelForRequest } = await import("../ui/sidebar.js");
+    const modelForRequest = await getModelForRequest();
+    ai.setModel(modelForRequest);
+
     const result = await ai.generateContent(relevancePrompt);
     // Adding defensive trimming and handling of potential model verbosity.
     const response = result.text
@@ -416,12 +426,14 @@ Please provide a clear and informative answer. If you're uncertain about any par
       isGeneralKnowledgeMode = true;
     } else if (searchMode === "page" && !isRelevant) {
       // Page Context Only mode - no relevant content found
+      isGeneralKnowledgeMode = false; // Explicitly set to false for page context
       llmResponse = {
         answer: `I apologize, but I cannot find any relevant information on this page to answer your question. You can try searching with general knowledge by changing the search mode or clicking the button below.`,
         citations: [],
       };
     } else {
       // Page Context mode with relevant content or Blended mode with relevant content
+      isGeneralKnowledgeMode = false; // Explicitly set to false for page context
       const pagePrompt = `
 You are an intelligent AI assistant named Magellan. Sometimes, the user may not enter a question or may just greet you or say something conversational. In those cases, respond in a friendly, conversational way—greet the user, offer help, or ask how you can assist, just like a helpful assistant.
 
@@ -659,6 +671,11 @@ export async function handleSearch() {
   if (!ai) {
     updateStatus("AI not initialized. Please configure API Key.", "error");
     return;
+  }
+
+  // Switch to chat tab when user enters a search
+  if (window.switchToChatTab) {
+    window.switchToChatTab();
   }
 
   const tabIdForSearch = currentActiveTabId;

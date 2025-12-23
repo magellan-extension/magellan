@@ -1,27 +1,30 @@
 /**
  * @fileoverview API Key Management for Magellan
- * @description Handles the storage, validation, and management of the Google Gemini API key.
+ * @description Handles the storage, validation, and management of the OpenRouter API key.
  * This module provides functionality for validating API keys, storing them securely,
  * and managing the API key UI interface.
  *
  * @requires chrome.storage API
- * @requires GoogleGenAI class
+ * @requires OpenRouterClient class
  */
 
 /** @constant {string} Storage key for the API key in Chrome's local storage */
-const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
+const API_KEY_STORAGE_KEY = "magellan_openrouter_api_key";
 
 /** @constant {string} Storage key for tracking if the user has seen the what's new screen */
 const WHATS_NEW_SEEN_KEY = "magellan_whats_new_seen";
 
+/** @constant {string} Storage key for tracking if user has completed one-time setup */
+const SETUP_COMPLETE_KEY = "magellan_setup_complete";
+
 /**
- * Validates a Google Gemini API key
+ * Validates an OpenRouter API key
  * @param {string} apiKey - The API key to validate
  * @returns {Promise<boolean>} Validation result
  * @throws {Error} If validation process fails
  *
  * @example
- * const result = await validateApiKey('AI...');
+ * const result = await validateApiKey('sk-or-v1-...');
  * if (result) {
  *   console.log('API key is valid');
  * } else {
@@ -31,9 +34,12 @@ const WHATS_NEW_SEEN_KEY = "magellan_whats_new_seen";
 async function validateApiKey(apiKey) {
   try {
     console.log("Starting API key validation...");
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models?key=" + apiKey
-    );
+    // Validate by making a simple request to OpenRouter API
+    const response = await fetch("https://openrouter.ai/api/v1/models", {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
     console.log("Validation response status:", response.status);
     if (!response.ok) {
       console.log("Validation failed with status:", response.status);
@@ -146,15 +152,32 @@ document.getElementById("saveApiKey").addEventListener("click", async () => {
         !!verification[API_KEY_STORAGE_KEY]
       );
 
-      console.log(
-        "API key saved successfully, checking if user should see what's new..."
-      );
+      console.log("API key saved successfully, checking next step...");
       updateApiKeyStatus(true);
 
-      // Check if user has seen the what's new screen
-      const { [WHATS_NEW_SEEN_KEY]: whatsNewSeen } =
-        await chrome.storage.local.get([WHATS_NEW_SEEN_KEY]);
-      const targetPage = whatsNewSeen ? "sidebar.html" : "whats-new.html";
+      // Check if this is part of the one-time setup flow
+      const {
+        [SETUP_COMPLETE_KEY]: setupComplete,
+        [WHATS_NEW_SEEN_KEY]: whatsNewSeen,
+      } = await chrome.storage.local.get([
+        SETUP_COMPLETE_KEY,
+        WHATS_NEW_SEEN_KEY,
+      ]);
+
+      let targetPage;
+      if (!setupComplete) {
+        // First time setup: go to model selection
+        targetPage = "model-selection.html";
+        console.log("First time setup - redirecting to model selection");
+      } else if (!whatsNewSeen) {
+        // User hasn't seen what's new yet
+        targetPage = "whats-new.html";
+        console.log("Redirecting to what's new page");
+      } else {
+        // Setup complete, go to sidebar
+        targetPage = "sidebar.html";
+        console.log("Setup complete - redirecting to sidebar");
+      }
 
       setTimeout(() => {
         console.log(`Redirecting to ${targetPage}...`);

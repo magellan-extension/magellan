@@ -5,56 +5,44 @@
     <title>Magellan - API Key Setup</title>
     <style>
       :root {
-        /* Core colors */
-        --primary: #6366f1;
-        --primary-hover: #4f46e5;
-        --success: #10b981;
-        --error: #ef4444;
-        --warning: #f59e0b;
+        /* Core colors - darker, sexier theme */
+        --primary: #8b8bff;
+        --primary-hover: #6b6bff;
+        --success: #51cf66;
+        --error: #ff6b6b;
+        --warning: #ffd43b;
+        --border-radius: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* Theme variables */
-        --bg-primary: #ffffff;
-        --bg-secondary: #f3f4f6;
-        --text-primary: #1f2937;
-        --text-secondary: #4b5563;
-        --border-color: #e5e7eb;
-        --input-bg: #ffffff;
-        --input-border: #d1d5db;
-        --input-focus-border: #6366f1;
-        --input-focus-ring: rgba(99, 102, 241, 0.2);
-        --button-hover: #4f46e5;
-        --button-active: #4338ca;
-        --link-color: #6366f1;
-        --link-hover: #4f46e5;
-        --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1),
-          0 1px 2px -1px rgb(0 0 0 / 0.1);
-        --transition: all 0.2s ease;
-
-        /* Dark theme */
-        --dark-bg-primary: #1f2937;
-        --dark-bg-secondary: #111827;
-        --dark-text-primary: #f9fafb;
-        --dark-text-secondary: #d1d5db;
-        --dark-border-color: #374151;
-        --dark-input-bg: #374151;
-        --dark-input-border: #4b5563;
-        --dark-input-focus-border: #6366f1;
-        --dark-input-focus-ring: rgba(99, 102, 241, 0.2);
-        --dark-card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3),
-          0 1px 2px -1px rgb(0 0 0 / 0.3);
+        /* Theme variables - darker, sexier */
+        --bg-primary: #0f0f13;
+        --bg-secondary: #1a1a24;
+        --text-primary: #e8e8f0;
+        --text-secondary: #8b8b9e;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --input-bg: #1a1a24;
+        --input-border: rgba(255, 255, 255, 0.08);
+        --input-focus-border: #8b8bff;
+        --input-focus-ring: rgba(139, 139, 255, 0.15);
+        --button-hover: #6b6bff;
+        --button-active: #5b5bff;
+        --link-color: #8b8bff;
+        --link-hover: #6b6bff;
+        --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
       }
 
-      :root[data-theme="dark"] {
-        --bg-primary: var(--dark-bg-primary);
-        --bg-secondary: var(--dark-bg-secondary);
-        --text-primary: var(--dark-text-primary);
-        --text-secondary: var(--dark-text-secondary);
-        --border-color: var(--dark-border-color);
-        --input-bg: var(--dark-input-bg);
-        --input-border: var(--dark-input-border);
-        --input-focus-border: var(--dark-input-focus-border);
-        --input-focus-ring: var(--dark-input-focus-ring);
-        --card-shadow: var(--dark-card-shadow);
+      /* Light theme */
+      :root[data-theme="light"] {
+        --bg-primary: #fafafa;
+        --bg-secondary: #f0f0f5;
+        --text-primary: #1a1a24;
+        --text-secondary: #6b6b7a;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --input-bg: #f0f0f5;
+        --input-border: rgba(0, 0, 0, 0.08);
+        --input-focus-border: #8b8bff;
+        --input-focus-ring: rgba(139, 139, 255, 0.15);
+        --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
       * {
@@ -339,15 +327,16 @@
           />
           <h1 class="api-key-title">Welcome to Magellan</h1>
           <p class="api-key-subtitle">
-            To get started, you'll need a Gemini API key. It's free to use with
-            rate limiting.
+            To get started, you'll need an OpenRouter API key. This gives you
+            access to hundreds of AI models from various providers, both free
+            and paid.
           </p>
           <a
-            href="https://makersuite.google.com/app/apikey"
+            href="https://openrouter.ai/keys"
             target="_blank"
             class="api-key-link"
           >
-            Get Free API Key
+            Get OpenRouter API Key
             <svg
               width="12"
               height="12"
@@ -369,9 +358,9 @@
         <div class="api-key-description">
           <strong>Privacy Notice</strong>
           Your API key is stored securely in your browser. However, please note
-          that Google's Gemini AI may store and process the content you search.
-          Be cautious about which pages you run the extension on, especially
-          with sensitive or private information.
+          that the AI models you use may store and process the content you
+          search. Be cautious about which pages you run the extension on,
+          especially with sensitive or private information.
         </div>
 
         <div class="api-key-input-group">
@@ -380,7 +369,7 @@
               type="password"
               id="apiKeyInput"
               class="api-key-input"
-              placeholder="Enter your Gemini API key"
+              placeholder="Enter your OpenRouter API key"
             />
             <svg
               class="api-key-status-icon success"
@@ -431,7 +420,7 @@
       </a>
     </div>
 
-    <script src="../js/api/google-ai.js"></script>
+    <script src="../js/api/openrouter.js"></script>
     <script src="../js/api/api-key.js"></script>
     <script type="module" src="../js/ui/theme.js"></script>
   </body>

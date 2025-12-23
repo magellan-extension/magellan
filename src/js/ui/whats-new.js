@@ -14,8 +14,20 @@
 
 import { initializeTheme } from "./theme.js";
 
+/** @constant {string} Storage key for the API key */
+const API_KEY_STORAGE_KEY = "magellan_openrouter_api_key";
+
 /** @constant {string} Storage key for tracking if the user has seen the what's new screen */
 const WHATS_NEW_SEEN_KEY = "magellan_whats_new_seen";
+
+/** @constant {string} Version of the what's new page - increment this to show it to all users again */
+const WHATS_NEW_VERSION = "2.0.0";
+
+/** @constant {string} Storage key for tracking the what's new version the user has seen */
+const WHATS_NEW_VERSION_KEY = "magellan_whats_new_version";
+
+/** @constant {string} Storage key for tracking if user has completed one-time setup */
+const SETUP_COMPLETE_KEY = "magellan_setup_complete";
 
 /**
  * Initializes the "What's New" screen
@@ -58,18 +70,35 @@ async function initializeWhatsNew() {
  */
 async function handleGetStarted() {
   try {
-    await chrome.storage.local.set({ [WHATS_NEW_SEEN_KEY]: true });
+    await chrome.storage.local.set({
+      [WHATS_NEW_SEEN_KEY]: true,
+      [WHATS_NEW_VERSION_KEY]: WHATS_NEW_VERSION,
+    });
 
-    console.log("What's new screen marked as seen, navigating to sidebar...");
+    console.log("What's new screen marked as seen, checking setup status...");
 
-    // Navigate to the sidebar
+    // Check if user needs to complete setup (API key and model selection)
+    const {
+      [API_KEY_STORAGE_KEY]: apiKey,
+      [SETUP_COMPLETE_KEY]: setupComplete,
+    } = await chrome.storage.local.get([
+      API_KEY_STORAGE_KEY,
+      SETUP_COMPLETE_KEY,
+    ]);
+
+    // Navigate based on setup status
     setTimeout(() => {
       try {
         // Check if we're in a popup context
         if (window.location.search.includes("popup=true") || window.opener) {
           window.close();
         } else {
-          window.location.href = "sidebar.html";
+          // If no API key or setup not complete, go to API key page
+          if (!apiKey || !setupComplete) {
+            window.location.href = "api-key.html";
+          } else {
+            window.location.href = "sidebar.html";
+          }
         }
       } catch (error) {
         console.error("Error during navigation:", error);

@@ -17,7 +17,7 @@
  * @requires chrome.storage API for settings and API key
  * @requires chrome.scripting API for content script execution
  * @requires chrome.tabs API for tab management
- * @requires GoogleGenAI class for AI functionality
+ * @requires OpenRouterClient class for AI functionality
  */
 
 import {
@@ -39,7 +39,10 @@ import { initializeTheme } from "./theme.js";
 import { initializeFileUpload } from "./fileUpload.js";
 
 /** @constant {string} Storage key for the API key in Chrome's local storage */
-export const API_KEY_STORAGE_KEY = "magellan_gemini_api_key";
+export const API_KEY_STORAGE_KEY = "magellan_openrouter_api_key";
+
+/** @constant {string} Storage key for the model selection */
+export const MODEL_STORAGE_KEY = "magellan_model";
 
 /** @constant {string} Storage key for the search mode setting */
 export const SEARCH_MODE_STORAGE_KEY = "magellan_search_mode";
@@ -50,7 +53,16 @@ export const THEME_STORAGE_KEY = "magellan_theme";
 /** @constant {string} Storage key for tracking if the user has seen the what's new screen */
 export const WHATS_NEW_SEEN_KEY = "magellan_whats_new_seen";
 
-/** @type {GoogleGenAI|null} Instance of the Google AI client */
+/** @constant {string} Storage key for real-time search toggle */
+export const REALTIME_TOGGLE_KEY = "magellan_realtime_toggle";
+
+/** @constant {string} Storage key prefix for chat history persistence */
+const CHAT_HISTORY_STORAGE_PREFIX = "magellan_chat_history_";
+
+/** @constant {string} Storage key for tracking if user has completed one-time setup */
+const SETUP_COMPLETE_KEY = "magellan_setup_complete";
+
+/** @type {OpenRouterClient|null} Instance of the OpenRouter AI client */
 export let ai = null;
 
 /**
@@ -84,16 +96,16 @@ export let ai = null;
 export let currentActiveTabId = null;
 
 /**
- * Initializes the AI client with the stored API key
+ * Initializes the AI client with the stored API key and model
  * @async
  * @function
- * @description Sets up the Google AI client using the stored API key.
+ * @description Sets up the OpenRouter AI client using the stored API key and model.
  * Redirects to API key page if no key is found or if initialization fails.
  *
  * This function:
- * 1. Retrieves API key from storage
+ * 1. Retrieves API key and model from storage
  * 2. Validates key presence
- * 3. Initializes AI client
+ * 3. Initializes AI client with selected model
  * 4. Handles initialization errors
  *
  * @throws {Error} If API key is missing or invalid
@@ -104,7 +116,19 @@ export let currentActiveTabId = null;
  */
 async function initializeAI() {
   console.log("Initializing AI client...");
-  const result = await chrome.storage.local.get([API_KEY_STORAGE_KEY]);
+
+  // Clear old API key if it exists (force re-authentication with OpenRouter)
+  const oldKey = "magellan_gemini_api_key";
+  const oldResult = await chrome.storage.local.get([oldKey]);
+  if (oldResult[oldKey]) {
+    console.log("Clearing old API key...");
+    await chrome.storage.local.remove([oldKey]);
+  }
+
+  const result = await chrome.storage.local.get([
+    API_KEY_STORAGE_KEY,
+    MODEL_STORAGE_KEY,
+  ]);
   console.log("Storage result:", result);
   console.log("API key found:", !!result[API_KEY_STORAGE_KEY]);
 
@@ -114,21 +138,52 @@ async function initializeAI() {
     return;
   }
 
-  // Check if GoogleGenAI is available
-  if (typeof GoogleGenAI === "undefined") {
-    console.error("GoogleGenAI class is not available");
+  // Check if OpenRouterClient is available
+  if (typeof OpenRouterClient === "undefined") {
+    console.error("OpenRouterClient class is not available");
     window.location.href = "../html/api-key.html";
     return;
   }
 
   try {
-    console.log("Creating GoogleGenAI instance...");
-    ai = new GoogleGenAI({ apiKey: result[API_KEY_STORAGE_KEY] });
+    // Get model from storage or use default
+    let model = result[MODEL_STORAGE_KEY] || "google/gemini-2.0-flash-exp";
+
+    // Remove :online suffix if present (we'll add it dynamically based on toggle)
+    model = model.replace(/:online$/, "");
+
+    console.log("Creating OpenRouterClient instance with model:", model);
+    ai = new OpenRouterClient({
+      apiKey: result[API_KEY_STORAGE_KEY],
+      model: model,
+    });
     console.log("AI client initialized successfully");
   } catch (error) {
     console.error("Failed to initialize AI:", error);
     window.location.href = "../html/api-key.html";
   }
+}
+
+/**
+ * Gets the model to use for API calls, appending :online if real-time is enabled
+ * @returns {Promise<string>} The model identifier with optional :online suffix
+ */
+export async function getModelForRequest() {
+  const result = await chrome.storage.local.get([
+    MODEL_STORAGE_KEY,
+    REALTIME_TOGGLE_KEY,
+  ]);
+  let model = result[MODEL_STORAGE_KEY] || "google/gemini-2.0-flash-exp";
+
+  // Remove :online suffix if present
+  model = model.replace(/:online$/, "");
+
+  // Append :online if real-time toggle is enabled
+  if (result[REALTIME_TOGGLE_KEY] === true) {
+    model = `${model}:online`;
+  }
+
+  return model;
 }
 
 /**
@@ -149,7 +204,7 @@ async function initializeAI() {
  * - Tab refresh
  */
 async function initializeOrRefreshForActiveTab() {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
     if (tabs.length === 0) {
       updateStatus("No active tab found.", "error");
       const searchButton = document.getElementById("searchButton");
@@ -161,6 +216,20 @@ async function initializeOrRefreshForActiveTab() {
 
     if (!tabStates[currentActiveTabId]) {
       setTabState(currentActiveTabId, createInitialTabState());
+
+      // Try to restore chat history from storage
+      const storageKey = `${CHAT_HISTORY_STORAGE_PREFIX}${currentActiveTabId}`;
+      try {
+        const result = await chrome.storage.local.get([storageKey]);
+        if (result[storageKey] && Array.isArray(result[storageKey])) {
+          tabStates[currentActiveTabId].chatHistory = result[storageKey];
+          console.log(
+            `Restored ${result[storageKey].length} chat messages for tab ${currentActiveTabId}`
+          );
+        }
+      } catch (error) {
+        console.error("Error restoring chat history:", error);
+      }
     }
     renderPopupUI();
   });
@@ -170,12 +239,57 @@ async function initializeOrRefreshForActiveTab() {
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeAI();
 
+  // Check if user needs to complete one-time setup
+  const setupResult = await chrome.storage.local.get([
+    SETUP_COMPLETE_KEY,
+    API_KEY_STORAGE_KEY,
+    MODEL_STORAGE_KEY,
+  ]);
+
+  const setupComplete = setupResult[SETUP_COMPLETE_KEY];
+  const hasApiKey = !!setupResult[API_KEY_STORAGE_KEY];
+  const hasModel = !!setupResult[MODEL_STORAGE_KEY];
+
+  // If no API key, go to API key page
+  if (!hasApiKey) {
+    console.log("No API key found, redirecting to API key page...");
+    window.location.href = "../html/api-key.html";
+    return;
+  }
+
+  // If user has API key and model but setup not marked complete, mark it complete
+  // This handles existing users who already set up before this flow was added
+  if (hasApiKey && hasModel && !setupComplete) {
+    console.log(
+      "User has API key and model but setup not marked complete, marking as complete..."
+    );
+    await chrome.storage.local.set({ [SETUP_COMPLETE_KEY]: true });
+  }
+
+  // If setup not complete (no model selected), go to model selection
+  if (!setupComplete && !hasModel) {
+    console.log("Setup not complete, redirecting to model selection...");
+    window.location.href = "../html/model-selection.html";
+    return;
+  }
+
   // Check if user should see the "What's New" screen
-  const { [WHATS_NEW_SEEN_KEY]: whatsNewSeen } = await chrome.storage.local.get(
-    [WHATS_NEW_SEEN_KEY]
-  );
-  if (!whatsNewSeen) {
-    console.log("User hasn't seen what's new screen, redirecting...");
+  // Show it if they haven't seen it, or if they haven't seen the latest version
+  const WHATS_NEW_VERSION = "2.0.0";
+  const WHATS_NEW_VERSION_KEY = "magellan_whats_new_version";
+
+  const result = await chrome.storage.local.get([
+    WHATS_NEW_SEEN_KEY,
+    WHATS_NEW_VERSION_KEY,
+  ]);
+
+  const whatsNewSeen = result[WHATS_NEW_SEEN_KEY];
+  const seenVersion = result[WHATS_NEW_VERSION_KEY];
+
+  if (!whatsNewSeen || seenVersion !== WHATS_NEW_VERSION) {
+    console.log(
+      "User hasn't seen what's new screen or needs to see new version, redirecting..."
+    );
     window.location.href = "../html/whats-new.html";
     return;
   }
@@ -259,24 +373,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (searchModeButton) {
       const modeConfig = {
         page: {
-          label: "Page Context",
-          tooltip:
-            "Search only within the current page content or uploaded document",
+          label: "Page",
+          tooltip: "Search only within the current page/document",
         },
         blended: {
           label: "Blended",
-          tooltip:
-            "Search page/document first, then use general knowledge if needed",
+          tooltip: "Search page/document first, then general knowledge",
         },
         general: {
-          label: "Gen. Knowledge",
-          tooltip: "Use only general knowledge, ignore page content",
+          label: "General",
+          tooltip: "Use only general knowledge",
         },
       };
 
       const config = modeConfig[mode] || modeConfig.blended;
-      const span = searchModeButton.querySelector("span");
-      const tooltip = searchModeButton.querySelector(".custom-tooltip");
+      const span = document.getElementById("searchModeButtonText");
+      const tooltip = document.getElementById("searchModeTooltip");
 
       if (span) {
         span.textContent = config.label;
@@ -412,7 +524,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   if (clearChatDropdownItem) {
-    clearChatDropdownItem.addEventListener("click", () => {
+    clearChatDropdownItem.addEventListener("click", async () => {
       if (currentActiveTabId && tabStates[currentActiveTabId]) {
         const state = tabStates[currentActiveTabId];
         state.chatHistory = [];
@@ -420,6 +532,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         state.currentCitedSentenceIndex = -1;
         state.errorMessage = "";
         state.status = "idle";
+
+        // Clear persisted chat history
+        const storageKey = `${CHAT_HISTORY_STORAGE_PREFIX}${currentActiveTabId}`;
+        try {
+          await chrome.storage.local.remove([storageKey]);
+        } catch (error) {
+          console.error("Error clearing chat history from storage:", error);
+        }
+
         renderPopupUI();
         updateStatus("Chat cleared. Ask a new question.", "idle");
       }
@@ -437,36 +558,56 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   if (changeApiKeyDropdownItem) {
-    changeApiKeyDropdownItem.addEventListener("click", () => {
+    changeApiKeyDropdownItem.addEventListener("click", async () => {
+      // Save chat history before navigating
+      if (currentActiveTabId && tabStates[currentActiveTabId]) {
+        const storageKey = `${CHAT_HISTORY_STORAGE_PREFIX}${currentActiveTabId}`;
+        try {
+          await chrome.storage.local.set({
+            [storageKey]: tabStates[currentActiveTabId].chatHistory,
+          });
+          console.log(`Saved chat history before navigating to API key page`);
+        } catch (error) {
+          console.error("Error saving chat history:", error);
+        }
+      }
       window.location.href = "../html/api-key.html";
       closeSettingsDropdown();
     });
   }
 
-  // Citations Collapse/Expand Functionality
-  if (citationsHeader && citationsTitle && citationsContentWrapper) {
-    chrome.storage.local.get(["citationsCollapsed"], (result) => {
-      const citationsAreCollapsed = result.citationsCollapsed === true;
-      if (citationsAreCollapsed) {
-        citationsTitle.classList.add("collapsed");
-        citationsContentWrapper.classList.add("collapsed");
-      } else {
-        citationsTitle.classList.remove("collapsed");
-        citationsContentWrapper.classList.remove("collapsed");
-      }
-    });
+  // Tab Switching Functionality
+  const chatTab = document.getElementById("chatTab");
+  const citationsTab = document.getElementById("citationsTab");
+  const chatTabContent = document.getElementById("chatTabContent");
+  const citationsTabContent = document.getElementById("citationsTabContent");
 
-    citationsHeader.addEventListener("click", () => {
-      const isCurrentlyCollapsed =
-        citationsTitle.classList.contains("collapsed");
-      citationsTitle.classList.toggle("collapsed", !isCurrentlyCollapsed);
-      citationsContentWrapper.classList.toggle(
-        "collapsed",
-        !isCurrentlyCollapsed
-      );
-      chrome.storage.local.set({ citationsCollapsed: !isCurrentlyCollapsed });
-    });
+  function switchTab(tabName) {
+    // Update tab buttons
+    if (tabName === "chat") {
+      chatTab.classList.add("active");
+      citationsTab.classList.remove("active");
+      chatTabContent.classList.add("active");
+      citationsTabContent.classList.remove("active");
+    } else if (tabName === "citations") {
+      citationsTab.classList.add("active");
+      chatTab.classList.remove("active");
+      citationsTabContent.classList.add("active");
+      chatTabContent.classList.remove("active");
+
+      // Re-render UI to update citations when switching to citations tab
+      renderPopupUI();
+    }
   }
+
+  if (chatTab && citationsTab) {
+    chatTab.addEventListener("click", () => switchTab("chat"));
+    citationsTab.addEventListener("click", () => switchTab("citations"));
+  }
+
+  // Export switchTab for use in other modules
+  window.switchToCitationsTab = () => switchTab("citations");
+  window.switchToChatTab = () => switchTab("chat");
 
   // Theme toggle elements
   const themeToggleDropdownItem = document.getElementById(
@@ -503,6 +644,161 @@ document.addEventListener("DOMContentLoaded", async () => {
         initializeTheme(); // Use shared theme function
       }
     });
+  });
+
+  // Model selection button
+  const modelSelectButton = document.getElementById("modelSelectButton");
+  const modelSelectButtonText = document.getElementById(
+    "modelSelectButtonText"
+  );
+
+  /**
+   * Gets a friendly display name for a model ID
+   * @param {string} modelId - The model ID
+   * @returns {string} Friendly display name
+   */
+  function getModelDisplayName(modelId) {
+    if (!modelId) return "Gemini";
+
+    // Extract provider and model name
+    const parts = modelId.split("/");
+    if (parts.length < 2) return modelId;
+
+    const provider = parts[0];
+    const model = parts[1].split(":")[0]; // Remove :free suffix if present
+
+    // Map common providers to friendly names
+    const providerMap = {
+      google: "Gemini",
+      openai: "GPT",
+      anthropic: "Claude",
+      xai: "Grok",
+      "meta-llama": "Llama",
+      mistralai: "Mistral",
+      qwen: "Qwen",
+    };
+
+    const friendlyProvider = providerMap[provider] || provider;
+
+    // Extract version number or key identifier
+    const versionMatch = model.match(/(\d+\.?\d*|flash|beta|sonnet|opus)/i);
+    if (versionMatch) {
+      return `${friendlyProvider} ${versionMatch[0]}`;
+    }
+
+    return friendlyProvider;
+  }
+
+  // Update model button text based on selected model
+  function updateModelButtonText() {
+    chrome.storage.local.get([MODEL_STORAGE_KEY], (result) => {
+      const savedModel =
+        result[MODEL_STORAGE_KEY] || "google/gemini-2.0-flash-exp";
+      // Extract a friendly name from the model ID
+      const modelName = getModelDisplayName(savedModel);
+      if (modelSelectButtonText) {
+        modelSelectButtonText.textContent = modelName;
+      }
+    });
+  }
+
+  if (modelSelectButton) {
+    // Initialize model button text
+    updateModelButtonText();
+
+    // Listen for model changes (when user returns from model selection page)
+    chrome.storage.onChanged.addListener((changes, areaName) => {
+      if (areaName === "local" && changes[MODEL_STORAGE_KEY]) {
+        updateModelButtonText();
+        // Reinitialize AI client with new model
+        initializeAI();
+      }
+    });
+
+    // Handle model selection button click
+    modelSelectButton.addEventListener("click", async () => {
+      // Save chat history before navigating
+      if (currentActiveTabId && tabStates[currentActiveTabId]) {
+        const storageKey = `${CHAT_HISTORY_STORAGE_PREFIX}${currentActiveTabId}`;
+        try {
+          await chrome.storage.local.set({
+            [storageKey]: tabStates[currentActiveTabId].chatHistory,
+          });
+          console.log(
+            `Saved chat history before navigating to model selection`
+          );
+        } catch (error) {
+          console.error("Error saving chat history:", error);
+        }
+      }
+      window.location.href = "../html/model-selection.html";
+    });
+  }
+
+  // Also update model button text when page loads (in case user navigated back)
+  updateModelButtonText();
+
+  // Real-time toggle button
+  const realtimeToggle = document.getElementById("realtimeToggle");
+  if (realtimeToggle) {
+    // Initialize toggle state from storage
+    chrome.storage.local.get([REALTIME_TOGGLE_KEY], (result) => {
+      const isRealtimeEnabled = result[REALTIME_TOGGLE_KEY] === true;
+      if (isRealtimeEnabled) {
+        realtimeToggle.classList.add("active");
+      }
+    });
+
+    // Handle toggle click
+    realtimeToggle.addEventListener("click", () => {
+      const isCurrentlyActive = realtimeToggle.classList.contains("active");
+      const newState = !isCurrentlyActive;
+
+      realtimeToggle.classList.toggle("active", newState);
+      chrome.storage.local.set({ [REALTIME_TOGGLE_KEY]: newState });
+    });
+  }
+
+  // Clear highlights when extension popup closes
+  async function clearAllHighlights() {
+    try {
+      // Get all tabs
+      const tabs = await chrome.tabs.query({});
+      const { contentScript_clearHighlightsAndIds } = await import(
+        "../search/contentScript.js"
+      );
+
+      // Clear highlights from all tabs
+      for (const tab of tabs) {
+        if (
+          tab.id &&
+          tab.url &&
+          !tab.url.startsWith("chrome://") &&
+          !tab.url.startsWith("chrome-extension://")
+        ) {
+          try {
+            await chrome.scripting.executeScript({
+              target: { tabId: tab.id },
+              func: contentScript_clearHighlightsAndIds,
+            });
+          } catch (error) {
+            // Ignore errors (tab might not be accessible or might not have highlights)
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Error clearing highlights:", error);
+    }
+  }
+
+  // Clear highlights when popup is about to close
+  window.addEventListener("beforeunload", clearAllHighlights);
+
+  // Also clear highlights when popup visibility changes
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      clearAllHighlights();
+    }
   });
 });
 

@@ -70,6 +70,16 @@ export function updateTabStateProperty(tabId, property, value) {
 export function addChatMessage(tabId, message) {
   if (tabStates[tabId]) {
     tabStates[tabId].chatHistory.push(message);
+
+    // Persist chat history to storage
+    const storageKey = `magellan_chat_history_${tabId}`;
+    chrome.storage.local
+      .set({
+        [storageKey]: tabStates[tabId].chatHistory,
+      })
+      .catch((error) => {
+        console.error("Error saving chat history:", error);
+      });
   }
 }
 

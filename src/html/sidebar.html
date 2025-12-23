@@ -5,54 +5,54 @@
     <title>Magellan</title>
     <style>
       :root {
-        /* Core colors - same for both themes */
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --error: #ef4444;
-        --error-bg: rgba(239, 68, 68, 0.1);
-        --success: #10b981;
-        --success-bg: rgba(16, 185, 129, 0.1);
-        --warning: #f59e0b;
-        --warning-bg: rgba(245, 158, 11, 0.1);
-        --border-radius: 6px;
-        --transition: all 0.2s ease;
+        /* Core colors - darker, sexier theme */
+        --primary: #8b8bff;
+        --primary-dark: #6b6bff;
+        --error: #ff6b6b;
+        --error-bg: rgba(255, 107, 107, 0.1);
+        --success: #51cf66;
+        --success-bg: rgba(81, 207, 102, 0.1);
+        --warning: #ffd43b;
+        --warning-bg: rgba(255, 212, 59, 0.1);
+        --border-radius: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* Theme-specific variables */
-        --bg-primary: #181f28;
-        --bg-secondary: #374151;
-        --text-primary: #f3f4f6;
-        --text-secondary: #9ca3af;
-        --border-color: rgba(255, 255, 255, 0.1);
-        --highlight-bg: rgba(99, 102, 241, 0.4);
-        --user-message-bg: var(--primary);
-        --assistant-message-bg: var(--bg-secondary);
+        /* Theme-specific variables - darker, sexier */
+        --bg-primary: #0f0f13;
+        --bg-secondary: #1a1a24;
+        --text-primary: #e8e8f0;
+        --text-secondary: #8b8b9e;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --highlight-bg: rgba(139, 139, 255, 0.15);
+        --user-message-bg: #2a2a3a;
+        --assistant-message-bg: #1f1f2e;
         --scrollbar-track: var(--bg-primary);
-        --scrollbar-thumb: var(--bg-secondary);
-        --scrollbar-thumb-hover: #5a6678;
-        --input-bg: var(--bg-secondary);
+        --scrollbar-thumb: #2a2a3a;
+        --scrollbar-thumb-hover: #3a3a4a;
+        --input-bg: #1a1a24;
         --input-border: var(--border-color);
-        --dropdown-bg: var(--bg-secondary);
-        --dropdown-hover: rgba(255, 255, 255, 0.1);
+        --dropdown-bg: #1f1f2e;
+        --dropdown-hover: rgba(255, 255, 255, 0.06);
         --dropdown-divider: var(--border-color);
       }
 
       /* Light theme */
       [data-theme="light"] {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f3f4f6;
-        --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --border-color: rgba(0, 0, 0, 0.1);
-        --highlight-bg: rgba(99, 102, 241, 0.2);
-        --user-message-bg: var(--primary);
-        --assistant-message-bg: #e5e7eb;
+        --bg-primary: #fafafa;
+        --bg-secondary: #f0f0f5;
+        --text-primary: #1a1a24;
+        --text-secondary: #6b6b7a;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --highlight-bg: rgba(139, 139, 255, 0.15);
+        --user-message-bg: #e8e8f0;
+        --assistant-message-bg: #f5f5fa;
         --scrollbar-track: var(--bg-primary);
-        --scrollbar-thumb: #d1d5db;
-        --scrollbar-thumb-hover: #9ca3af;
+        --scrollbar-thumb: #d0d0da;
+        --scrollbar-thumb-hover: #b0b0ba;
         --input-bg: var(--bg-secondary);
         --input-border: var(--border-color);
         --dropdown-bg: var(--bg-secondary);
-        --dropdown-hover: #e5e7eb;
+        --dropdown-hover: #e8e8f0;
         --dropdown-divider: var(--border-color);
       }
 
@@ -92,7 +92,9 @@
         margin-bottom: 4px;
         gap: 4px;
         flex-shrink: 0;
-        padding: 0 2px;
+        padding: 0;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .header-left {
@@ -208,6 +210,8 @@
         opacity: 0;
         width: 0;
         height: 0;
+        appearance: none;
+        -webkit-appearance: none;
       }
 
       .toggle-slider {
@@ -265,6 +269,7 @@
 
       input[type="range"] {
         -webkit-appearance: none;
+        appearance: none;
         width: 100%;
         height: 4px;
         background: var(--bg-secondary);
@@ -299,46 +304,57 @@
         flex-grow: 1;
       }
 
-      .status {
-        font-size: 12px;
+      /* Tab Navigation */
+      .tabs-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .tabs-header {
+        display: flex;
+        gap: 0;
+        border-bottom: 1px solid var(--border-color);
+        padding: 0;
+        background-color: var(--bg-primary);
+        width: 100%;
+      }
+
+      .tab-button {
+        flex: 1;
+        padding: 10px 16px;
+        background: transparent;
+        border: none;
         color: var(--text-secondary);
-        text-align: center;
-        padding: 6px 10px;
-        background-color: var(--bg-secondary);
-        border-radius: var(--border-radius);
-        display: none;
-        transition: var(--transition);
+        font-size: 13px;
         font-weight: 500;
-        letter-spacing: 0.3px;
-        flex-shrink: 0;
+        cursor: pointer;
+        transition: var(--transition);
+        position: relative;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
+        text-align: center;
       }
 
-      .status.visible {
-        display: block;
+      .tab-button:hover {
+        color: var(--text-primary);
       }
 
-      .status.error {
-        background-color: var(--error-bg);
-        color: var(--error);
-        outline: 1px solid rgba(239, 68, 68, 0.5);
-      }
-
-      .status.success {
-        background-color: var(--success-bg);
-        color: var(--success);
-        outline: 1px solid rgba(16, 185, 129, 0.5);
-      }
-
-      .status.warning {
-        background-color: var(--warning-bg);
-        color: var(--warning);
-        outline: 1px solid rgba(245, 158, 11, 0.5);
-      }
-
-      .status.idle {
-        background-color: rgba(99, 102, 241, 0.1);
+      .tab-button.active {
         color: var(--primary);
-        outline: 1px solid rgba(99, 102, 241, 0.5);
+        border-bottom-color: var(--primary);
+      }
+
+      .tab-content {
+        flex: 1;
+        min-height: 0;
+        display: none;
+        flex-direction: column;
+      }
+
+      .tab-content.active {
+        display: flex;
       }
 
       .chat-log-container {
@@ -346,14 +362,21 @@
         min-height: 0;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 8px;
+        padding: 20px 16px;
         background-color: var(--bg-primary);
-        border-radius: var(--border-radius);
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        border: none;
+        gap: 20px;
         max-width: 100%;
+      }
+
+      .citations-tab-container {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 20px 16px;
+        background-color: var(--bg-primary);
       }
 
       .chat-log-container:empty::before {
@@ -361,21 +384,37 @@
         color: var(--text-secondary);
         font-style: italic;
         text-align: center;
-        padding: 16px;
+        padding: 48px 24px;
         display: block;
         margin: auto;
-        font-size: 13px;
+        font-size: 14px;
+        opacity: 0.7;
       }
 
       .chat-message {
-        padding: 8px 12px;
-        border-radius: 12px;
-        max-width: 85%;
+        padding: 12px 0;
+        max-width: 100%;
         word-wrap: break-word;
         overflow-wrap: break-word;
         word-break: break-word;
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: 14px;
+        line-height: 1.6;
+        position: relative;
+        animation: messageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      @keyframes messageSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       .chat-message p {
@@ -413,9 +452,9 @@
       }
 
       .chat-message code {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: rgba(0, 0, 0, 0.3);
         padding: 0.2em 0.4em;
-        border-radius: 3px;
+        border-radius: 4px;
         font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
           Liberation Mono, monospace;
         font-size: 0.9em;
@@ -424,12 +463,13 @@
       }
 
       .chat-message pre {
-        background-color: rgba(0, 0, 0, 0.2);
+        background-color: rgba(0, 0, 0, 0.3);
         padding: 0.8em;
-        border-radius: 4px;
+        border-radius: 6px;
         overflow-x: auto;
         margin: 0.6em 0;
         max-width: 100%;
+        border: 1px solid var(--border-color);
       }
 
       .chat-message pre code {
@@ -497,62 +537,129 @@
       }
 
       .user-message {
-        background-color: var(--user-message-bg);
-        color: white;
+        color: var(--text-primary);
         align-self: flex-end;
-        border-bottom-right-radius: 4px;
-        margin-left: 15%;
+        text-align: right;
       }
 
       .assistant-message {
-        background-color: var(--assistant-message-bg);
         color: var(--text-primary);
         align-self: flex-start;
-        border-bottom-left-radius: 4px;
-        margin-right: 15%;
+        position: relative;
+        padding-left: 20px;
+      }
+
+      /* Subtle source indicator for page context - show for all non-general-knowledge messages */
+      .assistant-message:not(.general-knowledge):not(.error-message)::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--primary);
+        opacity: 0.5;
+        border-radius: 1px;
+      }
+
+      /* Override for messages with citations to make it slightly more visible */
+      .assistant-message.has-citations::before {
+        opacity: 0.6;
+      }
+
+      /* Error message styling - red accent bar */
+      .assistant-message.error-message::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--error);
+        opacity: 0.7;
+        border-radius: 1px;
+      }
+
+      /* Subtle source indicator for general knowledge */
+      .assistant-message.general-knowledge::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--success);
+        opacity: 0.5;
+        border-radius: 1px;
       }
 
       .assistant-message.has-citations {
         cursor: pointer;
-        transition: all 0.2s ease;
-        border-left: 2px solid var(--primary);
+        transition: var(--transition);
       }
 
-      .assistant-message.has-citations:hover {
-        background-color: var(--dropdown-hover);
+      .message-source-header {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        opacity: 0.8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .assistant-message:not(.general-knowledge):hover::before {
+        opacity: 0.8;
+        width: 3px;
       }
 
       .assistant-message.general-knowledge {
-        transition: all 0.2s ease;
-        border-left: 2px solid var(--success);
+        transition: var(--transition);
+      }
+
+      .assistant-message.general-knowledge:hover::before {
+        opacity: 0.7;
+        width: 3px;
+      }
+
+      .assistant-message.loading-dots {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 12px 0;
+        padding-left: 20px;
       }
 
       .assistant-message.loading-dots span {
         display: inline-block;
-        width: 6px;
-        height: 6px;
-        margin: 0 2px;
-        background-color: var(--text-secondary);
+        width: 8px;
+        height: 8px;
+        background-color: var(--primary);
         border-radius: 50%;
-        animation: bounce 1.4s infinite ease-in-out both;
+        animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        opacity: 0.4;
       }
 
       .assistant-message.loading-dots span:nth-child(1) {
-        animation-delay: -0.32s;
+        animation-delay: 0s;
       }
 
       .assistant-message.loading-dots span:nth-child(2) {
-        animation-delay: -0.16s;
+        animation-delay: 0.2s;
       }
 
-      @keyframes bounce {
+      .assistant-message.loading-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes pulse {
         0%,
-        80%,
         100% {
-          transform: scale(0);
+          opacity: 0.4;
+          transform: scale(0.8);
         }
-        40% {
-          transform: scale(1);
+        50% {
+          opacity: 1;
+          transform: scale(1.2);
         }
       }
 
@@ -566,56 +673,147 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 4px 10px;
-        font-size: 12px;
+        padding: 0;
+        font-size: 13px;
         font-weight: 500;
-        border-radius: 12px;
-        border: 1px solid var(--primary);
+        border: none;
         background-color: transparent;
-        color: var(--primary);
+        color: var(--success);
         cursor: pointer;
         transition: var(--transition);
         font-family: inherit;
-        line-height: 1;
+        line-height: 1.4;
+      }
+
+      .general-knowledge-prompt-button span {
+        display: inline-block !important;
+        color: var(--success) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
       }
 
       .general-knowledge-prompt-button:hover:not(:disabled) {
-        background-color: rgba(99, 102, 241, 0.15);
-        border-color: var(--primary-dark);
+        color: var(--success);
+        opacity: 0.8;
+      }
+
+      .general-knowledge-prompt-button:hover:not(:disabled) svg {
+        transform: translateX(2px);
       }
 
       .general-knowledge-prompt-button:disabled {
-        opacity: 0.7;
+        opacity: 0.5;
         cursor: not-allowed;
-        background-color: transparent;
       }
 
       .general-knowledge-prompt-button svg {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         flex-shrink: 0;
+        transition: transform 0.2s ease;
       }
 
-      .general-knowledge-prompt-button .spinner {
-        width: 12px;
-        height: 12px;
-        border-top-color: var(--primary);
-        border-width: 2px;
+      .input-section {
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 0;
+        background-color: var(--bg-primary);
+      }
+
+      /* Real-time search toggle */
+      .realtime-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+        position: relative;
+        white-space: nowrap;
+        height: 28px;
+        box-sizing: border-box;
+      }
+
+      .realtime-toggle:hover {
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .realtime-toggle.active {
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .realtime-toggle.active:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+      }
+
+      .realtime-toggle svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        stroke-width: 2;
+      }
+
+      .realtime-toggle .tooltip {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 0;
+        transform: translateX(0);
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease, visibility 0.15s ease;
+        pointer-events: none;
+      }
+
+      .realtime-toggle:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
       }
 
       .input-container {
         display: flex;
         flex-direction: column;
-        background-color: var(--input-bg);
-        padding: 6px 12px 12px 12px;
-        border-radius: 16px;
-        border: 1px solid var(--input-border);
+        background-color: transparent;
+        padding: 0;
+        border-radius: 0;
+        border: none;
         flex-shrink: 0;
-        flex: 1;
-        min-height: 100px;
-        gap: 8px;
+        gap: 10px;
         position: relative;
         overflow: visible;
+        box-shadow: none;
+        width: 100%;
+        box-sizing: border-box;
+        transition: var(--transition);
+      }
+
+      .search-bar-actions-right {
+        position: relative;
+      }
+
+      .input-container:focus-within {
+        border: none;
+        box-shadow: none;
       }
 
       .search-bar-row {
@@ -634,101 +832,122 @@
         background: transparent;
         border: none;
         color: var(--text-primary);
-        font-size: 13px;
+        font-size: 14px;
         font-family: inherit;
-        padding: 6px 0;
+        padding: 8px 0;
         outline: none;
-        border-radius: 8px;
-        line-height: 1.4;
+        border-radius: 0;
+        line-height: 1.5;
         box-sizing: border-box;
       }
       .search-bar-row textarea#searchQuery::placeholder {
         color: var(--text-secondary);
+        opacity: 0.6;
       }
 
       .search-bar-actions {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
         width: 100%;
         margin-top: 8px;
-        position: relative;
-        overflow: visible;
+        gap: 8px;
       }
-      .search-bar-actions .upload-button.with-text {
-        position: static;
-        margin-bottom: 0;
-      }
-      .search-bar-actions .search-mode-button.with-text {
-        position: static;
-        margin-bottom: 0;
-      }
-      .search-bar-actions .upload-button.with-text {
-        margin-right: 8px;
-      }
-      #searchButton {
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
+
+      .search-bar-actions-row {
         display: flex;
         align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: var(--transition);
-        padding: 0;
+        justify-content: space-between;
+        gap: 8px;
+        width: 100%;
+        flex-wrap: wrap;
+      }
+
+      .search-bar-actions-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        flex: 1;
+        min-width: 0;
+        row-gap: 8px;
+      }
+
+      .search-bar-actions-right {
+        display: flex;
+        align-items: center;
         flex-shrink: 0;
-        margin-left: auto;
       }
-      #searchButton svg {
-        width: 18px;
-        height: 18px;
-      }
-      .upload-button.with-text {
-        display: flex;
+
+      /* Action Button Styles */
+      .action-button {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: fit-content;
-        gap: 4px;
-        background-color: rgba(0, 0, 0, 0.03);
+        gap: 6px;
+        background-color: var(--bg-secondary);
         color: var(--text-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 30px;
-        height: 32px;
-        padding: 0 8px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 6px 10px;
         font-size: 12px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
-        transition: var(--transition);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         flex-shrink: 0;
+        position: relative;
+        white-space: nowrap;
+        height: 28px;
+        box-sizing: border-box;
       }
-      .upload-button.with-text svg {
-        width: 14px;
-        height: 14px;
-      }
-      .upload-button.with-text:hover {
+
+      .action-button:hover {
         background-color: var(--dropdown-hover);
-        border-color: var(--primary);
         color: var(--text-primary);
       }
 
-      .upload-button.with-text.has-file {
-        background-color: rgba(34, 197, 94, 0.1);
-        border-color: rgba(34, 197, 94, 0.2);
-        color: var(--success);
+      .action-button:active {
+        transform: scale(0.98);
+        background-color: rgba(255, 255, 255, 0.1);
       }
-      .upload-button.with-text.has-file:hover {
-        background-color: rgba(239, 68, 68, 0.1);
-        border-color: rgba(239, 68, 68, 0.3);
-        color: var(--error);
+
+      .action-button-icon-only {
+        width: 28px;
+        padding: 6px;
       }
-      .upload-button.with-text.has-file:hover::after {
-        content: "Click to remove";
+
+      .action-button-compact {
+        padding: 6px 10px;
+        min-width: fit-content;
+      }
+
+      .action-button.has-file {
+        width: auto;
+        min-width: 28px;
+        padding: 6px 10px;
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .action-button.has-file:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+      }
+
+      .action-button svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        stroke-width: 2;
+      }
+
+      .action-button span {
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .action-button .tooltip {
         position: absolute;
-        bottom: -30px;
+        bottom: calc(100% + 8px);
         left: 50%;
         transform: translateX(-50%);
         background-color: var(--bg-primary);
@@ -738,41 +957,47 @@
         font-size: 11px;
         white-space: nowrap;
         border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease, visibility 0.15s ease;
+        pointer-events: none;
+        min-width: max-content;
+        max-width: 200px;
       }
 
-      .search-bar-row textarea#searchQuery {
-        flex: 1;
-        resize: vertical;
-        min-height: 36px;
-        max-height: 120px;
-        background: transparent;
-        border: none;
-        color: var(--text-primary);
-        font-size: 15px;
-        padding: 8px 0;
-        outline: none;
-        border-radius: 8px;
-        line-height: 1.5;
-        box-sizing: border-box;
-      }
-      .search-bar-row textarea#searchQuery::placeholder {
-        color: var(--text-secondary);
+      /* Prevent tooltip cutoff on left edge - adjust for first few buttons */
+      .action-button:first-child .tooltip {
+        left: 0;
+        transform: translateX(0);
       }
 
-      .search-bar-actions {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-end;
-        align-items: center;
-        width: 100%;
-        margin-top: 8px;
+      .action-button:nth-child(2) .tooltip {
+        left: 0;
+        transform: translateX(0);
       }
+
+      /* Search mode tooltip - allow 2 lines and shift left */
+      #searchModeTooltip {
+        white-space: normal;
+        max-width: 180px;
+        line-height: 1.4;
+        text-align: left;
+        left: -8px;
+        transform: translateX(0);
+      }
+
+      .action-button:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
+      }
+
       #searchButton {
-        background-color: var(--primary);
+        background: var(--primary);
         color: white;
         border: none;
-        border-radius: 50%;
+        border-radius: 10px;
         width: 36px;
         height: 36px;
         display: flex;
@@ -782,63 +1007,34 @@
         transition: var(--transition);
         padding: 0;
         flex-shrink: 0;
-      }
-      #searchButton svg {
-        width: 18px;
-        height: 18px;
-      }
-
-      .attachment-section {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding-top: 4px;
-        border-top: 1px solid var(--border-color);
-      }
-
-      #searchQuery {
-        flex: 1;
-        background: transparent;
-        border: none;
-        color: var(--text-primary);
-        font-size: 14px;
-        padding: 8px 0;
-        outline: none;
-        min-height: 24px;
-      }
-
-      #searchQuery::placeholder {
-        color: var(--text-secondary);
-      }
-
-      #searchButton {
-        background-color: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: var(--transition);
-        padding: 0;
-        flex-shrink: 0;
-      }
-
-      #searchButton svg {
-        width: 16px;
-        height: 16px;
+        box-shadow: 0 4px 12px rgba(139, 139, 255, 0.4);
+        position: relative;
       }
 
       #searchButton:hover:not(:disabled) {
-        background-color: var(--primary-dark);
+        background: var(--primary-dark);
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(139, 139, 255, 0.5);
+      }
+
+      #searchButton:active:not(:disabled) {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(139, 139, 255, 0.4);
       }
 
       #searchButton:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      #searchButton svg {
+        width: 16px;
+        height: 16px;
+        position: relative;
+        z-index: 1;
+        stroke-width: 2.5;
       }
 
       #searchButton.loading .spinner {
@@ -853,10 +1049,10 @@
         display: none;
         width: 16px;
         height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 50%;
-        border-top-color: var(--text-primary);
-        animation: spin 1s linear infinite;
+        border-top-color: white;
+        animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
       }
 
       .spinner.loading {
@@ -936,56 +1132,58 @@
       }
 
       .citations-container {
-        background-color: var(--bg-secondary);
+        background-color: transparent;
         border-radius: var(--border-radius);
-        padding: 6px;
-        margin-bottom: 6px;
-        max-height: 140px;
-        overflow-y: auto;
-        border: 1px solid var(--border-color);
-        min-height: 50px;
+        padding: 0;
+        margin-bottom: 0;
+        overflow-y: visible;
+        border: none;
+        min-height: auto;
         display: flex;
         flex-direction: column;
+        gap: 8px;
       }
 
       .citations-container:empty {
         justify-content: center;
         align-items: center;
+        min-height: 200px;
       }
 
       .citations-container:empty::before {
-        content: "No citations provided by Magellan.";
+        content: "No citations available. Citations will appear here when you ask questions with page context.";
         display: block;
         color: var(--text-secondary);
         font-style: italic;
         text-align: center;
         padding: 8px;
-        font-size: 12px;
+        font-size: 13px;
+        line-height: 1.5;
       }
 
       .citation-item {
-        padding: 6px 8px;
-        font-size: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
         cursor: pointer;
-        border-bottom: 1px solid var(--border-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
         color: var(--text-primary);
-        transition: background-color 0.2s ease;
+        transition: var(--transition);
         display: flex;
         align-items: center;
-        gap: 6px;
-      }
-
-      .citation-item:last-child {
-        border-bottom: none;
+        gap: 8px;
+        background-color: var(--bg-secondary);
       }
 
       .citation-item:hover {
         background-color: var(--dropdown-hover);
+        border-color: var(--primary);
       }
 
       .citation-item.active-citation {
-        background-color: var(--primary);
-        color: white;
+        background-color: rgba(139, 139, 255, 0.15);
+        border-color: var(--primary);
+        color: var(--text-primary);
         font-weight: 500;
       }
 
@@ -1086,6 +1284,9 @@
       .footer img {
         width: 14px;
         height: 14px;
+        background: transparent;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
 
       @media (max-width: 400px) {
@@ -1199,13 +1400,6 @@
         font-size: 11px;
         color: var(--text-secondary);
         line-height: 1.4;
-      }
-
-      .input-section {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
       }
 
       .upload-button {
@@ -1377,6 +1571,53 @@
       .remove-document-button svg {
         width: 14px;
         height: 14px;
+      }
+
+      /* Success Snackbar Styles */
+      .success-snackbar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background-color: var(--bg-secondary);
+        border: none;
+        border-radius: var(--border-radius);
+        padding: 12px 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        gap: 12px;
+        min-width: 280px;
+        max-width: 90%;
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .success-snackbar.show {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+
+      .success-snackbar-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .success-snackbar-icon {
+        width: 20px;
+        height: 20px;
+        color: var(--success);
+        flex-shrink: 0;
+      }
+
+      .success-snackbar-message {
+        font-size: 14px;
+        color: var(--text-primary);
+        line-height: 1.4;
+        flex: 1;
       }
 
       /* Error Toast Styles */
@@ -1566,7 +1807,15 @@
           <img
             src="../../public/logo.png"
             alt="Logo"
-            style="width: 36px; height: auto; border-radius: 4px"
+            style="
+              width: 32px;
+              height: 32px;
+              border-radius: 4px;
+              object-fit: contain;
+              background: transparent;
+              image-rendering: -webkit-optimize-contrast;
+              image-rendering: crisp-edges;
+            "
           />
           <div class="title">Magellan</div>
         </div>
@@ -1751,8 +2000,6 @@
         </div>
       </div>
 
-      <div id="status" class="status">Enter a query to start.</div>
-
       <!-- Document Status Bar -->
       <div
         class="document-status-bar"
@@ -1836,8 +2083,39 @@
         </div>
       </div>
 
-      <div id="chatLogContainer" class="chat-log-container">
-        <!-- Chat messages will be dynamically inserted here -->
+      <div class="tabs-container">
+        <div class="tabs-header">
+          <button class="tab-button active" id="chatTab" data-tab="chat">
+            Chat
+          </button>
+          <button class="tab-button" id="citationsTab" data-tab="citations">
+            Cited Sentences
+          </button>
+        </div>
+
+        <div class="tab-content active" id="chatTabContent">
+          <div id="chatLogContainer" class="chat-log-container">
+            <!-- Chat messages will be dynamically inserted here -->
+          </div>
+        </div>
+
+        <div class="tab-content" id="citationsTabContent">
+          <div class="citations-tab-container">
+            <div id="citationsContainer" class="citations-container"></div>
+            <div
+              class="button-group"
+              id="citationNavButtons"
+              style="margin-top: 12px"
+            >
+              <button id="prevMatch" class="nav-button" disabled>
+                Previous Citation
+              </button>
+              <button id="nextMatch" class="nav-button" disabled>
+                Next Citation
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="input-section">
@@ -1856,104 +2134,136 @@
             ></textarea>
           </div>
           <div class="search-bar-actions">
-            <button
-              id="uploadButton"
-              class="upload-button with-text"
-              type="button"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <span>Attachments</span>
-            </button>
-            <button
-              id="searchModeButton"
-              class="search-mode-button with-text"
-              type="button"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <span>Blended</span>
-              <div class="custom-tooltip"></div>
-            </button>
-            <button id="searchButton">
-              <div class="spinner"></div>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M22 2L11 13"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-                <path
-                  d="M22 2L15 22L11 13L2 9L22 2Z"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="citations-section">
-        <div class="citations-header" id="citationsHeader">
-          <div class="citations-title" id="citationsTitle">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9 18L15 12L9 6"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            Cited Sentences
-          </div>
-        </div>
-        <div class="citations-content-wrapper" id="citationsContentWrapper">
-          <div id="citationsContainer" class="citations-container"></div>
-          <div class="button-group" id="citationNavButtons">
-            <button id="prevMatch" class="nav-button" disabled>
-              Previous Citation
-            </button>
-            <button id="nextMatch" class="nav-button" disabled>
-              Next Citation
-            </button>
+            <div class="search-bar-actions-row">
+              <div class="search-bar-actions-left">
+                <button
+                  id="uploadButton"
+                  class="action-button action-button-icon-only"
+                  type="button"
+                  title="Attach Document"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <div class="tooltip">Attach Document</div>
+                </button>
+                <button
+                  id="searchModeButton"
+                  class="action-button action-button-compact"
+                  type="button"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="11"
+                      cy="11"
+                      r="8"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="m21 21-4.35-4.35"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span id="searchModeButtonText">Blended</span>
+                  <div class="tooltip" id="searchModeTooltip">
+                    Search Mode: Blended
+                  </div>
+                </button>
+                <button
+                  id="modelSelectButton"
+                  class="action-button action-button-compact"
+                  type="button"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <span id="modelSelectButtonText">Gemini</span>
+                  <div class="tooltip">Change AI Model</div>
+                </button>
+                <button
+                  id="realtimeToggle"
+                  class="realtime-toggle"
+                  type="button"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    />
+                    <path
+                      d="M12 6v6l4 2"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span>Real-time</span>
+                  <div class="tooltip">Searches the web for addtional cost</div>
+                </button>
+              </div>
+              <div class="search-bar-actions-right">
+                <button id="searchButton" title="Send">
+                  <div class="spinner"></div>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M22 2L11 13"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M22 2L15 22L11 13L2 9L22 2Z"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1976,7 +2286,7 @@
         </a>
       </div>
     </div>
-    <script src="../js/api/google-ai.js"></script>
+    <script src="../js/api/openrouter.js"></script>
     <script src="../../public/lib/pdfjs/pdf.min.js"></script>
     <script src="../js/ui/sidebar.js" type="module"></script>
   </body>

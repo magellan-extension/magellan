@@ -5,50 +5,50 @@
     <title>What's New - Magellan</title>
     <style>
       :root {
-        /* Core colors - same for both themes */
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --error: #ef4444;
-        --error-bg: rgba(239, 68, 68, 0.1);
-        --success: #10b981;
-        --success-bg: rgba(16, 185, 129, 0.1);
-        --warning: #f59e0b;
-        --warning-bg: rgba(245, 158, 11, 0.1);
-        --border-radius: 6px;
-        --transition: all 0.2s ease;
+        /* Core colors - darker, sexier theme */
+        --primary: #8b8bff;
+        --primary-dark: #6b6bff;
+        --error: #ff6b6b;
+        --error-bg: rgba(255, 107, 107, 0.1);
+        --success: #51cf66;
+        --success-bg: rgba(81, 207, 102, 0.1);
+        --warning: #ffd43b;
+        --warning-bg: rgba(255, 212, 59, 0.1);
+        --border-radius: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* Theme-specific variables */
-        --bg-primary: #181f28;
-        --bg-secondary: #374151;
-        --text-primary: #f3f4f6;
-        --text-secondary: #9ca3af;
-        --border-color: rgba(255, 255, 255, 0.1);
-        --highlight-bg: rgba(99, 102, 241, 0.4);
+        /* Theme-specific variables - darker, sexier */
+        --bg-primary: #0f0f13;
+        --bg-secondary: #1a1a24;
+        --text-primary: #e8e8f0;
+        --text-secondary: #8b8b9e;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --highlight-bg: rgba(139, 139, 255, 0.15);
         --scrollbar-track: var(--bg-primary);
-        --scrollbar-thumb: var(--bg-secondary);
-        --scrollbar-thumb-hover: #5a6678;
+        --scrollbar-thumb: #2a2a3a;
+        --scrollbar-thumb-hover: #3a3a4a;
         --input-bg: var(--bg-secondary);
         --input-border: var(--border-color);
-        --dropdown-bg: var(--bg-secondary);
-        --dropdown-hover: rgba(255, 255, 255, 0.1);
+        --dropdown-bg: #1f1f2e;
+        --dropdown-hover: rgba(255, 255, 255, 0.06);
         --dropdown-divider: var(--border-color);
       }
 
       /* Light theme */
       [data-theme="light"] {
-        --bg-primary: #ffffff;
-        --bg-secondary: #f3f4f6;
-        --text-primary: #1f2937;
-        --text-secondary: #6b7280;
-        --border-color: rgba(0, 0, 0, 0.1);
-        --highlight-bg: rgba(99, 102, 241, 0.2);
+        --bg-primary: #fafafa;
+        --bg-secondary: #f0f0f5;
+        --text-primary: #1a1a24;
+        --text-secondary: #6b6b7a;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --highlight-bg: rgba(139, 139, 255, 0.15);
         --scrollbar-track: var(--bg-primary);
-        --scrollbar-thumb: #d1d5db;
-        --scrollbar-thumb-hover: #9ca3af;
+        --scrollbar-thumb: #d0d0da;
+        --scrollbar-thumb-hover: #b0b0ba;
         --input-bg: var(--bg-secondary);
         --input-border: var(--border-color);
         --dropdown-bg: var(--bg-secondary);
-        --dropdown-hover: #e5e7eb;
+        --dropdown-hover: #e8e8f0;
         --dropdown-divider: var(--border-color);
       }
 
@@ -61,14 +61,16 @@
       body {
         min-width: 320px;
         padding: 0;
+        margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
           "Helvetica Neue", Arial, sans-serif;
         color: var(--text-primary);
         background-color: var(--bg-primary);
-        margin: 0;
         height: 100vh;
         display: flex;
         flex-direction: column;
+        overflow-x: hidden;
+        box-sizing: border-box;
       }
 
       .container {
@@ -79,6 +81,8 @@
         height: 100%;
         padding: 16px;
         max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
       }
 
       .header {
@@ -115,7 +119,9 @@
       .content {
         flex: 1;
         overflow-y: auto;
-        padding-right: 8px;
+        overflow-x: hidden;
+        padding-right: 0;
+        box-sizing: border-box;
       }
 
       .update-section {
@@ -155,17 +161,21 @@
         display: flex;
         align-items: flex-start;
         gap: 12px;
-        padding: 12px 16px;
+        padding: 14px 16px;
         background-color: var(--bg-secondary);
         border-radius: var(--border-radius);
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         border: 1px solid var(--border-color);
         transition: var(--transition);
+        box-sizing: border-box;
+        max-width: 100%;
+        word-wrap: break-word;
       }
 
       .feature-item:hover {
         border-color: var(--primary);
-        transform: translateY(-1px);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(139, 139, 255, 0.1);
       }
 
       .feature-icon {
@@ -200,20 +210,57 @@
           var(--primary-dark) 100%
         );
         border-radius: var(--border-radius);
-        padding: 16px;
+        padding: 20px;
         margin: 16px 0;
         color: white;
         text-align: center;
+        box-shadow: 0 4px 12px rgba(139, 139, 255, 0.2);
+      }
+
+      .highlight-box.migration-notice {
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        margin-bottom: 20px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+      }
+
+      .highlight-box p {
+        margin: 0 0 12px 0;
+      }
+
+      .highlight-box p:last-child {
+        margin-bottom: 0;
       }
 
       .highlight-title {
-        font-size: 16px;
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .highlight-box.migration-notice .highlight-title {
+        font-size: 14px;
         font-weight: 600;
         margin-bottom: 8px;
+        color: var(--error);
       }
 
       .highlight-text {
         font-size: 14px;
+        opacity: 0.95;
+        line-height: 1.6;
+        text-align: left;
+        margin-top: 12px;
+      }
+
+      .highlight-box.migration-notice .highlight-text {
+        font-size: 13px;
+        margin-top: 0;
         opacity: 0.9;
         line-height: 1.5;
       }
@@ -304,6 +351,20 @@
 
       <div class="content">
         <div class="update-section">
+          <div class="highlight-box migration-notice">
+            <div class="highlight-title">🔑 Migration to OpenRouter</div>
+            <div class="highlight-text">
+              <p>
+                We've migrated from Gemini API keys to OpenRouter. If you're
+                using an old Gemini key, create a new OpenRouter API key (it's
+                free). OpenRouter offers a more generous free tier and access to
+                hundreds of AI models.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="update-section">
           <div class="update-title">
             <svg
               viewBox="0 0 24 24"
@@ -332,19 +393,11 @@
                 stroke-linejoin="round"
               />
             </svg>
-            v1.1.0 — Latest Updates
+            v2.0.0 — Major Update
           </div>
           <div class="update-description">
-            We've been working hard to improve Magellan with new features and
-            better performance. Here's what's new!
-          </div>
-
-          <div class="highlight-box">
-            <div class="highlight-title">📄 PDF Upload</div>
-            <div class="highlight-text">
-              Chat with your PDFs! Upload PDF files for comprehensive document
-              analysis.
-            </div>
+            We've completely redesigned Magellan with a modern, seamless
+            interface and powerful new features. Here's what's new!
           </div>
 
           <ul class="feature-list">
@@ -364,10 +417,10 @@
                 />
               </svg>
               <div class="feature-content">
-                <div class="feature-name">Conversation Context</div>
+                <div class="feature-name">Modernized Chat Interface</div>
                 <div class="feature-description">
-                  Magellan now maintains context of your conversation, allowing
-                  for more natural follow-up questions and coherent responses.
+                  Completely redesigned chat experience with a seamless,
+                  bubble-free design. Clean, modern, and distraction-free.
                 </div>
               </div>
             </li>
@@ -387,10 +440,10 @@
                 />
               </svg>
               <div class="feature-content">
-                <div class="feature-name">Light Mode & Theme Toggle</div>
+                <div class="feature-name">Real-Time Web Search</div>
                 <div class="feature-description">
-                  Choose between light, dark, or system themes with automatic
-                  switching based on your preferences.
+                  Toggle real-time web search to get the latest information from
+                  the internet. Perfect for current events and up-to-date data.
                 </div>
               </div>
             </li>
@@ -410,10 +463,10 @@
                 />
               </svg>
               <div class="feature-content">
-                <div class="feature-name">Enhanced Search Modes</div>
+                <div class="feature-name">Tabbed Interface</div>
                 <div class="feature-description">
-                  Choose between Page Context, Blended, or General Knowledge
-                  modes for more precise results.
+                  Clean tabbed layout separates chat history from cited
+                  sentences, making it easier to navigate and review sources.
                 </div>
               </div>
             </li>
@@ -433,10 +486,10 @@
                 />
               </svg>
               <div class="feature-content">
-                <div class="feature-name">Improved Citations</div>
+                <div class="feature-name">Smart Highlight Management</div>
                 <div class="feature-description">
-                  Better highlighting and navigation through cited content with
-                  enhanced visual feedback.
+                  Highlights automatically clear when you close the extension,
+                  keeping your browsing experience clean.
                 </div>
               </div>
             </li>
@@ -456,10 +509,11 @@
                 />
               </svg>
               <div class="feature-content">
-                <div class="feature-name">Better Performance</div>
+                <div class="feature-name">Enhanced Model Selection</div>
                 <div class="feature-description">
-                  Faster response times and more reliable AI interactions with
-                  improved error handling.
+                  Choose from hundreds of AI models through OpenRouter,
+                  including GPT, Claude, Gemini, and many more—all with one API
+                  key.
                 </div>
               </div>
             </li>
@@ -479,38 +533,37 @@
                 />
               </svg>
               <div class="feature-content">
-                <div class="feature-name">Refactored UI</div>
+                <div class="feature-name">Improved Error Handling</div>
                 <div class="feature-description">
-                  Cleaner, more intuitive interface with better organization and
-                  improved user experience.
+                  Better error messages and handling, including specific
+                  feedback for insufficient API credits and other issues.
+                </div>
+              </div>
+            </li>
+            <li class="feature-item">
+              <svg
+                class="feature-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="feature-content">
+                <div class="feature-name">Seamless Input Design</div>
+                <div class="feature-description">
+                  Modern chat input with clean borders and rounded corners that
+                  seamlessly integrates with the interface.
                 </div>
               </div>
             </li>
           </ul>
-        </div>
-
-        <div class="update-section">
-          <div class="update-title">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M13 2L3 14H12L11 22L21 10H12L13 2Z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            What's Next
-          </div>
-          <div class="update-description">
-            We're working on exciting new features including custom search
-            context, support for more file types, and integration with more AI
-            models.
-          </div>
         </div>
       </div>
 

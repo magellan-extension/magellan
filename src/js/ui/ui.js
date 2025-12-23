@@ -279,22 +279,40 @@ function renderChatLog(chatHistory, currentStatus) {
     );
 
     if (msg.role === "assistant") {
-      const headerDiv = document.createElement("div");
-      headerDiv.style.fontSize = "0.75rem";
-      headerDiv.style.marginBottom = "0.5rem";
-      headerDiv.style.fontStyle = "italic";
-
-      if (msg.isExternalSource) {
-        headerDiv.style.color = "#10b981";
-        headerDiv.textContent = "Answer from general knowledge";
-        messageDiv.classList.add("general-knowledge");
+      // Check if this is an error message
+      if (msg.content && msg.content.startsWith("Error:")) {
+        messageDiv.classList.add("error-message");
       } else {
-        headerDiv.style.color = "#6366f1";
-        headerDiv.textContent = "Answer from page context";
-        if (msg.citations && msg.citations.length > 0) {
-          messageDiv.classList.add("has-citations");
+        // Add source indicator classes
+        if (msg.isExternalSource) {
+          messageDiv.classList.add("general-knowledge");
+        } else {
+          if (msg.citations && msg.citations.length > 0) {
+            messageDiv.classList.add("has-citations");
+          }
         }
       }
+    }
+
+    // Add source header for assistant messages
+    if (msg.role === "assistant") {
+      const headerDiv = document.createElement("div");
+      headerDiv.className = "message-source-header";
+
+      if (msg.content?.startsWith("Error:")) {
+        // Error message header
+        headerDiv.textContent = "Error";
+        headerDiv.style.color = "var(--error)";
+      } else if (msg.isExternalSource) {
+        // General knowledge header
+        headerDiv.textContent = "Answer from general knowledge";
+        headerDiv.style.color = "var(--success)";
+      } else {
+        // Page context header
+        headerDiv.textContent = "Answer from page context";
+        headerDiv.style.color = "var(--primary)";
+      }
+
       messageDiv.appendChild(headerDiv);
     }
 
@@ -330,10 +348,12 @@ function renderChatLog(chatHistory, currentStatus) {
     messageDiv.appendChild(contentDiv);
 
     // Add "Prompt with general knowledge" button for page-context answers
+    // Don't show for error messages
     if (
       msg.role === "assistant" &&
       !msg.isExternalSource &&
       !msg.gkPrompted &&
+      !msg.content?.startsWith("Error:") &&
       chatHistory[index - 1]?.role === "user"
     ) {
       const originalQuery = chatHistory[index - 1].content;
@@ -344,31 +364,11 @@ function renderChatLog(chatHistory, currentStatus) {
       const button = document.createElement("button");
       button.className = "general-knowledge-prompt-button";
       button.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="2" y1="12" x2="22" y2="12"></line>
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        <span>Prompt with general knowledge</span>
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
         </svg>
-        <span style="color: #10b981; font-weight: 500;">Prompt with general knowledge</span>
-        <div class="spinner" style="display: none;"></div>
       `;
-      button.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border: 1px solid #10b981;
-        border-radius: 10px;
-        background-color: rgba(16, 185, 129, 0.1);
-        transition: all 0.2s ease;
-        cursor: pointer;
-      `;
-      button.addEventListener("mouseover", () => {
-        button.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
-      });
-      button.addEventListener("mouseout", () => {
-        button.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
-      });
       button.addEventListener("click", async (event) => {
         event.stopPropagation(); // Prevent container click events
 
@@ -447,8 +447,8 @@ function renderChatLog(chatHistory, currentStatus) {
           const isActive =
             state.citedSentences === msg.citations &&
             document
-              .getElementById("citationsTitle")
-              ?.classList.contains("collapsed") === false;
+              .getElementById("citationsTab")
+              ?.classList.contains("active");
 
           if (isActive) {
             // If already active, hide highlights and collapse citations
@@ -467,31 +467,23 @@ function renderChatLog(chatHistory, currentStatus) {
               },
             });
 
-            // Collapse citations section
-            document
-              .getElementById("citationsTitle")
-              ?.classList.add("collapsed");
-            document
-              .getElementById("citationsContentWrapper")
-              ?.classList.add("collapsed");
-            await chrome.storage.local.set({ citationsCollapsed: true });
+            // Switch back to chat tab
+            if (window.switchToChatTab) {
+              window.switchToChatTab();
+            }
 
             // Clear cited sentences from state
             state.citedSentences = [];
             state.currentCitedSentenceIndex = -1;
           } else {
-            // If not active, show highlights and expand citations
+            // If not active, show highlights and switch to citations tab
             state.citedSentences = msg.citations;
             state.currentCitedSentenceIndex = 0;
 
-            // Expand citations section
-            document
-              .getElementById("citationsTitle")
-              ?.classList.remove("collapsed");
-            document
-              .getElementById("citationsContentWrapper")
-              ?.classList.remove("collapsed");
-            await chrome.storage.local.set({ citationsCollapsed: false });
+            // Switch to citations tab
+            if (window.switchToCitationsTab) {
+              window.switchToCitationsTab();
+            }
 
             const { highlightsVisible } = await chrome.storage.local.get([
               "highlightsVisible",
@@ -501,8 +493,8 @@ function renderChatLog(chatHistory, currentStatus) {
             await chrome.scripting.insertCSS({
               target: { tabId: currentActiveTabId },
               css: `
-                .mgl-cited-element-highlight { background-color: var(--highlight-bg, rgba(99, 102, 241, 0.4)) !important; color: inherit !important; border-radius: 3px; padding: 0.1em 0.2em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-                .mgl-active-element-highlight { outline: 2px solid var(--primary, #6366f1) !important; outline-offset: 2px !important; box-shadow: 0 0 8px rgba(99, 102, 241, 0.6) !important; }
+                .mgl-cited-element-highlight { background-color: var(--highlight-bg, rgba(139, 139, 255, 0.4)) !important; color: inherit !important; border-radius: 3px; padding: 0.1em 0.2em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+                .mgl-active-element-highlight { outline: 2px solid var(--primary, #8b8bff) !important; outline-offset: 2px !important; box-shadow: 0 0 8px rgba(139, 139, 255, 0.6) !important; }
               `,
             });
 
@@ -558,11 +550,8 @@ function renderChatLog(chatHistory, currentStatus) {
  * Used for user feedback about search state, errors, and success messages.
  */
 export function updateStatus(message, type = "idle") {
-  const statusEl = document.getElementById("status");
-  if (statusEl) {
-    statusEl.textContent = message;
-    statusEl.className = `status visible ${type}`;
-  }
+  // Status indicator removed - errors are shown in chat messages
+  // This function is kept for compatibility but does nothing
 }
 
 /**
@@ -787,27 +776,7 @@ export async function handleRemoveHighlights() {
     .then(() => {
       if (state) {
         updateStatus("Highlights cleared from page.", "success");
-        setTimeout(() => {
-          const currentStatusEl = document.getElementById("status");
-          if (
-            currentStatusEl &&
-            currentStatusEl.textContent === "Highlights cleared from page."
-          ) {
-            if (state) {
-              updateStatus(
-                state.errorMessage ||
-                  (state.status === "ready" ? "Response received." : "Idle."),
-                state.status === "error"
-                  ? "error"
-                  : state.status === "ready"
-                  ? "success"
-                  : "idle"
-              );
-            } else {
-              updateStatus("Ready.", "idle");
-            }
-          }
-        }, 2000);
+        // Status indicator will auto-hide after 2 seconds
       }
     })
     .catch((err) => {

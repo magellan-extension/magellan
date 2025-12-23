@@ -412,7 +412,6 @@ function showFileUploadLoading() {
  */
 function showFileUploadError(message) {
   const uploadButton = document.getElementById("uploadButton");
-  const documentStatusBar = document.getElementById("documentStatusBar");
   const errorToast = document.getElementById("errorToast");
   const errorToastMessage = document.getElementById("errorToastMessage");
 
@@ -420,21 +419,16 @@ function showFileUploadError(message) {
     // Reset upload button
     uploadButton.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Attachments</span>
+      <div class="tooltip">Attach Document</div>
     `;
     uploadButton.disabled = false;
-    uploadButton.title = "Upload document";
+    uploadButton.title = "Attach Document";
     uploadButton.classList.remove("has-file");
 
     // Show error toast or notification
     console.error("File upload error:", message);
-  }
-
-  // Hide document status bar on error
-  if (documentStatusBar) {
-    documentStatusBar.style.display = "none";
   }
 
   // Show error toast
@@ -469,33 +463,79 @@ function hideErrorToast() {
 }
 
 /**
+ * Shows a success snackbar notification
+ * @function
+ * @param {string} message - Success message to display
+ */
+function showSuccessSnackbar(message) {
+  // Create or get success snackbar element
+  let snackbar = document.getElementById("successSnackbar");
+  if (!snackbar) {
+    snackbar = document.createElement("div");
+    snackbar.id = "successSnackbar";
+    snackbar.className = "success-snackbar";
+    snackbar.innerHTML = `
+      <div class="success-snackbar-content">
+        <svg class="success-snackbar-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="success-snackbar-message"></span>
+      </div>
+    `;
+    document.body.appendChild(snackbar);
+  }
+
+  const messageEl = snackbar.querySelector(".success-snackbar-message");
+  if (messageEl) {
+    messageEl.textContent = message;
+  }
+
+  // Show snackbar
+  snackbar.style.display = "flex";
+  setTimeout(() => {
+    snackbar.classList.add("show");
+  }, 10);
+
+  // Auto-hide after 3 seconds
+  setTimeout(() => {
+    snackbar.classList.remove("show");
+    setTimeout(() => {
+      snackbar.style.display = "none";
+    }, 300);
+  }, 3000);
+}
+
+/**
  * Updates the file upload UI with file information
  * @function
  * @param {UploadedFile} file - The uploaded file
  */
 function updateFileUploadUI(file) {
   const uploadButton = document.getElementById("uploadButton");
-  const documentStatusBar = document.getElementById("documentStatusBar");
-  const documentName = document.getElementById("documentName");
 
   if (uploadButton) {
-    // Update upload button with file indicator
+    // Truncate file name to 10 characters
+    const truncatedName =
+      file.name.length > 10 ? file.name.substring(0, 10) + "..." : file.name;
+
+    // Update upload button to show "Remove [filename]" with X icon, keeping same size
+    // Remove icon-only class and add compact class to maintain similar size
+    uploadButton.classList.remove("action-button-icon-only");
+    uploadButton.classList.add("action-button-compact");
     uploadButton.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Attached</span>
+      <span>${truncatedName}</span>
+      <div class="tooltip">Remove document</div>
     `;
     uploadButton.disabled = false;
     uploadButton.classList.add("has-file");
-    uploadButton.title = `File: ${file.name}\nClick to remove`;
+    uploadButton.title = `Remove ${file.name}`;
   }
 
-  // Show document status bar
-  if (documentStatusBar && documentName) {
-    documentName.textContent = file.name;
-    documentStatusBar.style.display = "flex";
-  }
+  // Show success snackbar notification
+  showSuccessSnackbar(`Document "${file.name}" uploaded successfully`);
 }
 
 /**
@@ -504,24 +544,20 @@ function updateFileUploadUI(file) {
  */
 function resetFileUploadUI() {
   const uploadButton = document.getElementById("uploadButton");
-  const documentStatusBar = document.getElementById("documentStatusBar");
 
   if (uploadButton) {
     // Reset upload button to original state
+    // Restore icon-only class and remove compact class
+    uploadButton.classList.remove("action-button-compact", "has-file");
+    uploadButton.classList.add("action-button-icon-only");
     uploadButton.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span>Attachments</span>
+      <div class="tooltip">Attach Document</div>
     `;
     uploadButton.disabled = false;
-    uploadButton.classList.remove("has-file");
-    uploadButton.title = "Upload document";
-  }
-
-  // Hide document status bar
-  if (documentStatusBar) {
-    documentStatusBar.style.display = "none";
+    uploadButton.title = "Attach Document";
   }
 }
 
