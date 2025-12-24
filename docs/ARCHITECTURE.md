@@ -18,6 +18,8 @@ Magellan is built as a Chrome extension with a modular architecture organized in
 
    - `sidebar.js` - Main sidebar interface and user interaction
    - `ui.js` - Reusable UI components and utilities
+   - `model-selection.js` - AI model selection interface
+   - `fileUpload.js` - Document upload, processing, and text extraction
    - `theme.js` - Theme management and system theme synchronization
    - `whats-new.js` - What's new page for user onboarding and updates
 
@@ -29,7 +31,7 @@ Magellan is built as a Chrome extension with a modular architecture organized in
 4. **API Integration** (`api/`)
 
    - `api-key.js` - API key management and validation
-   - `google-ai.js` - Google AI SDK integration and query handling
+   - `openrouter.js` - OpenRouter API integration and query handling
 
 5. **State Management** (`state/`)
 
@@ -39,15 +41,12 @@ Magellan is built as a Chrome extension with a modular architecture organized in
 
    - `utils.js` - Shared utility functions and helpers
 
-7. **File Upload System** (`ui/`)
-   - `fileUpload.js` - Document upload, processing, and text extraction
-
 ### Component Interaction
 
 ```mermaid
 graph TD
     A[UI Layer] -->|User Input| B[Search System]
-    B -->|Query| C[API Integration]
+    B -->|Query| C[OpenRouter API]
     B -->|Extract| D[Content Script]
     D -->|Store| E[State Management]
     E -->|Retrieve| B
@@ -61,6 +60,9 @@ graph TD
     I -->|Storage| J[User Preferences]
     K[File Upload System] -->|Process Documents| B
     K -->|Store Content| E
+    L[Model Selection] -->|Model Choice| C
+    M[Help Page] -->|Documentation| A
+    N[Real-time Search] -->|Web Results| B
 ```
 
 ## Page Data Flow
@@ -149,6 +151,10 @@ Magellan includes a comprehensive document upload and processing system that all
 #### Supported Formats
 
 - **PDF** (.pdf) - Advanced text extraction with layout preservation
+- **TXT** (.txt) - Plain text files
+- **DOC/DOCX** (.doc, .docx) - Microsoft Word documents
+- **MD** (.md) - Markdown files
+- **RTF** (.rtf) - Rich Text Format files
 
 #### Upload Interface
 
@@ -173,21 +179,33 @@ graph TD
 #### Text Extraction Methods
 
 1. **PDF Processing**
+
    - Uses PDF.js library for client-side PDF parsing
    - Extracts text from all pages with layout preservation
    - Handles complex PDF structures and formatting
    - Provides progress updates for large documents
    - Error handling for password-protected or corrupted files
 
+2. **Text File Processing**
+
+   - Direct text extraction from TXT, MD, and RTF files
+   - Preserves formatting where applicable
+   - Handles encoding issues gracefully
+
+3. **Word Document Processing**
+   - Extracts text from DOC and DOCX files
+   - Preserves document structure
+   - Handles formatting and metadata
+
 #### Content Integration
 
-Uploaded PDFs integrate seamlessly with the search system:
+Uploaded documents integrate seamlessly with the search system:
 
-- **Context Replacement**: Uploaded PDF content replaces page content
+- **Context Replacement**: Uploaded document content replaces page content
 - **Search Modes**: Works with all search modes (Page Context, Blended, General Knowledge)
-- **Citation System**: PDF content can be cited in responses
-- **Conversation History**: PDF context persists across conversations
-- **Storage**: PDF content is stored in tab state for session persistence
+- **Citation System**: Document content can be cited in responses
+- **Conversation History**: Document context persists across conversations
+- **Storage**: Document content is stored in tab state for session persistence
 
 #### Error Handling
 
@@ -195,9 +213,9 @@ The upload system includes comprehensive error handling:
 
 - **File Validation**: Checks file type, size, and format
 - **Extraction Errors**: Handles corrupted or unsupported files
-- **Size Limits**: Enforces reasonable file size limits (20MB for PDFs)
+- **Size Limits**: Enforces reasonable file size limits (20MB for PDFs, varies by format)
 - **User Feedback**: Clear error messages and recovery options
-- **PDF-Specific**: Special handling for password-protected or complex PDFs
+- **Format-Specific**: Special handling for password-protected PDFs, encoding issues, and corrupted files
 
 #### PDF Page Detection
 
@@ -260,6 +278,16 @@ type TabState = {
 
 ## AI Integration
 
+### OpenRouter Integration
+
+Magellan uses OpenRouter as its AI backend, providing access to hundreds of AI models:
+
+- **Model Selection**: Users can choose from hundreds of available models
+- **Free Models**: OpenRouter offers free models with rate limits
+- **Paid Models**: Upgrade to paid models for higher rate limits
+- **Flexible Switching**: Switch between models optimized for speed, accuracy, or specific capabilities
+- **API Key Management**: Secure local storage of OpenRouter API keys
+
 ### Search Modes
 
 Magellan supports three distinct search modes:
@@ -288,7 +316,16 @@ Magellan supports three distinct search modes:
      - Falls back to general knowledge
      - Marked as external source
      - No citations provided
-   - Allows manual fallback to general knowledge via "Prompt with general knowledge" button
+   - Allows manual fallback to general knowledge via "Use General Knowledge" button
+
+### Real-time Web Search
+
+Magellan includes an optional real-time web search feature:
+
+- **Toggle Control**: Users can enable/disable real-time search via a toggle button
+- **Current Events**: Provides up-to-date information for time-sensitive queries
+- **Integration**: Works seamlessly with all search modes
+- **Use Cases**: Perfect for news, recent developments, or queries requiring current information
 
 ### Content Relevance Check
 
@@ -351,16 +388,21 @@ Please:
    - Manages highlights for page context answers
    - Updates navigation state
    - Shows appropriate status messages based on response source
+   - Displays copy and citations buttons for assistant messages
+   - Implements chunked typing animation for faster response display
 
 3. **Response Types**
    - Page Context Response:
      - Blue header with "Answer from page context"
      - Includes citations and highlights
-     - Shows "Prompt with general knowledge" button
+     - Shows "Use General Knowledge" button
+     - Copy button for easy response copying
+     - Citations button for viewing all sources
    - General Knowledge Response:
      - Green header with "Answer from general knowledge"
      - No citations or highlights
-     - No additional action buttons
+     - Copy button for easy response copying
+     - No citations button (no sources available)
 
 ## Highlight Management
 
@@ -392,6 +434,51 @@ Please:
    - Manages focus
    - Handles edge cases
 
+## UI Features
+
+### Collapsible Input Section
+
+The input section can be collapsed to maximize screen space:
+
+- **Collapse Toggle**: Small caret button to hide/show input controls
+- **Smooth Animation**: CSS transitions for collapse/expand
+- **State Persistence**: Collapsed state saved in Chrome storage
+- **Minimal View**: When collapsed, shows only the input field
+
+### Action Buttons
+
+The input section includes several action buttons:
+
+- **Search Mode Button**: Toggles between Page, Blended, and General modes with visual icons
+- **Model Selection Button**: Opens model selection interface
+- **Real-time Search Toggle**: Enables/disables real-time web search
+- **Document Upload Button**: Opens file picker for document upload
+- **Submit Button**: Submits the query (subtle ">" icon)
+
+All buttons include:
+
+- Tooltips for clarity
+- Purple hue when active/toggled
+- Consistent styling and positioning
+
+### Message Actions
+
+Each assistant message includes action buttons:
+
+- **Copy Button**: Copies the entire response to clipboard with visual feedback (checkmark)
+- **Citations Button**: Opens citations tab and navigates to sources (only for messages with citations)
+- **Positioning**: Buttons aligned to the right, always visible
+- **Styling**: Matches input section button design
+
+### Help Page
+
+A dedicated help page (`help.html`) provides:
+
+- Comprehensive feature documentation
+- Detailed explanations of each button and mode
+- Tips and best practices
+- Accessible from settings menu
+
 ## Performance Considerations
 
 1. **Content Extraction**
@@ -412,6 +499,8 @@ Please:
    - Asynchronous processing
    - Progressive loading
    - Efficient DOM operations
+   - Chunked typing animation (3-5 characters) for faster perceived performance
+   - Smooth CSS transitions for animations
 
 ## Security
 
@@ -441,8 +530,10 @@ Please:
 
    - API failures
    - Invalid responses
-   - Rate limiting
+   - Rate limiting (especially for free OpenRouter models)
    - Network issues
+   - Model-specific errors
+   - API key validation failures
 
 3. **UI Errors**
    - Element not found
@@ -473,6 +564,11 @@ The UI layer is responsible for all user interaction and presentation:
    - Displays chat history and responses
    - Controls search mode selection
    - Manages citation navigation
+   - Implements collapsible input section
+   - Handles model selection
+   - Manages real-time search toggle
+   - Provides tooltips for all action buttons
+   - Handles help page navigation
 
 2. **UI Utilities** (`ui.js`)
 
@@ -480,6 +576,11 @@ The UI layer is responsible for all user interaction and presentation:
    - Handles DOM manipulation
    - Manages highlight rendering
    - Controls animation and transitions
+   - Implements chunked typing animation (3-5 character chunks)
+   - Handles copy-to-clipboard functionality
+   - Manages citations button and navigation
+   - Renders message action buttons (copy, citations)
+   - Implements smooth tab switching animations
 
 3. **What's New Component** (`whats-new.js`)
 
@@ -488,7 +589,21 @@ The UI layer is responsible for all user interaction and presentation:
    - Controls navigation between pages
    - Manages storage for user interaction tracking
 
-4. **Theme Component** (`theme.js`)
+4. **Model Selection Component** (`model-selection.js`)
+
+   - Manages AI model selection interface
+   - Displays available models from OpenRouter
+   - Handles model switching and persistence
+   - Updates model selection button tooltip
+
+5. **File Upload Component** (`fileUpload.js`)
+
+   - Handles document upload interface
+   - Manages file validation and processing
+   - Provides visual feedback for upload status
+   - Integrates with text extraction system
+
+6. **Theme Component** (`theme.js`)
    - Centralized theme management across all extension pages
    - Handles system theme detection and synchronization
    - Manages theme persistence in Chrome storage
@@ -521,11 +636,13 @@ Handles all external API interactions:
    - Handles key validation
    - Provides key retrieval
 
-2. **Google AI Integration** (`google-ai.js`)
-   - Implements Google AI SDK integration
-   - Manages API requests
-   - Handles response processing
-   - Implements retry logic
+2. **OpenRouter Integration** (`openrouter.js`)
+   - Implements OpenRouter API integration
+   - Manages API requests to OpenRouter endpoints
+   - Handles response processing and streaming
+   - Implements retry logic and error handling
+   - Supports multiple AI models
+   - Manages model-specific configurations
 
 ### State Management (`state/`)
 

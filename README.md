@@ -1,10 +1,10 @@
-# Magellan - Query Any Webpage with AI
+# Magellan - Your AI Superpower
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Get it on Chrome Web Store](https://img.shields.io/badge/Chrome_Web_Store-Get_it_here-4285F4?logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
 
-Magellan is an open-source Chrome extension that brings conversational AI to your web browsing experience. It allows you to ask questions about the web page you're currently viewing and get AI-powered answers with smart citations. It can search through the page content and provide relevant citations, or use general knowledge when needed.
+Magellan is an open-source Chrome extension that transforms your browser into an intelligent AI research assistant. It's your all-purpose AI tool that works seamlessly within your browser, allowing you to ask questions about any webpage or document and get instant, cited answers. Whether you're reading an article, analyzing a document, or researching a topic, Magellan understands the context and provides accurate, verifiable information.
 
 [Demo](https://www.youtube.com/watch?v=xeA9RsXxIdM)
 
@@ -13,18 +13,32 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
 ## Features
 
 - 🧠 **AI-Powered Search** – Ask questions about any webpage and get instant answers
-  - **Multiple Search Modes**:
-    - **Page Context**: Search only within the current page content
-    - **Blended**: Search page first, then use general knowledge if needed
-    - **General Knowledge**: Use only general knowledge, ignore page content
-- 📄 **Document Upload** – Upload PDF files for analysis
-  - **Smart Context**: Uses uploaded PDFs as page context for searches
-- 📚 **Smart Citations** – Get direct links to the relevant parts of the page
-- 🎯 **Visual Highlights** – See exactly where the information comes from with highlighted text
-- 💬 **Conversation History** – Keep track of your questions and answers
-- 🎨 **Theme Support** – Choose between light and dark themes, or sync with your system
-- 🧼 **Sleek, Responsive UI** – Clean design that fits right into your browser workflow
-- 💸 **100% Free** – No subscriptions, no paywalls, no data harvesting
+  - **Three Intelligent Search Modes**:
+    - **Page Context**: Search exclusively within the current page or document
+    - **Blended**: Combines page content with general knowledge for comprehensive answers
+    - **General Knowledge**: Use AI knowledge independent of page content
+- 📄 **Document Analysis** – Upload and analyze multiple file formats
+  - **Supported Formats**: PDF, TXT, DOC, DOCX, MD, RTF
+  - **Smart Context**: Uses uploaded documents as page context for searches
+- 📚 **Smart Citations & Visual Highlights** – See exactly where information comes from
+  - Automatic citation extraction with visual highlights on the page
+  - Navigate between citations effortlessly
+  - Click any citation to jump directly to the relevant section
+- 🔍 **Real-time Web Search** – Enable optional real-time web search for current events and up-to-date information
+- 🤖 **Flexible AI Model Selection** – Choose from hundreds of AI models via OpenRouter
+  - Free models available with rate limits
+  - Upgrade to paid models for higher limits
+  - Switch between models optimized for speed, accuracy, or specific capabilities
+- 💬 **Persistent Chat History** – Your conversation history is saved per browser tab
+  - Different conversations on different pages
+  - History persists across sessions
+- 📋 **Copy Responses** – One-click copy button for each AI response
+- 🎨 **Beautiful, Customizable Interface**
+  - Light and dark themes with system theme sync
+  - Collapsible interface for maximum screen space
+  - Clean, modern design that integrates seamlessly with your workflow
+- 📖 **Help & Documentation** – Built-in help page detailing all features
+- 💸 **100% Free & Open Source** – No subscriptions, no paywalls, no data harvesting
 
 ## 🚀 Quick Start
 
@@ -33,28 +47,34 @@ Magellan is an open-source Chrome extension that brings conversational AI to you
    - [Get it from the Chrome Web Store](https://chromewebstore.google.com/detail/magellan/ekkajebdacenikgmbgkdnmememnlibnd)
    - Or download the latest release:
      1. Go to the [Releases page](https://github.com/magellan-extension/magellan/releases)
-     2. Download `package.zip` from the latest release
+     2. Download the zip file from the latest release
      3. Extract the zip file
      4. Open Chrome and go to `chrome://extensions/`
      5. Enable "Developer mode" in the top right
      6. Click "Load unpacked" and select the extracted folder
    - Or [build from source](#🛠️-development)
 
-2. Get your API key:
+2. Get your OpenRouter API key:
 
-   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Visit [OpenRouter](https://openrouter.ai/)
+   - Sign up for a free account
    - Create a new API key
    - Copy the key
+   - **Note**: OpenRouter offers free models with rate limits, or you can use paid models for higher limits
 
 3. Start using Magellan:
    - Click the Magellan icon in your Chrome toolbar to open the sidebar
-   - Choose your preferred search mode:
+   - **Choose your preferred search mode**:
      - **Page Context**: Best for understanding specific content on the page
      - **Blended**: Good for general questions that might need additional context
      - **General Knowledge**: Use when you want answers not limited to the page content
-   - **Upload Documents**: Click the upload button (+) to add PDF files for analysis
-   - Type your question about the current page or uploaded PDF
+   - **Select your AI model**: Click the model selector to choose from hundreds of available models
+   - **Upload Documents**: Click the upload button (+) to add PDF, TXT, DOC, DOCX, MD, or RTF files for analysis
+   - **Enable Real-time Search** (optional): Toggle real-time web search for current events and up-to-date information
+   - Type your question about the current page or uploaded document
    - Get AI-powered answers with highlighted citations
+   - **Copy responses**: Click the copy button to copy any AI response to your clipboard
+   - **View citations**: Click the citations button to see all sources and navigate between them
 
 💡 **Pro Tip**: For quick access, set up a keyboard shortcut in Chrome's extension settings:
 
@@ -90,7 +110,7 @@ magellan/
 │   ├── js/                # JavaScript files
 │   │   ├── api/          # API integration
 │   │   │   ├── api-key.js    # API key management
-│   │   │   └── google-ai.js  # Google AI SDK integration
+│   │   │   └── openrouter.js # OpenRouter API integration
 │   │   ├── core/         # Core functionality
 │   │   │   ├── background.js # Background service worker
 │   │   │   └── utils.js      # Utility functions
@@ -101,10 +121,17 @@ magellan/
 │   │   │   └── tabState.js   # Tab state management
 │   │   └── ui/           # User interface
 │   │       ├── sidebar.js    # Sidebar component
+│   │       ├── model-selection.js # Model selection UI
+│   │       ├── fileUpload.js # File upload handling
 │   │       ├── theme.js      # Theme management
 │   │       ├── whats-new.js  # Displays extension updates
 │   │       └── ui.js         # UI utilities and components
 │   └── html/              # HTML files
+│       ├── sidebar.html     # Main sidebar UI
+│       ├── api-key.html     # API key setup page
+│       ├── model-selection.html # Model selection page
+│       ├── help.html        # Help and features page
+│       └── whats-new.html  # What's new page
 ├── public/                # Static assets
 ├── docs/                  # Documentation
 └── manifest.json          # Chrome extension manifest
