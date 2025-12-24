@@ -564,10 +564,17 @@
         padding-left: 20px;
       }
 
-      .copy-message-button {
-        position: absolute;
-        bottom: -12px;
-        right: 0;
+      .message-action-buttons {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 4px;
+        opacity: 1;
+        margin-left: auto;
+      }
+
+      .copy-message-button,
+      .citations-message-button {
         width: 28px;
         height: 28px;
         display: inline-flex;
@@ -583,26 +590,23 @@
         cursor: pointer;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         flex-shrink: 0;
-        opacity: 0;
-        z-index: 10;
         box-sizing: border-box;
       }
 
-      .assistant-message:hover .copy-message-button {
-        opacity: 1;
-      }
-
-      .copy-message-button:hover {
+      .copy-message-button:hover,
+      .citations-message-button:hover {
         background-color: var(--dropdown-hover);
         color: var(--text-primary);
       }
 
-      .copy-message-button:active {
+      .copy-message-button:active,
+      .citations-message-button:active {
         transform: scale(0.98);
         background-color: rgba(255, 255, 255, 0.1);
       }
 
-      .copy-message-button svg {
+      .copy-message-button svg,
+      .citations-message-button svg {
         width: 14px;
         height: 14px;
         flex-shrink: 0;
@@ -654,7 +658,6 @@
       }
 
       .assistant-message.has-citations {
-        cursor: pointer;
         transition: var(--transition);
       }
 
@@ -724,10 +727,27 @@
         }
       }
 
+      .message-separator-container {
+        margin-top: 4px;
+      }
+
+      .message-separator {
+        height: 1px;
+        background-color: var(--bg-secondary);
+        margin-bottom: 4px;
+      }
+
+      .message-action-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
       .general-knowledge-prompt-container {
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px solid var(--bg-secondary);
+        margin: 0;
+        padding: 0;
+        border: none;
       }
 
       .general-knowledge-prompt-button {

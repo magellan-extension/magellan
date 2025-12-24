@@ -361,182 +361,130 @@ function renderChatLog(chatHistory, currentStatus) {
 
     messageDiv.appendChild(contentDiv);
 
-    // Add copy button for assistant messages
+    // Add separator and action buttons for all assistant messages
     if (msg.role === "assistant") {
-      const copyButton = document.createElement("button");
-      copyButton.className = "copy-message-button";
-      copyButton.title = "Copy";
-      copyButton.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-      `;
+      // Create separator container
+      const separatorContainer = document.createElement("div");
+      separatorContainer.className = "message-separator-container";
 
-      // Store original HTML for restoration
-      const originalHTML = copyButton.innerHTML;
+      // Add separator
+      const separator = document.createElement("div");
+      separator.className = "message-separator";
+      separatorContainer.appendChild(separator);
 
-      copyButton.addEventListener("click", async (event) => {
-        event.stopPropagation();
+      // Create action row with gen knowledge button and icons
+      const actionRow = document.createElement("div");
+      actionRow.className = "message-action-row";
 
-        try {
-          // Get the plain text content (not HTML)
-          const textToCopy = msg.content;
-          await navigator.clipboard.writeText(textToCopy);
+      // Add "Use gen knowledge" button for page-context answers
+      // Don't show for error messages
+      if (
+        !msg.isExternalSource &&
+        !msg.gkPrompted &&
+        !msg.content?.startsWith("Error:") &&
+        chatHistory[index - 1]?.role === "user"
+      ) {
+        const originalQuery = chatHistory[index - 1].content;
+        const generalKnowledgeButton = document.createElement("button");
+        generalKnowledgeButton.className = "general-knowledge-prompt-button";
+        generalKnowledgeButton.innerHTML = `
+          <span>Use General Knowledge</span>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        `;
+        generalKnowledgeButton.addEventListener("click", async (event) => {
+          event.stopPropagation();
 
-          // Visual feedback - show checkmark
-          copyButton.innerHTML = `
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          `;
-          copyButton.style.color = "var(--success)";
+          const state = tabStates[currentActiveTabId];
+          if (!state || !ai || state.status === "querying_llm") return;
 
-          // Restore after 2 seconds
-          setTimeout(() => {
-            copyButton.innerHTML = originalHTML;
-            copyButton.style.color = "";
-          }, 2000);
-        } catch (err) {
-          console.error("Failed to copy text:", err);
-          // Restore on error too
-          copyButton.innerHTML = originalHTML;
-          copyButton.style.color = "";
-        }
-      });
+          const messageInHistory = state.chatHistory[index];
+          if (messageInHistory) {
+            messageInHistory.gkPrompted = true;
+          }
 
-      messageDiv.appendChild(copyButton);
-    }
+          generalKnowledgeButton.disabled = true;
+          const textSpan = generalKnowledgeButton.querySelector("span");
+          const iconSvg = generalKnowledgeButton.querySelector("svg");
+          const spinnerDiv = generalKnowledgeButton.querySelector(".spinner");
+          if (textSpan) textSpan.style.display = "none";
+          if (iconSvg) iconSvg.style.display = "none";
+          if (spinnerDiv) spinnerDiv.style.display = "inline-block";
 
-    // Add "Prompt with general knowledge" button for page-context answers
-    // Don't show for error messages
-    if (
-      msg.role === "assistant" &&
-      !msg.isExternalSource &&
-      !msg.gkPrompted &&
-      !msg.content?.startsWith("Error:") &&
-      chatHistory[index - 1]?.role === "user"
-    ) {
-      const originalQuery = chatHistory[index - 1].content;
-      const generalKnowledgeContainer = document.createElement("div");
-      generalKnowledgeContainer.className =
-        "general-knowledge-prompt-container";
+          // Temporarily hide highlights by removing highlight classes
+          await chrome.scripting.executeScript({
+            target: { tabId: currentActiveTabId },
+            func: () => {
+              const highlightClasses = [
+                "mgl-cited-element-highlight",
+                "mgl-active-element-highlight",
+              ];
+              highlightClasses.forEach((cls) => {
+                document
+                  .querySelectorAll(`.${cls}`)
+                  .forEach((el) => el.classList.remove(cls));
+              });
+            },
+          });
 
-      const button = document.createElement("button");
-      button.className = "general-knowledge-prompt-button";
-      button.innerHTML = `
-        <span>Prompt with general knowledge</span>
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-      `;
-      button.addEventListener("click", async (event) => {
-        event.stopPropagation(); // Prevent container click events
+          // Collapse citations section
+          document.getElementById("citationsTitle")?.classList.add("collapsed");
+          document
+            .getElementById("citationsContentWrapper")
+            ?.classList.add("collapsed");
+          await chrome.storage.local.set({ citationsCollapsed: true });
 
-        const state = tabStates[currentActiveTabId];
-        if (!state || !ai || state.status === "querying_llm") return;
+          // Clear cited sentences from state
+          state.citedSentences = [];
+          state.currentCitedSentenceIndex = -1;
 
-        const messageInHistory = state.chatHistory[index];
-        if (messageInHistory) {
-          messageInHistory.gkPrompted = true;
-        }
+          state.status = "querying_llm";
+          updateStatus("Asking Magellan AI...", "warning");
+          document.getElementById("searchButton").disabled = true;
 
-        button.disabled = true;
-        const textSpan = button.querySelector("span");
-        const iconSvg = button.querySelector("svg");
-        const spinnerDiv = button.querySelector(".spinner");
-        if (textSpan) textSpan.style.display = "none";
-        if (iconSvg) iconSvg.style.display = "none";
-        if (spinnerDiv) spinnerDiv.style.display = "inline-block";
-
-        // Temporarily hide highlights by removing highlight classes
-        await chrome.scripting.executeScript({
-          target: { tabId: currentActiveTabId },
-          func: () => {
-            const highlightClasses = [
-              "mgl-cited-element-highlight",
-              "mgl-active-element-highlight",
-            ];
-            highlightClasses.forEach((cls) => {
-              document
-                .querySelectorAll(`.${cls}`)
-                .forEach((el) => el.classList.remove(cls));
+          try {
+            await performLLMSearch(originalQuery, currentActiveTabId, {
+              forceGeneralKnowledge: true,
             });
-          },
+          } catch (error) {
+            console.error("General knowledge search error:", error);
+            if (tabStates[currentActiveTabId]) {
+              const errorState = tabStates[currentActiveTabId];
+              errorState.status = "error";
+              errorState.errorMessage =
+                "Failed to get general knowledge answer.";
+              renderPopupUI();
+            }
+          }
         });
 
-        // Collapse citations section
-        document.getElementById("citationsTitle")?.classList.add("collapsed");
-        document
-          .getElementById("citationsContentWrapper")
-          ?.classList.add("collapsed");
-        await chrome.storage.local.set({ citationsCollapsed: true });
+        actionRow.appendChild(generalKnowledgeButton);
+      }
 
-        // Clear cited sentences from state
-        state.citedSentences = [];
-        state.currentCitedSentenceIndex = -1;
+      // Add icons container
+      const buttonContainer = document.createElement("div");
+      buttonContainer.className = "message-action-buttons";
 
-        state.status = "querying_llm";
-        updateStatus("Asking Magellan AI...", "warning");
-        document.getElementById("searchButton").disabled = true;
+      // Add citations button first if message has citations
+      if (msg.citations && msg.citations.length > 0) {
+        const citationsButton = document.createElement("button");
+        citationsButton.className = "citations-message-button";
+        citationsButton.title = "View Citations";
+        citationsButton.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        `;
 
-        try {
-          await performLLMSearch(originalQuery, currentActiveTabId, {
-            forceGeneralKnowledge: true,
-          });
-        } catch (error) {
-          console.error("General knowledge search error:", error);
-          if (tabStates[currentActiveTabId]) {
-            const errorState = tabStates[currentActiveTabId];
-            errorState.status = "error";
-            errorState.errorMessage = "Failed to get general knowledge answer.";
-            renderPopupUI();
-          }
-        }
-      });
-      generalKnowledgeContainer.appendChild(button);
-      messageDiv.appendChild(generalKnowledgeContainer);
-    }
+        citationsButton.addEventListener("click", async (event) => {
+          event.stopPropagation();
 
-    if (msg.role === "assistant" && msg.citations && msg.citations.length > 0) {
-      messageDiv.classList.add("has-citations");
-      messageDiv.addEventListener("click", async () => {
-        if (currentActiveTabId && tabStates[currentActiveTabId]) {
-          const state = tabStates[currentActiveTabId];
+          if (currentActiveTabId && tabStates[currentActiveTabId]) {
+            const state = tabStates[currentActiveTabId];
 
-          // Check if this message is already active (clicked before)
-          const isActive =
-            state.citedSentences === msg.citations &&
-            document
-              .getElementById("citationsTab")
-              ?.classList.contains("active");
-
-          if (isActive) {
-            // If already active, hide highlights and collapse citations
-            await chrome.scripting.executeScript({
-              target: { tabId: currentActiveTabId },
-              func: () => {
-                const highlightClasses = [
-                  "mgl-cited-element-highlight",
-                  "mgl-active-element-highlight",
-                ];
-                highlightClasses.forEach((cls) => {
-                  document
-                    .querySelectorAll(`.${cls}`)
-                    .forEach((el) => el.classList.remove(cls));
-                });
-              },
-            });
-
-            // Switch back to chat tab
-            if (window.switchToChatTab) {
-              window.switchToChatTab();
-            }
-
-            // Clear cited sentences from state
-            state.citedSentences = [];
-            state.currentCitedSentenceIndex = -1;
-          } else {
-            // If not active, show highlights and switch to citations tab
+            // Set citations and switch to citations tab
             state.citedSentences = msg.citations;
             state.currentCitedSentenceIndex = 0;
 
@@ -569,11 +517,65 @@ function renderChatLog(chatHistory, currentStatus) {
               });
               navigateToMatchOnPage(currentActiveTabId, 0, true);
             }
-          }
 
-          renderPopupUI();
+            renderPopupUI();
+          }
+        });
+
+        buttonContainer.appendChild(citationsButton);
+      }
+
+      const copyButton = document.createElement("button");
+      copyButton.className = "copy-message-button";
+      copyButton.title = "Copy";
+      copyButton.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+
+      // Store original HTML for restoration
+      const originalHTML = copyButton.innerHTML;
+
+      copyButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+
+        try {
+          // Get the plain text content (not HTML)
+          const textToCopy = msg.content;
+          await navigator.clipboard.writeText(textToCopy);
+
+          // Visual feedback - show checkmark
+          copyButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `;
+          copyButton.style.color = "var(--success)";
+
+          // Restore after 2 seconds
+          setTimeout(() => {
+            copyButton.innerHTML = originalHTML;
+            copyButton.style.color = "";
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy text:", err);
+          // Restore on error too
+          copyButton.innerHTML = originalHTML;
+          copyButton.style.color = "";
         }
       });
+
+      buttonContainer.appendChild(copyButton);
+      actionRow.appendChild(buttonContainer);
+      separatorContainer.appendChild(actionRow);
+
+      messageDiv.appendChild(separatorContainer);
+    }
+
+    if (msg.role === "assistant" && msg.citations && msg.citations.length > 0) {
+      messageDiv.classList.add("has-citations");
     }
 
     chatLogContainer.appendChild(messageDiv);
