@@ -5,16 +5,18 @@
     <title>Magellan - Model Selection</title>
     <style>
       :root {
-        /* Core colors - darker, sexier theme */
+        /* Core colors - darker theme */
         --primary: #8b8bff;
         --primary-hover: #6b6bff;
         --success: #51cf66;
         --error: #ff6b6b;
         --warning: #ffd43b;
         --border-radius: 8px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* Theme variables - darker, sexier */
+        /* Theme variables - darker */
         --bg-primary: #0f0f13;
         --bg-secondary: #1a1a24;
         --text-primary: #e8e8f0;
@@ -52,7 +54,7 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
           "Helvetica Neue", Arial, sans-serif;
         background-color: var(--bg-primary);
         color: var(--text-primary);
@@ -68,143 +70,208 @@
       .container {
         width: 100%;
         margin: 0 auto;
-        padding: 1.5rem 0.75rem;
+        padding: 0;
         flex: 1;
         display: flex;
         flex-direction: column;
         overflow-y: auto;
-        background-color: var(--bg-secondary);
+        background-color: var(--bg-primary);
+      }
+
+      .header-section {
+        padding: 20px 16px;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+        background-color: var(--bg-primary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
 
       .model-selection-container {
-        padding: 1.5rem;
+        padding: 24px 20px;
         transition: var(--transition);
         margin-top: 0;
         width: 100%;
         flex: 1;
         display: flex;
         flex-direction: column;
-        max-width: 600px;
+        max-width: 640px;
         margin: 0 auto;
       }
 
       .model-selection-header {
         text-align: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 32px;
       }
 
       .model-selection-logo {
-        width: 48px;
-        height: 48px;
-        margin-bottom: 1rem;
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 16px;
         border-radius: 8px;
+        display: block;
       }
 
       .model-selection-title {
-        font-size: 1.25rem;
+        font-size: 20px;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.375rem;
+        margin-bottom: 8px;
       }
 
       .model-selection-subtitle {
-        font-size: 0.8125rem;
+        font-size: 13px;
         color: var(--text-secondary);
         max-width: 24rem;
         margin: 0 auto;
-        line-height: 1.4;
+        line-height: 1.5;
       }
 
       .model-selection-link {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
+        gap: 6px;
         color: var(--link-color);
         text-decoration: none;
         font-weight: 500;
-        font-size: 0.875rem;
-        margin: 0.75rem 0;
+        font-size: 13px;
+        margin: 12px 0 0;
         transition: var(--transition);
+        padding: 6px 12px;
+        border-radius: 6px;
       }
 
       .model-selection-link:hover {
         color: var(--link-hover);
+        background-color: var(--bg-secondary);
       }
 
       .model-section {
-        margin-bottom: 1.5rem;
+        margin-bottom: 20px;
       }
 
       .model-section-title {
-        font-size: 0.875rem;
+        font-size: 13px;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.75rem;
+        margin-bottom: 12px;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .model-section-title .badge {
-        font-size: 0.75rem;
-        padding: 0.125rem 0.5rem;
+        font-size: 11px;
+        padding: 2px 8px;
         background-color: var(--success);
         color: white;
         border-radius: 12px;
-        font-weight: 500;
+        font-weight: 600;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+
+      .model-section-description {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        line-height: 1.5;
       }
 
       .model-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 0.75rem;
-        margin-bottom: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 8px;
+        margin-bottom: 0;
       }
 
       .model-card {
-        padding: 0.75rem;
-        border: 2px solid var(--border-color);
-        border-radius: 8px;
-        background-color: var(--bg-primary);
+        padding: 10px 12px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
         cursor: pointer;
-        transition: var(--transition);
-        text-align: center;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
 
       .model-card:hover {
-        border-color: var(--primary);
-        transform: translateY(-2px);
-        box-shadow: var(--card-shadow);
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .model-card:active {
+        transform: scale(0.98);
+        background-color: rgba(255, 255, 255, 0.1);
       }
 
       .model-card.selected {
-        border-color: var(--primary);
-        background-color: rgba(99, 102, 241, 0.1);
+        background-color: rgba(139, 139, 255, 0.2);
+        color: var(--primary);
+        border-color: transparent;
+      }
+
+      .model-card.selected:hover {
+        background-color: rgba(139, 139, 255, 0.3);
+        color: var(--primary);
       }
 
       .model-card-name {
-        font-size: 0.8125rem;
+        font-size: 12px;
         font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
+        color: inherit;
+        line-height: 1.4;
+        margin: 0;
       }
 
       .model-card-id {
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        word-break: break-all;
+        font-size: 11px;
+        color: inherit;
+        opacity: 0.7;
+        word-break: break-word;
+        line-height: 1.3;
+        font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+          Liberation Mono, monospace;
+        margin: 0;
       }
 
       .custom-model-section {
-        margin-top: 1.5rem;
-        padding-top: 1.5rem;
+        margin-top: 0;
+        padding-top: 20px;
         border-top: 1px solid var(--border-color);
+      }
+
+      .custom-model-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .custom-model-section-description {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        line-height: 1.5;
       }
 
       .custom-model-input-group {
         display: flex;
-        gap: 0.75rem;
-        margin-top: 0.75rem;
+        gap: 10px;
+        margin-top: 0;
       }
 
       .custom-model-input-wrapper {
@@ -214,14 +281,16 @@
 
       .custom-model-input {
         width: 100%;
-        padding: 0.625rem 2.5rem 0.625rem 0.875rem;
-        font-size: 0.8125rem;
+        padding: 10px 40px 10px 12px;
+        font-size: 13px;
         border: 1px solid var(--input-border);
-        border-radius: 6px;
+        border-radius: var(--border-radius);
         background-color: var(--input-bg);
         color: var(--text-primary);
         transition: var(--transition);
         height: 36px;
+        font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+          Liberation Mono, monospace;
       }
 
       .custom-model-input:focus {
@@ -275,97 +344,257 @@
       }
 
       .button {
-        padding: 0.625rem 1rem;
-        font-size: 0.8125rem;
+        padding: 10px 16px;
+        font-size: 13px;
         font-weight: 500;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--border-radius);
         cursor: pointer;
         transition: var(--transition);
         white-space: nowrap;
-        color: white !important;
         height: 36px;
-        min-width: 64px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        position: relative;
+      }
+
+      .button svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        stroke-width: 2;
+      }
+
+      .button span {
+        line-height: 1;
+      }
+
+      .validate-button {
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        min-width: 90px;
+        height: 36px;
+      }
+
+      .validate-button:hover:not(:disabled) {
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .validate-button:active:not(:disabled) {
+        transform: scale(0.98);
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .validate-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .validate-button.success {
+        background-color: rgba(81, 207, 102, 0.2);
+        color: var(--success);
+      }
+
+      .validate-button.success:hover:not(:disabled) {
+        background-color: rgba(81, 207, 102, 0.3);
+        color: var(--success);
       }
 
       .save-button {
-        background-color: var(--primary);
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        min-width: 100%;
+        border: none;
       }
 
       .save-button:hover:not(:disabled) {
-        background-color: var(--primary-hover);
+        background-color: rgba(139, 139, 255, 0.1);
+        color: var(--primary);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .save-button:active:not(:disabled) {
+        transform: translateY(0);
       }
 
       .save-button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
       }
 
       .back-button {
-        background-color: var(--bg-primary);
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color);
-        margin-top: 1rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background-color: transparent;
+        color: var(--text-secondary);
+        border: none;
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        min-width: auto;
       }
 
       .back-button:hover {
-        background-color: var(--bg-secondary);
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .back-button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .button-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .button-separator {
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 24px 0;
+        width: 100%;
+      }
+
+      .action-buttons-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .navigation-buttons-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
       }
 
       .footer {
         text-align: center;
-        padding: 1rem 0.75rem;
+        padding: 16px 12px;
         color: var(--text-secondary);
-        font-size: 0.8125rem;
+        font-size: 13px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
+        gap: 4px;
         flex-shrink: 0;
         background-color: var(--bg-primary);
         border-top: 1px solid var(--border-color);
       }
 
+      .footer-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
       .footer a {
-        color: var(--link-color);
+        color: var(--primary);
         text-decoration: none;
         font-weight: 500;
         transition: var(--transition);
       }
 
       .footer a:hover {
-        color: var(--link-hover);
+        color: var(--primary-hover);
       }
 
       .footer span {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        margin: 0 0.25rem;
+        margin: 0 4px;
       }
 
       .footer img {
         width: 14px;
         height: 14px;
+        background: transparent;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
       }
 
       @media (max-width: 400px) {
         .container {
-          padding: 1rem 0.5rem;
+          padding: 0;
         }
 
         .model-selection-container {
-          padding: 1.25rem;
+          padding: 20px 16px;
         }
 
         .model-grid {
           grid-template-columns: 1fr;
         }
       }
+
+      /* Scrollbar styling to match main UI */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+        border: 2px solid var(--bg-primary);
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--border-color) var(--bg-primary);
+      }
     </style>
   </head>
   <body>
     <div class="container">
+      <div class="header-section">
+        <button id="backButton" class="back-button">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M19 12H5M12 19l-7-7 7-7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          Back to Chat
+        </button>
+      </div>
       <div class="model-selection-container">
         <div class="model-selection-header">
           <img
@@ -413,14 +642,7 @@
             Free Models
             <span class="badge">Free</span>
           </div>
-          <p
-            style="
-              font-size: 0.75rem;
-              color: var(--text-secondary);
-              margin-bottom: 0.75rem;
-              line-height: 1.4;
-            "
-          >
+          <p class="model-section-description">
             Free models have daily rate limits enforced by OpenRouter. Usage
             resets daily.
           </p>
@@ -430,14 +652,8 @@
         </div>
 
         <div class="custom-model-section">
-          <div class="model-section-title">Custom Model</div>
-          <p
-            style="
-              font-size: 0.8125rem;
-              color: var(--text-secondary);
-              margin-bottom: 0.75rem;
-            "
-          >
+          <div class="custom-model-section-title">Custom Model</div>
+          <p class="custom-model-section-description">
             Enter a model ID from OpenRouter (e.g.,
             "google/gemini-2.0-flash-exp")
           </p>
@@ -510,42 +726,37 @@
             </div>
             <button
               id="validateCustomModel"
-              class="button save-button"
+              class="button validate-button"
               disabled
             >
-              Validate
+              <span>Validate</span>
             </button>
           </div>
         </div>
 
-        <button
-          id="saveModel"
-          class="button save-button"
-          style="width: 100%; margin-top: 1.5rem"
-          disabled
-        >
-          Save Model Selection
-        </button>
-
-        <button id="backButton" class="button back-button" style="width: 100%">
-          Back to Chat
-        </button>
+        <div class="action-buttons-group" style="margin-top: 24px">
+          <button id="saveModel" class="button save-button" disabled>
+            <span>Save Selection</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <div class="footer">
-      Made with
-      <span>
-        <img src="../../public/heart.png" alt="heart" height="16" width="16" />
-      </span>
-      by the
-      <a
-        href="https://github.com/magellan-extension/magellan"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Magellan Team
-      </a>
+      <div class="footer-content">
+        Made with
+        <span>
+          <img src="../../public/heart.png" alt="heart" />
+        </span>
+        by the
+        <a
+          href="https://github.com/magellan-extension/magellan"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Magellan Team
+        </a>
+      </div>
     </div>
 
     <script src="../js/api/openrouter.js"></script>

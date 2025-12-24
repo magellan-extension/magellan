@@ -57,7 +57,6 @@ export function initializeFileUpload() {
   const fileInput = document.getElementById("fileInput");
   const uploadButton = document.getElementById("uploadButton");
   const removeDocumentButton = document.getElementById("removeDocumentButton");
-  const errorToastClose = document.getElementById("errorToastClose");
 
   if (!fileInput || !uploadButton) {
     console.error("File upload elements not found");
@@ -79,11 +78,6 @@ export function initializeFileUpload() {
   // Remove document button click handler
   if (removeDocumentButton) {
     removeDocumentButton.addEventListener("click", removeCurrentFile);
-  }
-
-  // Error toast close button handler
-  if (errorToastClose) {
-    errorToastClose.addEventListener("click", hideErrorToast);
   }
 
   // Load existing file from storage
@@ -143,7 +137,7 @@ async function processFile(file) {
   } catch (error) {
     console.error("Error processing file:", error);
     showFileUploadError(
-      "Failed to process file. Ensure it is type PDF and please try again."
+      "Failed to process file. Ensure it is a supported file type and try again."
     );
   }
 }
@@ -396,12 +390,15 @@ function showFileUploadLoading() {
   const uploadButton = document.getElementById("uploadButton");
 
   if (uploadButton) {
-    // Show loading spinner on upload button
-    uploadButton.innerHTML = `
-      <div class="spinner" style="width: 12px; height: 12px; border-width: 1px;"></div>
-    `;
+    // Add uploading class and replace content with spinner
+    uploadButton.classList.add("uploading");
     uploadButton.disabled = true;
-    uploadButton.title = "Processing file...";
+
+    // Replace button content with spinner
+    uploadButton.innerHTML = `
+      <div class="upload-spinner"></div>
+      <div class="tooltip">Processing file...</div>
+    `;
   }
 }
 
@@ -412,10 +409,16 @@ function showFileUploadLoading() {
  */
 function showFileUploadError(message) {
   const uploadButton = document.getElementById("uploadButton");
-  const errorToast = document.getElementById("errorToast");
-  const errorToastMessage = document.getElementById("errorToastMessage");
+  let errorSnackbar = document.getElementById("errorSnackbar");
 
   if (uploadButton) {
+    // Remove uploading state
+    uploadButton.classList.remove("uploading");
+    const loadingOverlay = uploadButton.querySelector(".upload-spinner");
+    if (loadingOverlay) {
+      loadingOverlay.remove();
+    }
+
     // Reset upload button
     uploadButton.innerHTML = `
       <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -424,28 +427,42 @@ function showFileUploadError(message) {
       <div class="tooltip">Attach Document</div>
     `;
     uploadButton.disabled = false;
-    uploadButton.title = "Attach Document";
     uploadButton.classList.remove("has-file");
-
-    // Show error toast or notification
-    console.error("File upload error:", message);
   }
 
-  // Show error toast
-  if (errorToast && errorToastMessage) {
-    errorToastMessage.textContent = message;
-    errorToast.style.display = "flex";
-
-    // Trigger animation
-    setTimeout(() => {
-      errorToast.classList.add("show");
-    }, 10);
-
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      hideErrorToast();
-    }, 5000);
+  // Create error snackbar if it doesn't exist
+  if (!errorSnackbar) {
+    errorSnackbar = document.createElement("div");
+    errorSnackbar.id = "errorSnackbar";
+    errorSnackbar.className = "error-snackbar";
+    errorSnackbar.innerHTML = `
+      <div class="error-snackbar-content">
+        <svg class="error-snackbar-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+          <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <span class="error-snackbar-message"></span>
+      </div>
+    `;
+    document.body.appendChild(errorSnackbar);
   }
+
+  const messageEl = errorSnackbar.querySelector(".error-snackbar-message");
+  if (messageEl) {
+    messageEl.textContent = message;
+  }
+
+  // Show snackbar
+  errorSnackbar.style.display = "flex";
+  setTimeout(() => {
+    errorSnackbar.classList.add("show");
+  }, 10);
+
+  // Auto-hide after 5 seconds
+  setTimeout(() => {
+    hideErrorToast();
+  }, 5000);
 }
 
 /**
@@ -453,11 +470,11 @@ function showFileUploadError(message) {
  * @function
  */
 function hideErrorToast() {
-  const errorToast = document.getElementById("errorToast");
-  if (errorToast) {
-    errorToast.classList.remove("show");
+  const errorSnackbar = document.getElementById("errorSnackbar");
+  if (errorSnackbar) {
+    errorSnackbar.classList.remove("show");
     setTimeout(() => {
-      errorToast.style.display = "none";
+      errorSnackbar.style.display = "none";
     }, 300);
   }
 }
@@ -514,6 +531,13 @@ function updateFileUploadUI(file) {
   const uploadButton = document.getElementById("uploadButton");
 
   if (uploadButton) {
+    // Remove uploading state
+    uploadButton.classList.remove("uploading");
+    const loadingOverlay = uploadButton.querySelector(".upload-spinner");
+    if (loadingOverlay) {
+      loadingOverlay.remove();
+    }
+
     // Truncate file name to 10 characters
     const truncatedName =
       file.name.length > 10 ? file.name.substring(0, 10) + "..." : file.name;
@@ -531,7 +555,6 @@ function updateFileUploadUI(file) {
     `;
     uploadButton.disabled = false;
     uploadButton.classList.add("has-file");
-    uploadButton.title = `Remove ${file.name}`;
   }
 
   // Show success snackbar notification
@@ -546,6 +569,13 @@ function resetFileUploadUI() {
   const uploadButton = document.getElementById("uploadButton");
 
   if (uploadButton) {
+    // Remove uploading state
+    uploadButton.classList.remove("uploading");
+    const loadingOverlay = uploadButton.querySelector(".upload-spinner");
+    if (loadingOverlay) {
+      loadingOverlay.remove();
+    }
+
     // Reset upload button to original state
     // Restore icon-only class and remove compact class
     uploadButton.classList.remove("action-button-compact", "has-file");
@@ -557,7 +587,6 @@ function resetFileUploadUI() {
       <div class="tooltip">Attach Document</div>
     `;
     uploadButton.disabled = false;
-    uploadButton.title = "Attach Document";
   }
 }
 

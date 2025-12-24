@@ -227,4 +227,47 @@ document.getElementById("apiKeyInput").addEventListener("keydown", (e) => {
   }
 });
 
+// Continue button handler
+const continueButton = document.getElementById("continueButton");
+if (continueButton) {
+  continueButton.addEventListener("click", async () => {
+    // Check if API key is saved
+    const { [API_KEY_STORAGE_KEY]: apiKey } = await chrome.storage.local.get([
+      API_KEY_STORAGE_KEY,
+    ]);
+    
+    if (!apiKey) {
+      // If no API key, focus the input
+      const input = document.getElementById("apiKeyInput");
+      if (input) {
+        input.focus();
+      }
+      return;
+    }
+
+    // Check if this is part of the one-time setup flow
+    const {
+      [SETUP_COMPLETE_KEY]: setupComplete,
+      [WHATS_NEW_SEEN_KEY]: whatsNewSeen,
+    } = await chrome.storage.local.get([
+      SETUP_COMPLETE_KEY,
+      WHATS_NEW_SEEN_KEY,
+    ]);
+
+    let targetPage;
+    if (!setupComplete) {
+      // First time setup: go to model selection
+      targetPage = "model-selection.html";
+    } else if (!whatsNewSeen) {
+      // User hasn't seen what's new yet
+      targetPage = "whats-new.html";
+    } else {
+      // Setup complete, go to sidebar
+      targetPage = "sidebar.html";
+    }
+
+    window.location.href = targetPage;
+  });
+}
+
 document.addEventListener("DOMContentLoaded", initializeApiKey);

@@ -5,16 +5,18 @@
     <title>Magellan - API Key Setup</title>
     <style>
       :root {
-        /* Core colors - darker, sexier theme */
+        /* Core colors - darker theme */
         --primary: #8b8bff;
-        --primary-hover: #6b6bff;
+        --primary-dark: #6b6bff;
         --success: #51cf66;
         --error: #ff6b6b;
         --warning: #ffd43b;
         --border-radius: 8px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* Theme variables - darker, sexier */
+        /* Theme variables - darker */
         --bg-primary: #0f0f13;
         --bg-secondary: #1a1a24;
         --text-primary: #e8e8f0;
@@ -28,6 +30,7 @@
         --button-active: #5b5bff;
         --link-color: #8b8bff;
         --link-hover: #6b6bff;
+        --dropdown-hover: rgba(255, 255, 255, 0.06);
         --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
       }
 
@@ -43,6 +46,7 @@
         --input-focus-border: #8b8bff;
         --input-focus-ring: rgba(139, 139, 255, 0.15);
         --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        --dropdown-hover: #e8e8f0;
       }
 
       * {
@@ -52,7 +56,7 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
           "Helvetica Neue", Arial, sans-serif;
         background-color: var(--bg-primary);
         color: var(--text-primary);
@@ -66,106 +70,122 @@
       }
 
       .container {
-        width: 100%;
-        margin: 0 auto;
-        padding: 1.5rem 0.75rem;
-        flex: 1;
         display: flex;
         flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+        padding: 0;
+        max-width: 100%;
+        box-sizing: border-box;
         overflow-y: auto;
-        background-color: var(--bg-secondary);
+        overflow-x: hidden;
       }
 
-      .api-key-container {
-        padding: 1.5rem;
-        transition: var(--transition);
-        margin-top: 0;
+      .content {
+        padding: 24px 16px;
+        max-width: 640px;
+        margin: 0 auto;
         width: 100%;
         flex: 1;
-        display: flex;
-        flex-direction: column;
       }
 
       .api-key-header {
         text-align: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 32px;
       }
 
       .api-key-logo {
-        width: 48px;
-        height: 48px;
-        margin-bottom: 1rem;
-        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 16px;
+        border-radius: var(--border-radius);
+        display: block;
       }
 
       .api-key-title {
-        font-size: 1.25rem;
+        font-size: 20px;
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 0.375rem;
+        margin-bottom: 8px;
       }
 
       .api-key-subtitle {
-        font-size: 0.8125rem;
+        font-size: 13px;
         color: var(--text-secondary);
         max-width: 24rem;
         margin: 0 auto;
-        line-height: 1.4;
+        line-height: 1.5;
       }
 
       .api-key-link {
         display: inline-flex;
         align-items: center;
-        gap: 0.375rem;
-        color: var(--link-color);
+        gap: 8px;
+        color: var(--text-primary);
         text-decoration: none;
-        font-weight: 600;
-        font-size: 0.875rem;
-        padding: 0.5rem 0.875rem;
-        border-radius: 6px;
-        transition: var(--transition);
-        margin: 0.75rem 0;
-        background-color: var(--primary);
-        color: white !important;
+        font-weight: 500;
+        font-size: 13px;
+        padding: 10px 16px;
+        border-radius: var(--border-radius);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        margin: 16px 0 0;
+        background-color: var(--bg-secondary);
+        border: none;
       }
 
       .api-key-link:hover {
-        background-color: var(--primary-hover);
-        transform: translateY(-1px);
+        background-color: rgba(139, 139, 255, 0.1);
+        color: var(--primary);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .api-key-link svg {
-        transition: var(--transition);
         width: 14px;
         height: 14px;
       }
 
-      .api-key-link:hover svg {
-        transform: translate(2px, -2px);
-      }
-
-      .api-key-description {
-        font-size: 0.8125rem;
-        color: var(--text-secondary);
-        background-color: var(--bg-primary);
-        padding: 0.875rem;
-        border-radius: 8px;
-        margin: 1.25rem 0;
+      .info-card {
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius);
+        padding: 16px;
+        margin-bottom: 24px;
         border: 1px solid var(--border-color);
-        line-height: 1.4;
       }
 
-      .api-key-description strong {
+      .info-card-title {
+        font-size: 14px;
+        font-weight: 600;
         color: var(--text-primary);
+        margin-bottom: 8px;
+      }
+
+      .info-card-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+      }
+
+      .input-section {
+        margin-bottom: 24px;
+      }
+
+      .input-section-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
         display: block;
-        margin-bottom: 0.375rem;
-        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .api-key-input-group {
         display: flex;
-        gap: 1rem;
-        margin: 1.25rem 0;
+        gap: 12px;
         position: relative;
       }
 
@@ -182,7 +202,7 @@
         width: 16px;
         height: 16px;
         display: none;
-        transition: var(--transition);
+        transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .api-key-status-icon.visible {
@@ -199,14 +219,16 @@
 
       .api-key-input {
         width: 100%;
-        padding: 0.625rem 2.5rem 0.625rem 0.875rem;
-        font-size: 0.8125rem;
+        padding: 10px 40px 10px 12px;
+        font-size: 13px;
         border: 1px solid var(--input-border);
-        border-radius: 6px;
+        border-radius: var(--border-radius);
         background-color: var(--input-bg);
         color: var(--text-primary);
-        transition: var(--transition);
+        transition: border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         height: 36px;
+        font-family: monospace;
       }
 
       .api-key-input:focus {
@@ -223,94 +245,100 @@
         border-color: var(--success);
       }
 
-      .button {
-        padding: 0.625rem 0.75rem;
-        font-size: 0.8125rem;
+      .save-button {
+        padding: 10px 16px;
+        font-size: 13px;
         font-weight: 500;
         border: none;
-        border-radius: 6px;
+        border-radius: var(--border-radius);
         cursor: pointer;
-        transition: var(--transition);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
-        color: white !important;
+        color: var(--text-primary);
         height: 36px;
-        min-width: auto;
-      }
-
-      .save-button {
-        background-color: var(--primary);
-      }
-
-      .save-button:hover {
-        background-color: var(--primary-hover);
-      }
-
-      .back-button {
-        background-color: var(--bg-primary);
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color);
-      }
-
-      .back-button:hover {
         background-color: var(--bg-secondary);
       }
 
+      .save-button:hover:not(:disabled) {
+        background-color: rgba(139, 139, 255, 0.1);
+        color: var(--primary);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .save-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       .footer {
-        text-align: center;
-        padding: 1rem 0.75rem;
-        color: var(--text-secondary);
-        font-size: 0.8125rem;
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+
+      .continue-button {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
-        flex-shrink: 0;
-        background-color: var(--bg-primary);
-        border-top: 1px solid var(--border-color);
+        gap: 8px;
       }
 
-      .footer a {
-        color: var(--link-color);
-        text-decoration: none;
-        font-weight: 500;
-        transition: var(--transition);
+      .continue-button:hover {
+        background-color: rgba(139, 139, 255, 0.1);
+        color: var(--primary);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      .footer a:hover {
-        color: var(--link-hover);
+      .continue-button svg {
+        width: 16px;
+        height: 16px;
       }
 
-      .footer span {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 0.25rem;
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
       }
 
-      .footer img {
-        width: 14px;
-        height: 14px;
+      ::-webkit-scrollbar-track {
+        background: var(--bg-primary);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #2a2a3a;
+        border-radius: 4px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #3a3a4a;
       }
 
       @media (max-width: 400px) {
-        .container {
-          padding: 1rem 0.5rem;
-        }
-
-        .api-key-container {
-          padding: 1.25rem;
+        .content {
+          padding: 20px 12px;
         }
 
         .api-key-input-group {
           flex-direction: column;
-          gap: 0.75rem;
+          gap: 12px;
         }
 
-        .button {
-          width: 100%;
-        }
-
-        .api-key-input {
+        .save-button {
           width: 100%;
         }
       }
@@ -318,7 +346,7 @@
   </head>
   <body>
     <div class="container">
-      <div class="api-key-container">
+      <div class="content">
         <div class="api-key-header">
           <img
             src="../../public/logo.png"
@@ -355,69 +383,78 @@
           </a>
         </div>
 
-        <div class="api-key-description">
-          <strong>Privacy Notice</strong>
-          Your API key is stored securely in your browser. However, please note
-          that the AI models you use may store and process the content you
-          search. Be cautious about which pages you run the extension on,
-          especially with sensitive or private information.
+        <div class="info-card">
+          <div class="info-card-title">Privacy Notice</div>
+          <div class="info-card-text">
+            Your API key is stored securely in your browser. However, please
+            note that the AI models you use may store and process the content
+            you search. Be cautious about which pages you run the extension on,
+            especially with sensitive or private information.
+          </div>
         </div>
 
-        <div class="api-key-input-group">
-          <div class="api-key-input-wrapper">
-            <input
-              type="password"
-              id="apiKeyInput"
-              class="api-key-input"
-              placeholder="Enter your OpenRouter API key"
-            />
-            <svg
-              class="api-key-status-icon success"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M20 6L9 17L4 12"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+        <div class="input-section">
+          <label for="apiKeyInput" class="input-section-label">API Key</label>
+          <div class="api-key-input-group">
+            <div class="api-key-input-wrapper">
+              <input
+                type="password"
+                id="apiKeyInput"
+                class="api-key-input"
+                placeholder="Enter your OpenRouter API key"
               />
-            </svg>
-            <svg
-              class="api-key-status-icon error"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M18 6L6 18M6 6L18 18"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+              <svg
+                class="api-key-status-icon success"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <svg
+                class="api-key-status-icon error"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M18 6L6 18M6 6L18 18"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+            <button id="saveApiKey" class="save-button">Save</button>
           </div>
-          <button id="saveApiKey" class="button save-button">Save</button>
+        </div>
+
+        <div class="footer">
+          <button id="continueButton" class="continue-button">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12H19M19 12L12 5M19 12L12 19"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Continue
+          </button>
         </div>
       </div>
-    </div>
-
-    <div class="footer">
-      Made with
-      <span>
-        <img src="../../public/heart.png" alt="heart" height="16" width="16" />
-      </span>
-      by the
-      <a
-        href="https://github.com/magellan-extension/magellan"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Magellan Team
-      </a>
     </div>
 
     <script src="../js/api/openrouter.js"></script>

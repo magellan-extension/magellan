@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Magellan - Your AI Super Assistant",
+  "name": "Magellan - Your AI Superpower",
   "version": "2.0.0",
   "description": "Your AI superpower. Ask questions, analyze documents, and get instant answers with citations.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],

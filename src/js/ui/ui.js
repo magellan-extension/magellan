@@ -26,6 +26,7 @@ import {
 } from "../search/contentScript.js";
 import { performLLMSearch } from "../search/search.js";
 import { currentActiveTabId, ai } from "./sidebar.js";
+import { handleSearch } from "../search/search.js";
 
 /**
  * @typedef {Object} ChatMessage
@@ -217,8 +218,8 @@ async function typeMessage(contentDiv, fullContent, speed = 15) {
       return;
     }
 
-    // Determine chunk size (3-5 characters)
-    const chunkSize = 3 + Math.floor(Math.random() * 3); // Random between 3-5
+    // Determine chunk size (3-10 characters)
+    const chunkSize = 3 + Math.floor(Math.random() * 8); // Random between 3-10
     const remainingLength = totalLength - currentIndex;
     const actualChunkSize = Math.min(chunkSize, remainingLength);
 
@@ -284,6 +285,12 @@ function renderChatLog(chatHistory, currentStatus) {
   const chatLogContainer = document.getElementById("chatLogContainer");
   if (!chatLogContainer) return;
   chatLogContainer.innerHTML = "";
+
+  // Show suggestions if chat is empty
+  if (chatHistory.length === 0) {
+    renderChatSuggestions(chatLogContainer);
+    return;
+  }
 
   chatHistory.forEach((msg, index) => {
     const messageDiv = document.createElement("div");
@@ -361,17 +368,8 @@ function renderChatLog(chatHistory, currentStatus) {
 
     messageDiv.appendChild(contentDiv);
 
-    // Add separator and action buttons for all assistant messages
+    // Add action buttons for all assistant messages
     if (msg.role === "assistant") {
-      // Create separator container
-      const separatorContainer = document.createElement("div");
-      separatorContainer.className = "message-separator-container";
-
-      // Add separator
-      const separator = document.createElement("div");
-      separator.className = "message-separator";
-      separatorContainer.appendChild(separator);
-
       // Create action row with gen knowledge button and icons
       const actionRow = document.createElement("div");
       actionRow.className = "message-action-row";
@@ -466,7 +464,18 @@ function renderChatLog(chatHistory, currentStatus) {
       const buttonContainer = document.createElement("div");
       buttonContainer.className = "message-action-buttons";
 
-      // Add citations button first if message has citations
+      // Add copy button first
+      const copyButton = document.createElement("button");
+      copyButton.className = "copy-message-button";
+      copyButton.title = "Copy";
+      copyButton.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+
+      // Add citations button second if message has citations
       if (msg.citations && msg.citations.length > 0) {
         const citationsButton = document.createElement("button");
         citationsButton.className = "citations-message-button";
@@ -522,18 +531,11 @@ function renderChatLog(chatHistory, currentStatus) {
           }
         });
 
+        buttonContainer.appendChild(copyButton);
         buttonContainer.appendChild(citationsButton);
+      } else {
+        buttonContainer.appendChild(copyButton);
       }
-
-      const copyButton = document.createElement("button");
-      copyButton.className = "copy-message-button";
-      copyButton.title = "Copy";
-      copyButton.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      `;
 
       // Store original HTML for restoration
       const originalHTML = copyButton.innerHTML;
@@ -567,11 +569,9 @@ function renderChatLog(chatHistory, currentStatus) {
         }
       });
 
-      buttonContainer.appendChild(copyButton);
       actionRow.appendChild(buttonContainer);
-      separatorContainer.appendChild(actionRow);
 
-      messageDiv.appendChild(separatorContainer);
+      messageDiv.appendChild(actionRow);
     }
 
     if (msg.role === "assistant" && msg.citations && msg.citations.length > 0) {
@@ -600,6 +600,56 @@ function renderChatLog(chatHistory, currentStatus) {
       refocusSearchInput();
     }
   }
+}
+
+/**
+ * Renders suggestion questions in the chat container
+ * @function
+ * @param {HTMLElement} container - The chat log container element
+ */
+function renderChatSuggestions(container) {
+  const suggestionsContainer = document.createElement("div");
+  suggestionsContainer.className = "chat-suggestions-container";
+  suggestionsContainer.id = "chatSuggestionsContainer";
+
+  const title = document.createElement("div");
+  title.className = "chat-suggestions-title";
+  title.textContent = "Try asking:";
+  suggestionsContainer.appendChild(title);
+
+  const questionsContainer = document.createElement("div");
+  questionsContainer.className = "suggestion-questions";
+
+  // Pool of suggestion questions - mix of page-specific and general questions
+  const SUGGESTION_QUESTIONS = [
+    "What is this page about in simple terms?",
+    "Explain this page to me like I'm 5 years old.",
+    "What are important details of this page?",
+    "Draft an email to my boss.",
+    "Who was the explorer Magellan?",
+    "How does quantum computing work?",
+  ];
+
+  // Shuffle and pick 3 questions
+  const shuffled = [...SUGGESTION_QUESTIONS].sort(() => Math.random() - 0.5);
+  const selectedQuestions = shuffled.slice(0, 3);
+
+  selectedQuestions.forEach((question) => {
+    const suggestionButton = document.createElement("button");
+    suggestionButton.className = "suggestion-question";
+    suggestionButton.textContent = question;
+    suggestionButton.addEventListener("click", () => {
+      const searchQueryEl = document.getElementById("searchQuery");
+      if (searchQueryEl) {
+        searchQueryEl.value = question;
+        handleSearch();
+      }
+    });
+    questionsContainer.appendChild(suggestionButton);
+  });
+
+  suggestionsContainer.appendChild(questionsContainer);
+  container.appendChild(suggestionsContainer);
 }
 
 /**

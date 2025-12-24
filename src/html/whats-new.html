@@ -5,7 +5,7 @@
     <title>What's New - Magellan</title>
     <style>
       :root {
-        /* Core colors - darker, sexier theme */
+        /* Core colors - darker theme */
         --primary: #8b8bff;
         --primary-dark: #6b6bff;
         --error: #ff6b6b;
@@ -15,9 +15,11 @@
         --warning: #ffd43b;
         --warning-bg: rgba(255, 212, 59, 0.1);
         --border-radius: 8px;
-        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-        /* Theme-specific variables - darker, sexier */
+        /* Theme-specific variables - darker */
         --bg-primary: #0f0f13;
         --bg-secondary: #1a1a24;
         --text-primary: #e8e8f0;
@@ -165,17 +167,17 @@
         background-color: var(--bg-secondary);
         border-radius: var(--border-radius);
         margin-bottom: 10px;
-        border: 1px solid var(--border-color);
-        transition: var(--transition);
+        border: none;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-sizing: border-box;
         max-width: 100%;
         word-wrap: break-word;
       }
 
       .feature-item:hover {
-        border-color: var(--primary);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(139, 139, 255, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
 
       .feature-icon {
@@ -223,6 +225,7 @@
         margin-bottom: 20px;
         padding: 12px 16px;
         color: var(--text-primary);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
       }
 
       .highlight-box p {
@@ -275,14 +278,14 @@
       .button {
         width: 100%;
         padding: 12px 16px;
-        background-color: var(--primary);
-        color: white;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
         border: none;
         border-radius: var(--border-radius);
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 500;
         cursor: pointer;
-        transition: var(--transition);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -290,8 +293,11 @@
       }
 
       .button:hover {
-        background-color: var(--primary-dark);
-        transform: translateY(-1px);
+        background-color: rgba(139, 139, 255, 0.1);
+        color: var(--primary);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .button svg {
@@ -393,7 +399,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            v2.0.0 — Major Update
+            v2.0.0 - Major Update
           </div>
           <div class="update-description">
             We've completely redesigned Magellan with a modern, seamless
