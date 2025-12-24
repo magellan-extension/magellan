@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Magellan - Your AI Super Assistant",
   "version": "2.0.0",
-  "description": "The all-purpose AI assistant that does everything. Ask questions, analyze documents, research topics, get instant answers with citations, and unlock unlimited AI capabilities.",
+  "description": "Your AI superpower. Ask questions, analyze documents, and get instant answers with citations.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
   "background": {
     "service_worker": "src/js/core/background.js"
