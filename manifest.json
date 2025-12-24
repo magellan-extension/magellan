@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Magellan AI: Free Knowledge Assistant for Any Webpage",
+  "name": "Magellan - Your AI Super Assistant",
   "version": "2.0.0",
-  "description": "Your free all-in-one AI tool for searching, summarizing, and answering questions from any webpage or uploaded document.",
+  "description": "The all-purpose AI assistant that does everything. Ask questions, analyze documents, research topics, get instant answers with citations, and unlock unlimited AI capabilities.",
   "permissions": ["activeTab", "scripting", "sidePanel", "storage"],
   "background": {
     "service_worker": "src/js/core/background.js"

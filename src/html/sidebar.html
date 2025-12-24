@@ -310,6 +310,8 @@
         flex-direction: column;
         flex: 1;
         min-height: 0;
+        position: relative;
+        overflow: hidden;
       }
 
       .tabs-header {
@@ -319,6 +321,8 @@
         padding: 0;
         background-color: var(--bg-primary);
         width: 100%;
+        flex-shrink: 0;
+        z-index: 10;
       }
 
       .tab-button {
@@ -351,10 +355,21 @@
         min-height: 0;
         display: none;
         flex-direction: column;
+        opacity: 0;
+        transform: translateX(30px);
+        transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .tab-content.active {
         display: flex;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .tab-content.sliding-out {
+        display: flex;
+        transform: translateX(-30px);
       }
 
       .chat-log-container {
@@ -549,6 +564,51 @@
         padding-left: 20px;
       }
 
+      .copy-message-button {
+        position: absolute;
+        bottom: -12px;
+        right: 0;
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-secondary);
+        color: var(--text-secondary);
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        flex-shrink: 0;
+        opacity: 0;
+        z-index: 10;
+        box-sizing: border-box;
+      }
+
+      .assistant-message:hover .copy-message-button {
+        opacity: 1;
+      }
+
+      .copy-message-button:hover {
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
+      }
+
+      .copy-message-button:active {
+        transform: scale(0.98);
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .copy-message-button svg {
+        width: 14px;
+        height: 14px;
+        flex-shrink: 0;
+        stroke-width: 2;
+      }
+
       /* Subtle source indicator for page context - show for all non-general-knowledge messages */
       .assistant-message:not(.general-knowledge):not(.error-message)::before {
         content: "";
@@ -605,6 +665,7 @@
         opacity: 0.8;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        padding-right: 32px;
       }
 
       .assistant-message:not(.general-knowledge):hover::before {
@@ -719,6 +780,97 @@
         padding: 16px;
         margin-top: 0;
         background-color: var(--bg-primary);
+        position: relative;
+        transition: var(--transition);
+      }
+
+      .input-section.collapsed {
+        padding: 4px 8px;
+      }
+
+      .search-bar-actions {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 8px;
+        gap: 8px;
+        overflow: visible;
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        max-height: 200px;
+        opacity: 1;
+      }
+
+      .input-section.collapsed .search-bar-actions {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+        pointer-events: none;
+      }
+
+      .search-bar-actions-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        min-width: 0;
+        row-gap: 8px;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .search-bar-actions-right {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        margin-left: auto;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+          transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .input-section.collapsed .search-bar-actions-left {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      .input-section.collapsed .search-bar-actions-right {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+
+      .collapse-caret {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: 4px;
+        transition: var(--transition);
+        z-index: 10;
+        padding: 0;
+      }
+
+      .collapse-caret:hover {
+        color: var(--text-primary);
+        background-color: var(--dropdown-hover);
+      }
+
+      .collapse-caret svg {
+        width: 16px;
+        height: 16px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .input-section.collapsed .collapse-caret svg {
+        transform: rotate(180deg);
       }
 
       /* Real-time search toggle */
@@ -726,12 +878,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
         background-color: var(--bg-secondary);
         color: var(--text-secondary);
         border: 1px solid transparent;
         border-radius: 6px;
-        padding: 6px 10px;
+        padding: 6px;
         font-size: 12px;
         font-weight: 500;
         cursor: pointer;
@@ -740,6 +891,7 @@
         position: relative;
         white-space: nowrap;
         height: 28px;
+        width: 28px;
         box-sizing: border-box;
       }
 
@@ -749,13 +901,13 @@
       }
 
       .realtime-toggle.active {
-        background-color: var(--dropdown-hover);
-        color: var(--text-primary);
+        background-color: rgba(139, 139, 255, 0.2);
+        color: var(--primary);
       }
 
       .realtime-toggle.active:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
+        background-color: rgba(139, 139, 255, 0.3);
+        color: var(--primary);
       }
 
       .realtime-toggle svg {
@@ -765,11 +917,15 @@
         stroke-width: 2;
       }
 
+      .realtime-toggle {
+        position: relative;
+      }
+
       .realtime-toggle .tooltip {
         position: absolute;
         bottom: calc(100% + 8px);
-        left: 0;
-        transform: translateX(0);
+        left: 50%;
+        transform: translateX(calc(-50% - 8px));
         background-color: var(--bg-primary);
         color: var(--text-primary);
         padding: 4px 8px;
@@ -778,7 +934,7 @@
         white-space: nowrap;
         border: 1px solid var(--border-color);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
+        z-index: 10000;
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -807,8 +963,12 @@
         transition: var(--transition);
       }
 
-      .search-bar-actions-right {
-        position: relative;
+      .search-bar-actions-row {
+        overflow: visible;
+      }
+
+      .search-bar-actions-left {
+        overflow: visible;
       }
 
       .input-container:focus-within {
@@ -834,7 +994,7 @@
         color: var(--text-primary);
         font-size: 14px;
         font-family: inherit;
-        padding: 8px 0;
+        padding: 8px 40px 8px 0;
         outline: none;
         border-radius: 0;
         line-height: 1.5;
@@ -845,37 +1005,13 @@
         opacity: 0.6;
       }
 
-      .search-bar-actions {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        margin-top: 8px;
-        gap: 8px;
-      }
-
       .search-bar-actions-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
+        gap: 10px;
         width: 100%;
         flex-wrap: wrap;
-      }
-
-      .search-bar-actions-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        flex: 1;
-        min-width: 0;
-        row-gap: 8px;
-      }
-
-      .search-bar-actions-right {
-        display: flex;
-        align-items: center;
-        flex-shrink: 0;
       }
 
       /* Action Button Styles */
@@ -924,13 +1060,25 @@
         width: auto;
         min-width: 28px;
         padding: 6px 10px;
-        background-color: var(--dropdown-hover);
-        color: var(--text-primary);
+        background-color: rgba(139, 139, 255, 0.2);
+        color: var(--primary);
       }
 
       .action-button.has-file:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        color: var(--text-primary);
+        background-color: rgba(139, 139, 255, 0.3);
+        color: var(--primary);
+      }
+
+      .action-button.active,
+      .action-button[data-active="true"] {
+        background-color: rgba(139, 139, 255, 0.2);
+        color: var(--primary);
+      }
+
+      .action-button.active:hover,
+      .action-button[data-active="true"]:hover {
+        background-color: rgba(139, 139, 255, 0.3);
+        color: var(--primary);
       }
 
       .action-button svg {
@@ -945,11 +1093,15 @@
         line-height: 1;
       }
 
+      .action-button {
+        position: relative;
+      }
+
       .action-button .tooltip {
         position: absolute;
         bottom: calc(100% + 8px);
         left: 50%;
-        transform: translateX(-50%);
+        transform: translateX(calc(-50% - 8px));
         background-color: var(--bg-primary);
         color: var(--text-primary);
         padding: 4px 8px;
@@ -958,7 +1110,7 @@
         white-space: nowrap;
         border: 1px solid var(--border-color);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        z-index: 1000;
+        z-index: 10000;
         opacity: 0;
         visibility: hidden;
         transition: opacity 0.15s ease, visibility 0.15s ease;
@@ -967,13 +1119,8 @@
         max-width: 200px;
       }
 
-      /* Prevent tooltip cutoff on left edge - adjust for first few buttons */
+      /* Prevent tooltip cutoff on left edge - only for attach document button */
       .action-button:first-child .tooltip {
-        left: 0;
-        transform: translateX(0);
-      }
-
-      .action-button:nth-child(2) .tooltip {
         left: 0;
         transform: translateX(0);
       }
@@ -994,12 +1141,12 @@
       }
 
       #searchButton {
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 10px;
-        width: 36px;
-        height: 36px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid transparent;
+        border-radius: 6px;
+        width: 28px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1007,34 +1154,60 @@
         transition: var(--transition);
         padding: 0;
         flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(139, 139, 255, 0.4);
+        box-shadow: none;
         position: relative;
       }
 
       #searchButton:hover:not(:disabled) {
-        background: var(--primary-dark);
-        transform: scale(1.05);
-        box-shadow: 0 6px 16px rgba(139, 139, 255, 0.5);
+        background-color: var(--dropdown-hover);
+        color: var(--text-primary);
       }
 
       #searchButton:active:not(:disabled) {
         transform: scale(0.98);
-        box-shadow: 0 2px 8px rgba(139, 139, 255, 0.4);
       }
 
       #searchButton:disabled {
         opacity: 0.5;
         cursor: not-allowed;
         transform: none;
-        box-shadow: none;
       }
 
       #searchButton svg {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         position: relative;
         z-index: 1;
-        stroke-width: 2.5;
+        stroke-width: 2;
+      }
+
+      #searchButton {
+        position: relative;
+      }
+
+      #searchButton .tooltip {
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(calc(-50% - 8px));
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.15s ease, visibility 0.15s ease;
+        pointer-events: none;
+      }
+
+      #searchButton:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
       }
 
       #searchButton.loading .spinner {
@@ -1227,6 +1400,15 @@
         border-radius: var(--border-radius);
         cursor: pointer;
         transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .nav-button svg {
+        width: 16px;
+        height: 16px;
+        stroke-width: 2;
       }
 
       .nav-button:not(:disabled):hover {
@@ -1820,7 +2002,7 @@
           <div class="title">Magellan</div>
         </div>
         <div class="settings-icon-wrapper">
-          <button id="settingsButton" class="settings-icon" title="Settings">
+          <button id="settingsButton" class="settings-icon">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -1947,22 +2129,6 @@
                 </label>
               </div>
               <div class="settings-dropdown-divider"></div>
-              <div class="settings-dropdown-item" id="clearChatDropdownItem">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-                Clear Chat
-              </div>
               <div class="settings-dropdown-item" id="whatsNewDropdownItem">
                 <svg
                   viewBox="0 0 24 24"
@@ -1979,6 +2145,29 @@
                 </svg>
                 What's New
               </div>
+              <div class="settings-dropdown-item" id="helpDropdownItem">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Help & Features
+              </div>
               <div class="settings-dropdown-item" id="changeApiKeyDropdownItem">
                 <svg
                   viewBox="0 0 24 24"
@@ -1994,6 +2183,23 @@
                   />
                 </svg>
                 Change API Key
+              </div>
+              <div class="settings-dropdown-divider"></div>
+              <div class="settings-dropdown-item" id="clearChatDropdownItem">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Clear Chat
               </div>
             </div>
           </button>
@@ -2101,24 +2307,68 @@
 
         <div class="tab-content" id="citationsTabContent">
           <div class="citations-tab-container">
-            <div id="citationsContainer" class="citations-container"></div>
             <div
               class="button-group"
               id="citationNavButtons"
-              style="margin-top: 12px"
+              style="margin-bottom: 12px"
             >
               <button id="prevMatch" class="nav-button" disabled>
-                Previous Citation
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M15 18l-6-6 6-6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </button>
               <button id="nextMatch" class="nav-button" disabled>
-                Next Citation
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9 18l6-6-6-6"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
               </button>
             </div>
+            <div id="citationsContainer" class="citations-container"></div>
           </div>
         </div>
       </div>
 
-      <div class="input-section">
+      <div class="input-section" id="inputSection">
+        <button
+          class="collapse-caret"
+          id="collapseCaret"
+          type="button"
+          title="Collapse/Expand buttons"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6 9L12 15L18 9"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
         <input
           type="file"
           id="fileInput"
@@ -2140,7 +2390,6 @@
                   id="uploadButton"
                   class="action-button action-button-icon-only"
                   type="button"
-                  title="Attach Document"
                 >
                   <svg
                     viewBox="0 0 24 24"
@@ -2159,7 +2408,7 @@
                 </button>
                 <button
                   id="searchModeButton"
-                  class="action-button action-button-compact"
+                  class="action-button action-button-icon-only"
                   type="button"
                 >
                   <svg
@@ -2182,14 +2431,13 @@
                       stroke-linejoin="round"
                     />
                   </svg>
-                  <span id="searchModeButtonText">Blended</span>
                   <div class="tooltip" id="searchModeTooltip">
                     Search Mode: Blended
                   </div>
                 </button>
                 <button
                   id="modelSelectButton"
-                  class="action-button action-button-compact"
+                  class="action-button action-button-icon-only"
                   type="button"
                 >
                   <svg
@@ -2205,8 +2453,9 @@
                       stroke-linejoin="round"
                     />
                   </svg>
-                  <span id="modelSelectButtonText">Gemini</span>
-                  <div class="tooltip">Change AI Model</div>
+                  <div class="tooltip" id="modelSelectTooltip">
+                    Change AI Model
+                  </div>
                 </button>
                 <button
                   id="realtimeToggle"
@@ -2232,8 +2481,7 @@
                       stroke-linecap="round"
                     />
                   </svg>
-                  <span>Real-time</span>
-                  <div class="tooltip">Searches the web for addtional cost</div>
+                  <div class="tooltip">Real-time Search</div>
                 </button>
               </div>
               <div class="search-bar-actions-right">
@@ -2247,16 +2495,9 @@
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     <path
-                      d="M22 2L11 13"
+                      d="M9 18l6-6-6-6"
                       stroke="currentColor"
-                      stroke-width="2.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M22 2L15 22L11 13L2 9L22 2Z"
-                      stroke="currentColor"
-                      stroke-width="2.5"
+                      stroke-width="2"
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     />

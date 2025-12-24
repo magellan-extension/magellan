@@ -304,6 +304,33 @@ document.addEventListener("DOMContentLoaded", async () => {
   const prevMatchButton = document.getElementById("prevMatch");
   const highlightsToggle = document.getElementById("highlightsToggle");
 
+  // Input section collapse/expand functionality
+  const inputSection = document.getElementById("inputSection");
+  const collapseCaret = document.getElementById("collapseCaret");
+  const INPUT_SECTION_COLLAPSED_KEY = "magellan_input_section_collapsed";
+
+  // Initialize collapse state from storage
+  chrome.storage.local.get([INPUT_SECTION_COLLAPSED_KEY], (result) => {
+    const isCollapsed = result[INPUT_SECTION_COLLAPSED_KEY] === true;
+    if (isCollapsed && inputSection) {
+      inputSection.classList.add("collapsed");
+    }
+  });
+
+  // Handle collapse caret click
+  if (collapseCaret && inputSection) {
+    collapseCaret.addEventListener("click", () => {
+      const isCollapsed = inputSection.classList.contains("collapsed");
+      if (isCollapsed) {
+        inputSection.classList.remove("collapsed");
+        chrome.storage.local.set({ [INPUT_SECTION_COLLAPSED_KEY]: false });
+      } else {
+        inputSection.classList.add("collapsed");
+        chrome.storage.local.set({ [INPUT_SECTION_COLLAPSED_KEY]: true });
+      }
+    });
+  }
+
   // --- Settings Dropdown Elements ---
   const settingsButton = document.getElementById("settingsButton");
   const settingsDropdown = document.getElementById("settingsDropdown");
@@ -363,10 +390,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   /**
-   * Updates the search mode button text and tooltip
+   * Updates the search mode button text, tooltip, and icon
    * @function
    * @param {string} mode - The current search mode ('page', 'blended', 'general')
-   * @description Updates the search mode button text and tooltip to reflect the current mode.
+   * @description Updates the search mode button text, tooltip, and icon to reflect the current mode.
    */
   function updateSearchModeButtonText(mode) {
     const searchModeButton = document.getElementById("searchModeButton");
@@ -374,27 +401,48 @@ document.addEventListener("DOMContentLoaded", async () => {
       const modeConfig = {
         page: {
           label: "Page",
-          tooltip: "Search only within the current page/document",
+          tooltip: "Page Context",
+          icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>`,
         },
         blended: {
           label: "Blended",
-          tooltip: "Search page/document first, then general knowledge",
+          tooltip: "Blended Search",
+          icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="18" cy="6" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>`,
         },
         general: {
           label: "General",
-          tooltip: "Use only general knowledge",
+          tooltip: "General Knowledge",
+          icon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2"/>
+          </svg>`,
         },
       };
 
       const config = modeConfig[mode] || modeConfig.blended;
       const span = document.getElementById("searchModeButtonText");
       const tooltip = document.getElementById("searchModeTooltip");
+      const svg = searchModeButton.querySelector("svg");
 
       if (span) {
         span.textContent = config.label;
       }
       if (tooltip) {
         tooltip.textContent = config.tooltip;
+      }
+      if (svg && config.icon) {
+        svg.outerHTML = config.icon;
       }
     }
   }
@@ -557,6 +605,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  const helpDropdownItem = document.getElementById("helpDropdownItem");
+  if (helpDropdownItem) {
+    helpDropdownItem.addEventListener("click", () => {
+      window.location.href = "../html/help.html";
+      closeSettingsDropdown();
+    });
+  }
+
   if (changeApiKeyDropdownItem) {
     changeApiKeyDropdownItem.addEventListener("click", async () => {
       // Save chat history before navigating
@@ -583,20 +639,47 @@ document.addEventListener("DOMContentLoaded", async () => {
   const citationsTabContent = document.getElementById("citationsTabContent");
 
   function switchTab(tabName) {
+    const wasChat = chatTabContent.classList.contains("active");
+    const isChat = tabName === "chat";
+
+    // Determine slide direction
+    const slideDirection = isChat ? -1 : 1;
+
     // Update tab buttons
     if (tabName === "chat") {
       chatTab.classList.add("active");
       citationsTab.classList.remove("active");
-      chatTabContent.classList.add("active");
-      citationsTabContent.classList.remove("active");
+
+      // Animate out citations tab
+      if (citationsTabContent.classList.contains("active")) {
+        citationsTabContent.classList.add("sliding-out");
+        setTimeout(() => {
+          citationsTabContent.classList.remove("active", "sliding-out");
+          chatTabContent.classList.add("active");
+        }, 50);
+      } else {
+        chatTabContent.classList.add("active");
+        citationsTabContent.classList.remove("active");
+      }
     } else if (tabName === "citations") {
       citationsTab.classList.add("active");
       chatTab.classList.remove("active");
-      citationsTabContent.classList.add("active");
-      chatTabContent.classList.remove("active");
 
-      // Re-render UI to update citations when switching to citations tab
-      renderPopupUI();
+      // Animate out chat tab
+      if (chatTabContent.classList.contains("active")) {
+        chatTabContent.classList.add("sliding-out");
+        setTimeout(() => {
+          chatTabContent.classList.remove("active", "sliding-out");
+          citationsTabContent.classList.add("active");
+          // Re-render UI to update citations when switching to citations tab
+          renderPopupUI();
+        }, 50);
+      } else {
+        citationsTabContent.classList.add("active");
+        chatTabContent.classList.remove("active");
+        // Re-render UI to update citations when switching to citations tab
+        renderPopupUI();
+      }
     }
   }
 
@@ -648,9 +731,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Model selection button
   const modelSelectButton = document.getElementById("modelSelectButton");
-  const modelSelectButtonText = document.getElementById(
-    "modelSelectButtonText"
-  );
+  const modelSelectTooltip = document.getElementById("modelSelectTooltip");
 
   /**
    * Gets a friendly display name for a model ID
@@ -689,15 +770,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     return friendlyProvider;
   }
 
-  // Update model button text based on selected model
+  // Update model button tooltip based on selected model
   function updateModelButtonText() {
     chrome.storage.local.get([MODEL_STORAGE_KEY], (result) => {
       const savedModel =
         result[MODEL_STORAGE_KEY] || "google/gemini-2.0-flash-exp";
       // Extract a friendly name from the model ID
       const modelName = getModelDisplayName(savedModel);
-      if (modelSelectButtonText) {
-        modelSelectButtonText.textContent = modelName;
+      if (modelSelectTooltip) {
+        modelSelectTooltip.textContent = modelName;
       }
     });
   }

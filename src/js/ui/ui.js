@@ -195,7 +195,7 @@ async function typeMessage(contentDiv, fullContent, speed = 15) {
     }
   }, 10000);
 
-  const typeNextCharacter = () => {
+  const typeNextChunk = () => {
     if (finished) return;
     if (currentIndex >= totalLength) {
       finished = true;
@@ -217,12 +217,21 @@ async function typeMessage(contentDiv, fullContent, speed = 15) {
       return;
     }
 
-    const char = fullContent[currentIndex];
+    // Determine chunk size (3-5 characters)
+    const chunkSize = 3 + Math.floor(Math.random() * 3); // Random between 3-5
+    const remainingLength = totalLength - currentIndex;
+    const actualChunkSize = Math.min(chunkSize, remainingLength);
+
+    // Get the chunk of text
+    const chunk = fullContent.substring(
+      currentIndex,
+      currentIndex + actualChunkSize
+    );
     const cursor = contentDiv.querySelector(".typing-cursor");
     if (cursor) {
-      cursor.insertAdjacentText("beforebegin", char);
+      cursor.insertAdjacentText("beforebegin", chunk);
     }
-    currentIndex++;
+    currentIndex += actualChunkSize;
 
     // Scroll to bottom during typing (throttled to avoid performance issues)
     const now = Date.now();
@@ -237,19 +246,24 @@ async function typeMessage(contentDiv, fullContent, speed = 15) {
       lastScrollTime = now;
     }
 
-    const randomDelay = speed + Math.random() * 10 - 5;
-    let finalDelay = Math.max(5, randomDelay);
+    // Calculate delay - faster for chunks, with pauses at punctuation
+    const lastChar = chunk[chunk.length - 1];
+    let finalDelay = speed * 0.3; // Much faster since we're typing chunks
 
-    if (char === "." || char === "!" || char === "?" || char === ",") {
-      finalDelay += 50; // Extra pause at punctuation
-    } else if (char === " " && Math.random() < 0.3) {
-      finalDelay += 25; // Occasional pause at spaces
+    if (lastChar === "." || lastChar === "!" || lastChar === "?") {
+      finalDelay += 80; // Extra pause at sentence endings
+    } else if (lastChar === "," || lastChar === ";") {
+      finalDelay += 40; // Smaller pause at commas
+    } else if (lastChar === " " && Math.random() < 0.2) {
+      finalDelay += 20; // Occasional pause at spaces
     }
 
-    setTimeout(typeNextCharacter, finalDelay);
+    finalDelay = Math.max(10, finalDelay); // Minimum delay
+
+    setTimeout(typeNextChunk, finalDelay);
   };
 
-  typeNextCharacter();
+  typeNextChunk();
 }
 
 /**
@@ -346,6 +360,52 @@ function renderChatLog(chatHistory, currentStatus) {
     }
 
     messageDiv.appendChild(contentDiv);
+
+    // Add copy button for assistant messages
+    if (msg.role === "assistant") {
+      const copyButton = document.createElement("button");
+      copyButton.className = "copy-message-button";
+      copyButton.title = "Copy";
+      copyButton.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      `;
+
+      // Store original HTML for restoration
+      const originalHTML = copyButton.innerHTML;
+
+      copyButton.addEventListener("click", async (event) => {
+        event.stopPropagation();
+
+        try {
+          // Get the plain text content (not HTML)
+          const textToCopy = msg.content;
+          await navigator.clipboard.writeText(textToCopy);
+
+          // Visual feedback - show checkmark
+          copyButton.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          `;
+          copyButton.style.color = "var(--success)";
+
+          // Restore after 2 seconds
+          setTimeout(() => {
+            copyButton.innerHTML = originalHTML;
+            copyButton.style.color = "";
+          }, 2000);
+        } catch (err) {
+          console.error("Failed to copy text:", err);
+          // Restore on error too
+          copyButton.innerHTML = originalHTML;
+          copyButton.style.color = "";
+        }
+      });
+
+      messageDiv.appendChild(copyButton);
+    }
 
     // Add "Prompt with general knowledge" button for page-context answers
     // Don't show for error messages

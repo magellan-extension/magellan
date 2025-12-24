@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Help & Features - Magellan</title>
+    <style>
+      :root {
+        /* Core colors - darker, sexier theme */
+        --primary: #8b8bff;
+        --primary-dark: #6b6bff;
+        --error: #ff6b6b;
+        --error-bg: rgba(255, 107, 107, 0.1);
+        --success: #51cf66;
+        --success-bg: rgba(81, 207, 102, 0.1);
+        --warning: #ffd43b;
+        --warning-bg: rgba(255, 212, 59, 0.1);
+        --border-radius: 8px;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* Theme-specific variables - darker, sexier */
+        --bg-primary: #0f0f13;
+        --bg-secondary: #1a1a24;
+        --text-primary: #e8e8f0;
+        --text-secondary: #8b8b9e;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --highlight-bg: rgba(139, 139, 255, 0.15);
+        --scrollbar-track: var(--bg-primary);
+        --scrollbar-thumb: #2a2a3a;
+        --scrollbar-thumb-hover: #3a3a4a;
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-bg: #1f1f2e;
+        --dropdown-hover: rgba(255, 255, 255, 0.06);
+        --dropdown-divider: var(--border-color);
+      }
+
+      /* Light theme */
+      [data-theme="light"] {
+        --bg-primary: #fafafa;
+        --bg-secondary: #f0f0f5;
+        --text-primary: #1a1a24;
+        --text-secondary: #6b6b7a;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --highlight-bg: rgba(139, 139, 255, 0.15);
+        --scrollbar-track: var(--bg-primary);
+        --scrollbar-thumb: #d0d0da;
+        --scrollbar-thumb-hover: #b0b0ba;
+        --input-bg: var(--bg-secondary);
+        --input-border: var(--border-color);
+        --dropdown-bg: var(--bg-secondary);
+        --dropdown-hover: #e8e8f0;
+        --dropdown-divider: var(--border-color);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        min-width: 320px;
+        padding: 0;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text",
+          "Helvetica Neue", Arial, sans-serif;
+        color: var(--text-primary);
+        background-color: var(--bg-primary);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        box-sizing: border-box;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+        padding: 16px;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-shrink: 0;
+      }
+
+      .logo {
+        width: 48px;
+        height: auto;
+        border-radius: 8px;
+      }
+
+      .title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .section {
+        margin-bottom: 32px;
+      }
+
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .feature-item {
+        margin-bottom: 24px;
+        padding: 16px;
+        background-color: var(--bg-secondary);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+      }
+
+      .feature-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .feature-icon {
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        color: var(--primary);
+      }
+
+      .feature-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .feature-description {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-left: 36px;
+      }
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: var(--transition);
+        margin-bottom: 24px;
+        height: 36px;
+        box-sizing: border-box;
+      }
+
+      .back-button:hover {
+        background-color: var(--dropdown-hover);
+      }
+
+      .back-button svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        background-color: rgba(139, 139, 255, 0.2);
+        color: var(--primary);
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="../html/sidebar.html" class="back-button">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M19 12H5M12 19l-7-7 7-7"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Back to Chat
+      </a>
+
+      <div class="header">
+        <img src="../../public/logo.png" alt="Magellan Logo" class="logo" />
+        <h1 class="title">Help & Features</h1>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Input Section</h2>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Attach Document</span>
+          </div>
+          <div class="feature-description">
+            Upload a document (PDF, TXT, DOC, DOCX, MD, RTF) to include it in
+            your conversation. The AI will be able to read and answer questions
+            about the document content. When a document is attached, the button
+            will show a purple highlight to indicate it's active.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="11"
+                cy="11"
+                r="8"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="m21 21-4.35-4.35"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Search Mode</span>
+          </div>
+          <div class="feature-description">
+            <span class="badge" style="display: block; margin-bottom: 12px"
+              >Blended / Page / General</span
+            >
+            <strong>Blended:</strong> Searches the current page/document first,
+            then falls back to general knowledge if needed. This is the default
+            mode and provides the most comprehensive answers.<br /><br />
+            <strong>Page:</strong> Searches only within the current
+            page/document. Use this when you want answers strictly from the
+            visible content.<br /><br />
+            <strong>General:</strong> Uses only general knowledge, ignoring the
+            current page. Useful for questions unrelated to the page content.
+            Click the button to cycle through modes.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">AI Model Selection</span>
+          </div>
+          <div class="feature-description">
+            Choose which AI model to use for your queries. Different models have
+            different strengths - some are faster, some are more accurate, and
+            some support real-time web search. Click to open the model selection
+            page where you can browse and choose from hundreds of models.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <path
+                d="M12 6v6l4 2"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span class="feature-name">Real-time Search</span>
+            <span class="badge">Optional</span>
+          </div>
+          <div class="feature-description">
+            When enabled, the AI can search the web in real-time to get the
+            latest information. This is useful for current events, recent news,
+            or up-to-date data. Note: This feature may incur additional costs
+            depending on your API provider. The button will show a purple
+            highlight when active.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M9 18l6-6-6-6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Send Message</span>
+          </div>
+          <div class="feature-description">
+            Send your question or message to the AI. You can press Enter to send
+            (Shift+Enter for a new line). The button will show a loading spinner
+            while processing your request.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M6 9L12 15L18 9"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Collapse/Expand Buttons</span>
+          </div>
+          <div class="feature-description">
+            Click the caret button in the top-right of the input section to
+            collapse all buttons and show only the input field. Click again to
+            expand and show all buttons. Your preference is saved automatically.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Chat Features</h2>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Chat History</span>
+          </div>
+          <div class="feature-description">
+            Your conversation history is automatically saved per tab. Each tab
+            maintains its own separate chat history, so you can have different
+            conversations on different pages. History persists even after
+            closing and reopening the extension.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="12"
+                cy="12"
+                r="3"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+            </svg>
+            <span class="feature-name">Citations</span>
+          </div>
+          <div class="feature-description">
+            When the AI references content from the page, it provides citations.
+            Click on "Cited Sentences" tab to see all citations. You can
+            navigate through them using Previous/Next buttons, and the
+            corresponding text on the page will be highlighted.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">General Knowledge Prompt</span>
+          </div>
+          <div class="feature-description">
+            For any assistant message, you can click "Prompt with general
+            knowledge" to get an answer using only general knowledge, ignoring
+            the page content. This is useful when you want a broader perspective
+            or the page content isn't relevant to your question.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Settings</h2>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Show Highlights</span>
+          </div>
+          <div class="feature-description">
+            Toggle to show or hide highlighted citations on the page. When
+            enabled, cited text is highlighted with a purple background, and the
+            currently active citation has a purple outline.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Theme</span>
+          </div>
+          <div class="feature-description">
+            Choose between Dark, Light, or System theme. System theme follows
+            your operating system's appearance settings.
+          </div>
+        </div>
+
+        <div class="feature-item">
+          <div class="feature-header">
+            <svg
+              class="feature-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span class="feature-name">Clear Chat</span>
+          </div>
+          <div class="feature-description">
+            Clear the current tab's chat history. This action cannot be undone.
+            All messages and citations will be removed.
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Tips & Best Practices</h2>
+
+        <div class="feature-item">
+          <div class="feature-description">
+            <ul style="list-style: disc; padding-left: 20px; margin: 0">
+              <li style="margin-bottom: 12px">
+                <strong>Be specific:</strong> The more specific your question,
+                the better the answer. Include context about what you're looking
+                for.
+              </li>
+              <li style="margin-bottom: 12px">
+                <strong>Use the right mode:</strong> Choose Page mode for
+                page-specific questions, General for broad questions, and
+                Blended for a mix of both.
+              </li>
+              <li style="margin-bottom: 12px">
+                <strong>Attach documents:</strong> For long documents or PDFs,
+                attach them to get better context-aware answers.
+              </li>
+              <li style="margin-bottom: 12px">
+                <strong>Check citations:</strong> Always review citations to
+                verify the AI's sources and understand where information came
+                from.
+              </li>
+              <li>
+                <strong>Real-time search:</strong> Enable real-time search for
+                current events, but be aware it may increase costs.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/ui/theme.js"></script>
+  </body>
+</html>
