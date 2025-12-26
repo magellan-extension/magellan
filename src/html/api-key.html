@@ -122,25 +122,21 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        color: var(--text-primary);
+        color: white;
         text-decoration: none;
         font-weight: 500;
         font-size: 13px;
         padding: 10px 16px;
         border-radius: var(--border-radius);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-          box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         margin: 16px 0 0;
-        background-color: var(--bg-secondary);
+        background-color: var(--primary);
         border: none;
       }
 
       .api-key-link:hover {
-        background-color: rgba(139, 139, 255, 0.1);
-        color: var(--primary);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #7a7aff;
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .api-key-link svg {
@@ -282,26 +278,23 @@
       .continue-button {
         width: 100%;
         padding: 12px 16px;
-        background-color: var(--bg-secondary);
-        color: var(--text-primary);
+        background-color: var(--primary);
+        color: white;
         border: none;
         border-radius: var(--border-radius);
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
       }
 
-      .continue-button:hover {
-        background-color: rgba(139, 139, 255, 0.1);
-        color: var(--primary);
-        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-          background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-          color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      .continue-button:hover:not(:disabled) {
+        background-color: #7a7aff;
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
       .continue-button svg {

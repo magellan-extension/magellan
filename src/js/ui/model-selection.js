@@ -142,19 +142,19 @@ function renderModelCards(models, container) {
       if (validateButton) {
         validateButton.classList.remove("success");
       }
-      updateSaveButton();
+      updateContinueButton();
     });
     container.appendChild(card);
   });
 }
 
 /**
- * Updates the save button state
+ * Updates the continue button state
  */
-function updateSaveButton() {
-  const saveButton = document.getElementById("saveModel");
-  // Save button should only be enabled for validated custom models
-  saveButton.disabled = !customModelValid;
+function updateContinueButton() {
+  const continueButton = document.getElementById("continueButton");
+  // Continue button should be enabled if a model is selected (from cards) or custom model is validated
+  continueButton.disabled = !selectedModel && !customModelValid;
 }
 
 /**
@@ -195,11 +195,15 @@ async function initializeModelSelection() {
         document.getElementById("customModelInput").value = savedModel;
         customModelValid = true;
         updateCustomModelStatus(true);
+        const validateButton = document.getElementById("validateCustomModel");
+        if (validateButton) {
+          validateButton.classList.add("success");
+        }
       }
     }
   }
 
-  updateSaveButton();
+  updateContinueButton();
 
   // Custom model input handler
   const customInput = document.getElementById("customModelInput");
@@ -219,7 +223,7 @@ async function initializeModelSelection() {
         validateButton.classList.remove("success");
       }
     }
-    updateSaveButton();
+    updateContinueButton();
   });
 
   customInput.addEventListener("keydown", (e) => {
@@ -260,24 +264,27 @@ async function initializeModelSelection() {
     } else {
       validateButton.classList.remove("success");
     }
-    updateSaveButton();
+    updateContinueButton();
   });
 
-  // Save button - only for custom models
-  const saveButton = document.getElementById("saveModel");
-  saveButton.addEventListener("click", async () => {
-    // Only save if custom model is valid
-    if (!customModelValid) {
-      return;
+  // Continue button - saves selected model and navigates
+  const continueButton = document.getElementById("continueButton");
+  continueButton.addEventListener("click", async () => {
+    let modelToSave = null;
+
+    // Get the model to save - either from selected card or validated custom model
+    if (selectedModel) {
+      modelToSave = selectedModel;
+    } else if (customModelValid) {
+      modelToSave = customInput.value.trim();
     }
 
-    const modelToSave = customInput.value.trim();
     if (!modelToSave) {
       return;
     }
 
     await chrome.storage.local.set({ [MODEL_STORAGE_KEY]: modelToSave });
-    console.log("Custom model saved:", modelToSave);
+    console.log("Model saved:", modelToSave);
 
     // Mark setup as complete (one-time setup flow)
     await chrome.storage.local.set({ [SETUP_COMPLETE_KEY]: true });
@@ -287,21 +294,6 @@ async function initializeModelSelection() {
     window.location.href = "../html/sidebar.html";
   });
 
-  // Back button
-  const backButton = document.getElementById("backButton");
-  backButton.addEventListener("click", async () => {
-    // Save the selected model if one is selected
-    if (selectedModel) {
-      await chrome.storage.local.set({ [MODEL_STORAGE_KEY]: selectedModel });
-      console.log("Model saved before going back:", selectedModel);
-      
-      // Mark setup as complete (one-time setup flow)
-      await chrome.storage.local.set({ [SETUP_COMPLETE_KEY]: true });
-      console.log("Setup marked as complete");
-    }
-    
-    window.location.href = "../html/sidebar.html";
-  });
 }
 
 // Initialize when DOM is ready

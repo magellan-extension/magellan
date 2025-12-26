@@ -849,6 +849,20 @@
         cursor: not-allowed;
       }
 
+      .general-knowledge-prompt-button.loading .spinner {
+        display: inline-block;
+      }
+
+      .general-knowledge-prompt-button.loading span,
+      .general-knowledge-prompt-button.loading svg {
+        display: none;
+      }
+
+      .general-knowledge-prompt-button .spinner {
+        border: 2px solid rgba(81, 207, 102, 0.2);
+        border-top-color: var(--success);
+      }
+
       .general-knowledge-prompt-button svg {
         width: 14px;
         height: 14px;

@@ -264,6 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       "User has API key and model but setup not marked complete, marking as complete..."
     );
     await chrome.storage.local.set({ [SETUP_COMPLETE_KEY]: true });
+    setupComplete = true; // Update local variable after storage operation
   }
 
   // If setup not complete (no model selected), go to model selection

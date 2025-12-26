@@ -288,28 +288,46 @@
           grid-template-columns: repeat(2, 1fr);
         }
       }
+
+      .footer {
+        margin-top: 24px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+        flex-shrink: 0;
+        padding: 16px 20px;
+      }
+
+      .continue-button {
+        width: 100%;
+        padding: 12px 16px;
+        background-color: var(--primary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .continue-button:hover {
+        background-color: #7a7aff;
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .continue-button svg {
+        width: 16px;
+        height: 16px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="header-section">
-        <a href="../html/sidebar.html" class="back-button">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M19 12H5M12 19l-7-7 7-7"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          Back to Chat
-        </a>
-
         <div class="header">
           <img src="../../public/logo.png" alt="Magellan Logo" class="logo" />
           <h1 class="title">Help & Features</h1>
@@ -719,6 +737,22 @@
       </div>
     </div>
 
+    <div class="footer">
+      <button id="continueButton" class="button continue-button">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M5 12H19M19 12L12 5M19 12L12 19"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Continue
+      </button>
+    </div>
+
     <script type="module" src="../js/ui/theme.js"></script>
+    <script type="module" src="../js/ui/help.js"></script>
   </body>
 </html>

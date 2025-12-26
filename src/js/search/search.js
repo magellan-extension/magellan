@@ -41,6 +41,7 @@ import {
   SEARCH_MODE_STORAGE_KEY,
   currentActiveTabId,
   ai,
+  getModelForRequest,
 } from "../ui/sidebar.js";
 import {
   navigateToMatchOnPage,
@@ -169,7 +170,6 @@ async function runMcpCompletion(basePrompt, { mode, requireCitations }) {
         attempt,
       });
       // Update model with :online suffix if real-time is enabled
-      const { getModelForRequest } = await import("../ui/sidebar.js");
       const modelForRequest = await getModelForRequest();
       ai.setModel(modelForRequest);
 
@@ -293,7 +293,6 @@ Your decision (output ONLY "RELEVANT" or "NOT_RELEVANT"):
 
   try {
     // Update model with :online suffix if real-time is enabled
-    const { getModelForRequest } = await import("../ui/sidebar.js");
     const modelForRequest = await getModelForRequest();
     ai.setModel(modelForRequest);
 
@@ -349,17 +348,15 @@ export async function performLLMSearch(query, forTabId, options = {}) {
     .join("\n\n");
 
   if (!state) {
-    if (state) {
-      updateTabStatus(
-        forTabId,
-        "error",
-        "Page content not available for LLM search."
-      );
-      addChatMessage(forTabId, {
-        role: "assistant",
-        content: `Error: Page content not available for LLM search.`,
-      });
-    }
+    updateTabStatus(
+      forTabId,
+      "error",
+      "Page content not available for LLM search."
+    );
+    addChatMessage(forTabId, {
+      role: "assistant",
+      content: `Error: Page content not available for LLM search.`,
+    });
     if (currentActiveTabId === forTabId) renderPopupUI();
     return;
   }

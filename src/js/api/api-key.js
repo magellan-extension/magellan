@@ -152,50 +152,8 @@ document.getElementById("saveApiKey").addEventListener("click", async () => {
         !!verification[API_KEY_STORAGE_KEY]
       );
 
-      console.log("API key saved successfully, checking next step...");
+      console.log("API key saved successfully");
       updateApiKeyStatus(true);
-
-      // Check if this is part of the one-time setup flow
-      const {
-        [SETUP_COMPLETE_KEY]: setupComplete,
-        [WHATS_NEW_SEEN_KEY]: whatsNewSeen,
-      } = await chrome.storage.local.get([
-        SETUP_COMPLETE_KEY,
-        WHATS_NEW_SEEN_KEY,
-      ]);
-
-      let targetPage;
-      if (!setupComplete) {
-        // First time setup: go to model selection
-        targetPage = "model-selection.html";
-        console.log("First time setup - redirecting to model selection");
-      } else if (!whatsNewSeen) {
-        // User hasn't seen what's new yet
-        targetPage = "whats-new.html";
-        console.log("Redirecting to what's new page");
-      } else {
-        // Setup complete, go to sidebar
-        targetPage = "sidebar.html";
-        console.log("Setup complete - redirecting to sidebar");
-      }
-
-      setTimeout(() => {
-        console.log(`Redirecting to ${targetPage}...`);
-        try {
-          // Check if we're in a popup context
-          if (window.location.search.includes("popup=true") || window.opener) {
-            // We're in a popup, close it and let the extension handle the side panel
-            window.close();
-          } else {
-            // We're in a side panel or regular page, redirect normally
-            window.location.href = targetPage;
-          }
-        } catch (error) {
-          console.error("Error during redirection:", error);
-          // Fallback: try to reload the page
-          window.location.reload();
-        }
-      }, 200);
     } else {
       console.log("API key validation failed");
       updateApiKeyStatus(false, "Invalid API key");

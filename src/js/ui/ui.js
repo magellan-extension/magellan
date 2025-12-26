@@ -386,6 +386,7 @@ function renderChatLog(chatHistory, currentStatus) {
         const generalKnowledgeButton = document.createElement("button");
         generalKnowledgeButton.className = "general-knowledge-prompt-button";
         generalKnowledgeButton.innerHTML = `
+          <div class="spinner"></div>
           <span>Use General Knowledge</span>
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -403,12 +404,7 @@ function renderChatLog(chatHistory, currentStatus) {
           }
 
           generalKnowledgeButton.disabled = true;
-          const textSpan = generalKnowledgeButton.querySelector("span");
-          const iconSvg = generalKnowledgeButton.querySelector("svg");
-          const spinnerDiv = generalKnowledgeButton.querySelector(".spinner");
-          if (textSpan) textSpan.style.display = "none";
-          if (iconSvg) iconSvg.style.display = "none";
-          if (spinnerDiv) spinnerDiv.style.display = "inline-block";
+          generalKnowledgeButton.classList.add("loading");
 
           // Temporarily hide highlights by removing highlight classes
           await chrome.scripting.executeScript({
@@ -454,6 +450,10 @@ function renderChatLog(chatHistory, currentStatus) {
                 "Failed to get general knowledge answer.";
               renderPopupUI();
             }
+          } finally {
+            // Remove loading state when done
+            generalKnowledgeButton.classList.remove("loading");
+            generalKnowledgeButton.disabled = false;
           }
         });
 

@@ -88,10 +88,12 @@ class OpenRouterClient {
         throw new Error("Invalid API key.");
       } else if (response.status === 402) {
         throw new Error(
-          "Insufficient credits. Please add credits to your OpenRouter account or switch to a free model."
+          "Insufficient credits. Please add credits to your OpenRouter account or switch to a free model without real-time search."
         );
       } else if (response.status === 429) {
-        throw new Error("Rate limit exceeded. Please try again shortly.");
+        throw new Error(
+          "Rate limit exceeded. Please try again shortly or switch to a different model."
+        );
       } else if (response.status === 503) {
         throw new Error("Service unavailable. Please try again shortly.");
       } else if (response.status === 400) {
