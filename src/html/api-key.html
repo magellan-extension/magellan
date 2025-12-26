@@ -297,6 +297,12 @@
         transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
+      .continue-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
       .continue-button svg {
         width: 16px;
         height: 16px;
@@ -430,7 +436,7 @@
         </div>
 
         <div class="footer">
-          <button id="continueButton" class="continue-button">
+          <button id="continueButton" class="continue-button" disabled>
             <svg
               viewBox="0 0 24 24"
               fill="none"

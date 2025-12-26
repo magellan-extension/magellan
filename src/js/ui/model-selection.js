@@ -28,7 +28,10 @@ const POPULAR_MODELS = [
 
 // Free models (with daily rate limits)
 const FREE_MODELS = [
-  { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash" },
+  {
+    id: "nvidia/nemotron-3-nano-30b-a3b:free",
+    name: "NVIDIA Nemotron 3 Nano 30B",
+  },
   { id: "xiaomi/mimo-v2-flash:free", name: "Xiaomi MiMo V2 Flash" },
   { id: "mistralai/devstral-2512:free", name: "Mistral Devstral 2 2512" },
   { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B" },
@@ -293,7 +296,6 @@ async function initializeModelSelection() {
     // Redirect back to sidebar
     window.location.href = "../html/sidebar.html";
   });
-
 }
 
 // Initialize when DOM is ready

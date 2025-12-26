@@ -90,6 +90,12 @@ function showApiKeyStatus(message, isError = false) {
  */
 async function initializeApiKey() {
   try {
+    const continueButton = document.getElementById("continueButton");
+    // Disable continue button initially
+    if (continueButton) {
+      continueButton.disabled = true;
+    }
+
     const { [API_KEY_STORAGE_KEY]: apiKey } = await chrome.storage.local.get([
       API_KEY_STORAGE_KEY,
     ]);
@@ -99,6 +105,9 @@ async function initializeApiKey() {
       // Validate the stored key on load
       const isValid = await validateApiKey(apiKey);
       updateApiKeyStatus(isValid);
+    } else {
+      // No API key stored, ensure continue button is disabled
+      updateApiKeyStatus(null);
     }
   } catch (error) {
     console.error("Error initializing API key:", error);
@@ -110,6 +119,7 @@ function updateApiKeyStatus(isValid, message) {
   const successIcon = document.querySelector(".api-key-status-icon.success");
   const errorIcon = document.querySelector(".api-key-status-icon.error");
   const saveButton = document.getElementById("saveApiKey");
+  const continueButton = document.getElementById("continueButton");
 
   // Remove all status classes
   input.classList.remove("success", "error");
@@ -120,12 +130,24 @@ function updateApiKeyStatus(isValid, message) {
     input.classList.add("success");
     successIcon.classList.add("visible");
     saveButton.disabled = false;
+    // Enable continue button if API key is valid
+    if (continueButton) {
+      continueButton.disabled = false;
+    }
   } else if (isValid === false || message) {
     input.classList.add("error");
     errorIcon.classList.add("visible");
     saveButton.disabled = true;
+    // Disable continue button if API key is invalid or empty
+    if (continueButton) {
+      continueButton.disabled = true;
+    }
   } else {
     saveButton.disabled = false;
+    // Disable continue button if no validation state
+    if (continueButton) {
+      continueButton.disabled = true;
+    }
   }
 }
 
