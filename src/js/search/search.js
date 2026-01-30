@@ -182,7 +182,7 @@ async function runMcpCompletion(basePrompt, { mode, requireCitations }) {
       lastError = error;
       console.warn(
         `Failed to get valid MCP response (attempt ${attempt + 1}):`,
-        error.message || error
+        error.message || error,
       );
       if (attempt < MCP_MAX_ATTEMPTS - 1) {
         const backoff = MCP_RETRY_BASE_DELAY_MS * (attempt + 1);
@@ -206,13 +206,13 @@ export async function isPageContentRelevant(
   query,
   pageContent,
   chatHistory,
-  isDocumentAttached
+  isDocumentAttached,
 ) {
   // Use the last 4 messages for focused pronoun resolution.
   const recentMessages = chatHistory.slice(-4);
   const conversationContext = recentMessages
     .map(
-      (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+      (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`,
     )
     .join("\n\n");
 
@@ -307,7 +307,7 @@ Your decision (output ONLY "RELEVANT" or "NOT_RELEVANT"):
     // Final sanity check
     if (response !== "RELEVANT" && response !== "NOT_RELEVANT") {
       console.warn(
-        `Unexpected relevance response: "${response}". Defaulting to NOT_RELEVANT.`
+        `Unexpected relevance response: "${response}". Defaulting to NOT_RELEVANT.`,
       );
       return false;
     }
@@ -343,7 +343,7 @@ export async function performLLMSearch(query, forTabId, options = {}) {
   const recentMessages = state.chatHistory.slice(-10);
   const conversationContext = recentMessages
     .map(
-      (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+      (msg) => `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`,
     )
     .join("\n\n");
 
@@ -351,7 +351,7 @@ export async function performLLMSearch(query, forTabId, options = {}) {
     updateTabStatus(
       forTabId,
       "error",
-      "Page content not available for LLM search."
+      "Page content not available for LLM search.",
     );
     addChatMessage(forTabId, {
       role: "assistant",
@@ -370,7 +370,7 @@ export async function performLLMSearch(query, forTabId, options = {}) {
     updateTabStatus(
       forTabId,
       "error",
-      "Page content not available for LLM search."
+      "Page content not available for LLM search.",
     );
     addChatMessage(forTabId, {
       role: "assistant",
@@ -390,7 +390,7 @@ export async function performLLMSearch(query, forTabId, options = {}) {
         query,
         state.fullPageTextContent,
         state.chatHistory,
-        isDocumentAttached
+        isDocumentAttached,
       );
     } else if (searchMode === "page") {
       // In page mode, always assume relevant (skip check)
@@ -478,7 +478,7 @@ ${state.fullPageTextContent}
 
     const assistantResponseText = (llmResponse.answer || "").replace(
       /\s*\[\s*mgl-node-\d+(?:\s*,\s*mgl-node-\d+)*\s*\]/g,
-      ""
+      "",
     ); // Defensive cleanup in case the model leaked citations
 
     // Deduplicate and filter overlapping citations
@@ -504,7 +504,7 @@ ${state.fullPageTextContent}
     ) {
       uniqueElementIds.forEach((elementId, index) => {
         const identifiedElement = state.pageIdentifiedElements.find(
-          (el) => el.id === elementId
+          (el) => el.id === elementId,
         );
         if (identifiedElement) {
           currentCitationsForThisResponse.push({
@@ -515,7 +515,7 @@ ${state.fullPageTextContent}
           });
         } else {
           console.warn(
-            `LLM cited element ID "${elementId}" which was not found in pageIdentifiedElements.`
+            `LLM cited element ID "${elementId}" which was not found in pageIdentifiedElements.`,
           );
         }
       });
@@ -552,7 +552,7 @@ ${state.fullPageTextContent}
 
     if (state.citedSentences.length > 0) {
       const elementIdsToHighlight = state.citedSentences.map(
-        (cs) => cs.elementId
+        (cs) => cs.elementId,
       );
       await chrome.scripting.insertCSS({
         target: { tabId: forTabId },
@@ -576,14 +576,14 @@ ${state.fullPageTextContent}
           console.error(
             "Highlighting script error or no result:",
             chrome.runtime.lastError,
-            highlightResults
+            highlightResults,
           );
           if (!state.errorMessage)
             state.errorMessage = "Error applying highlights on page.";
         } else {
           const resultSummary = highlightResults[0].result;
           console.log(
-            `Highlighting summary: ${resultSummary.highlightCount} elements highlighted.`
+            `Highlighting summary: ${resultSummary.highlightCount} elements highlighted.`,
           );
           if (
             resultSummary.highlightCount < state.citedSentences.length &&
@@ -614,17 +614,14 @@ ${state.fullPageTextContent}
     }
   } catch (error) {
     console.error("LLM Search Error:", error);
+    const errorMessage = error.message?.includes("404")
+      ? "The model you selected is no longer available. Please select a different model."
+      : error.message || error.toString();
     if (tabStates[forTabId]) {
-      updateTabStatus(
-        forTabId,
-        "error",
-        `LLM request error: ${error.message || error.toString()}`
-      );
+      updateTabStatus(forTabId, "error", errorMessage);
       addChatMessage(forTabId, {
         role: "assistant",
-        content: `Error: LLM request error: ${
-          error.message || error.toString()
-        }`,
+        content: `Error: ${errorMessage}`,
       });
       if (currentActiveTabId === forTabId) renderPopupUI();
     }
@@ -781,7 +778,7 @@ export async function handleSearch() {
 
     if (chrome.runtime.lastError) {
       throw new Error(
-        `Extraction script error: ${chrome.runtime.lastError.message}`
+        `Extraction script error: ${chrome.runtime.lastError.message}`,
       );
     }
     const extractionResult = injectionResults?.[0]?.result;
@@ -791,7 +788,7 @@ export async function handleSearch() {
       typeof extractionResult.fullTextForLLM !== "string"
     ) {
       throw new Error(
-        "No text or IDs found or an error occurred during extraction."
+        "No text or IDs found or an error occurred during extraction.",
       );
     }
 

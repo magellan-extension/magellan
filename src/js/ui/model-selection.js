@@ -32,8 +32,10 @@ const FREE_MODELS = [
     id: "nvidia/nemotron-3-nano-30b-a3b:free",
     name: "NVIDIA Nemotron 3 Nano 30B",
   },
-  { id: "xiaomi/mimo-v2-flash:free", name: "Xiaomi MiMo V2 Flash" },
-  { id: "mistralai/devstral-2512:free", name: "Mistral Devstral 2 2512" },
+  {
+    id: "arcee-ai/trinity-large-preview:free",
+    name: "Arcee AI Trinity Large Preview",
+  },
   { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B" },
   { id: "deepseek/deepseek-r1-0528:free", name: "DeepSeek R1" },
 ];
@@ -79,11 +81,11 @@ async function validateCustomModel(modelId, apiKey) {
 function updateCustomModelStatus(isValid) {
   const input = document.getElementById("customModelInput");
   const successIcon = document.querySelector(
-    ".custom-model-status-icon.success"
+    ".custom-model-status-icon.success",
   );
   const errorIcon = document.querySelector(".custom-model-status-icon.error");
   const loadingIcon = document.querySelector(
-    ".custom-model-status-icon.loading"
+    ".custom-model-status-icon.loading",
   );
   const validateButton = document.getElementById("validateCustomModel");
 
@@ -258,7 +260,7 @@ async function initializeModelSelection() {
 
     const isValid = await validateCustomModel(
       modelId,
-      apiKeyResult[API_KEY_STORAGE_KEY]
+      apiKeyResult[API_KEY_STORAGE_KEY],
     );
 
     updateCustomModelStatus(isValid);
